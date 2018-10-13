@@ -24,9 +24,10 @@ Faudra créer un projet JAVA, puis récupération données ANTLR
 
 	Notes Grammaire
 Réc gauche :
-	A->A*A|E
+
+A->A*A|E
 	
-	A-> EC*
+A-> EC*
 
 
 Priorités :
