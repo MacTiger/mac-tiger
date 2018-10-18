@@ -1,51 +1,9 @@
-	Ce dépôt doit contenir :
-	
-Le mode d'emloi du compilateur
+# Projet de compilation des languages
 
-Les dossiers intermédiare et final (PDF)
+Ce dépôt doit contenir :
 
-Les fichiers source
+- Le mode d'emploi du compilateur que l'on fabriquera
+- Les dossiers intermédiaires (c'est-à-dire les sources) et finaux (rapport, compilateur)
 
-Attention à ne pas inclure les fichiers de configuration => .gitignore
-
-En-tête fichier de grammaire : options 
-
-options : *langage=java *output=ast *backtrace=false *k=1
-
-
-	Etapes :
-1° mise gramm dans ANTLR 
-
-2° adapter la gramm : ambiguités, ll1
-
-3° Plus tard :
-Faudra créer un projet JAVA, puis récupération données ANTLR
-
-
-	Notes Grammaire
-Réc gauche :
-
-A->A*A|E
-	
-A-> EC*
-
-
-Priorités :
-	
-A->A+A
-
-A->A*A
-	
-A->A(+|*)A | idf
-
-A->idf(("*"|"+")idf)*
-
-A1->A2(*A2)*
-
-A2->idf(+idf)*
-
-
-
-
-
+Attention à ne pas inclure les fichiers de configuration. Chacun doit créer son propre fichier *.gitignore* qu'il doit placer dans la racine du dépôt git. Pour rappel, chaque ligne du *.gitignore* correspond à une expression régulière associée aux fichier ignorés par toutes les commandes `git`.
 
