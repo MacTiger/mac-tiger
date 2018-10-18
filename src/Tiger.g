@@ -54,3 +54,68 @@ WS
     |   '\f'
     )+ {$channel = HIDDEN;}
 ;
+
+letexp
+:   'let' dec+ 'in' (exp(';'exp)*)? 'end'
+;
+
+dec
+:   (   tydec
+    |   vardec
+    |   fundec
+    )
+;
+
+tydec
+:
+    'type' TYID '=' ty
+;
+
+ty
+:
+    (   TYID
+    |   arrty
+    |   recty
+    )
+;
+
+arrty
+:
+    'array' 'of' TYID
+;
+
+recty
+:   
+    '{' (fielddec(','fielddec)*)? '}'
+;
+
+fieldrec
+:
+     ID ':' TYID
+;
+
+fundrec
+:    (  'function' ID '(' (fielddec(','fielddec)*)? ')' = exp
+     |  'function' ID '(' (fielddec(','fielddec)*)? ')' : TYID = exp
+     )
+;
+
+vardec
+:    (  'var' ID ':=' exp
+     |  'var' ID ':' TYID ':=' exp
+     )
+;
+
+lvalue
+:    (   ID
+     |   subscript
+     |   fieldexp
+;
+
+subscript
+:    lvalue '[' exp ']'
+;
+
+fieldexp
+:    lvalue '.' ID
+;
