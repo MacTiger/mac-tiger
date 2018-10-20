@@ -12,9 +12,145 @@ program
 ;
 
 exp
-: 'TODO'
+:   infixExp
+//  |   assignment
 ;
 
+infixExp
+:   orExp
+;
+
+orExp
+:   andExp
+    (   '|'
+        orExp
+    )?
+;
+
+andExp
+:   compExp
+    (   '&'
+        andExp
+    )?
+;
+
+compExp
+:   addExp
+    (   (   '='
+        |   '<>'
+        |   '>'
+        |   '<'
+        |   '>='
+        |   '<='
+        )
+        addExp
+    )?
+;
+
+addExp
+:   multExp
+    (   (   '+'
+        |   '-'
+        )
+        addExp
+    )?
+;
+
+multExp
+:   unaryExp
+    (   (   '*'
+        |   '/'
+        )
+        multExp
+    )?
+;
+
+unaryExp
+:   seqExp
+|   negExp
+|   callExp
+|   objCreate
+//  |   ifExp
+|   whileExp
+|   forExp
+|   letExp
+//  |   lValue
+|   STRINGLIT
+|   INTLIT
+|   'nil'
+|   'break'
+;
+
+seqExp
+:   '('
+    (   exp
+        (   ';'
+            exp
+        )*
+    )?
+    ')'
+;
+
+negExp
+:   '-'
+    unaryExp
+;
+
+callExp
+:   ID
+    '('
+    (   exp
+        (   ','
+            exp
+        )*
+    )?
+    ')'
+;
+
+objCreate
+:   TYID
+    (   '['
+        exp
+        ']'
+        'of'
+        unaryExp
+    |   '{'
+        (   fieldCreate
+            (   ','
+                fieldCreate
+            )*
+        )?
+        '}'
+    )
+;
+
+fieldCreate
+:   ID
+    '='
+    exp
+;
+
+//  ifExp
+//  :   'if'
+//  ;
+
+whileExp
+:   'while'
+    exp
+    'do'
+    unaryExp
+;
+
+forExp
+:   'for'
+    ID
+    ':='
+    exp
+    'to'
+    exp
+    'do'
+    unaryExp
+;
 
 letExp
 :   'let'
@@ -63,7 +199,7 @@ recTy
     '}'
 ;
 
-filedDec
+fieldDec
 :   ID
     ':'
     TYID
