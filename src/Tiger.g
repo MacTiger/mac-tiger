@@ -7,9 +7,17 @@ options {
     k = 1;
 }
 
-//  prog
-//  :   exp
-//  ;
+prog
+:   exp
+;
+
+ID
+:   ('a'..'z')+
+;
+
+TYID
+:   ('A'..'Z')+
+;
 
 STRINGLIT
 :   '"'
@@ -55,67 +63,119 @@ WS
     )+ {$channel = HIDDEN;}
 ;
 
-letexp
-:   'let' dec+ 'in' (exp(';'exp)*)? 'end'
+exp
+: 'TODO'
+;
+
+
+letExp
+:   'let'
+    dec+
+    'in'
+    (   exp
+        (   ';'
+            exp
+        )*
+    )?
+    'end'
 ;
 
 dec
-:   (   tydec
-    |   vardec
-    |   fundec
-    )
+:   tyDec
+|   varDec
+|   funDec
 ;
 
-tydec
-:
-    'type' TYID '=' ty
+tyDec
+:   'type'
+    TYID
+    '='
+    ty
 ;
 
 ty
-:
-    (   TYID
-    |   arrty
-    |   recty
-    )
+:   TYID
+    arrTy
+    recTy
 ;
 
-arrty
-:
-    'array' 'of' TYID
+arrTy
+:   'array'
+    'of'
+    TYID
 ;
 
-recty
-:   
-    '{' (fielddec(','fielddec)*)? '}'
+recTy
+:   '{'
+    (   fieldDec
+        (   ','
+            fieldDec
+    	)*
+    )?
+    '}'
 ;
 
-fieldrec
-:
-     ID ':' TYID
+filedDec
+:   ID
+    ':'
+    TYID
 ;
 
-fundrec
-:    (  'function' ID '(' (fielddec(','fielddec)*)? ')' = exp
-     |  'function' ID '(' (fielddec(','fielddec)*)? ')' : TYID = exp
-     )
+funDec
+:   'function'
+    ID
+    '('
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
+    )?
+    ')'
+    '='
+    exp
+|   'function'
+    ID
+    '('
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
+    )?
+    ')'
+    ':'
+    TYID
+    '='
+    exp
 ;
 
-vardec
-:    (  'var' ID ':=' exp
-     |  'var' ID ':' TYID ':=' exp
-     )
+varDec
+:   'var'
+    ID
+    ':='
+    exp
+|   'var'
+    ID
+    ':'
+    TYID
+    ':='
+    exp
 ;
 
-lvalue
-:    (   ID
-     |   subscript
-     |   fieldexp
+lValue
+:   ID
+|   subscript
+|   fieldExp
 ;
 
 subscript
-:    lvalue '[' exp ']'
+:   lValue
+    '['
+    exp
+    ']'
 ;
 
-fieldexp
-:    lvalue '.' ID
+fieldExp
+:   lValue
+    '.'
+    ID
 ;
