@@ -81,6 +81,7 @@ unaryExp
 |   'break'
 ;
 
+
 seqExp
 :   '('
     (   exp
@@ -131,13 +132,14 @@ fieldCreate
 ;
 
 ifExp
-:   'if' exp 'then' if2
+:   'if' exp 'then' unaryExp if2
 ;
 
 if2
 :   'else' unaryExp      // Cas "if exp then exp else exp"
 |                   // Cas "if exp then exp"
 ;
+
 
 whileExp
 :   'while'
