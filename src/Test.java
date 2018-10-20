@@ -6,6 +6,6 @@ public class Test {
 		TigerLexer lexer = new TigerLexer (input);
 		CommonTokenStream tokens = new CommonTokenStream (lexer);
 		TigerParser parser = new TigerParser (tokens);
-		parser.prog ();
+		parser.program ();
 	}
 }
