@@ -70,7 +70,7 @@ unaryExp
 |   negExp
 |   callExp
 |   objCreate
-//  |   ifExp
+|   ifExp
 |   whileExp
 |   forExp
 |   letExp
@@ -130,9 +130,14 @@ fieldCreate
     exp
 ;
 
-//  ifExp
-//  :   'if'
-//  ;
+ifExp
+:   'if' exp 'then' if2
+;
+
+if2
+:   'else' unaryExp      // Cas "if exp then exp else exp"
+|                   // Cas "if exp then exp"
+;
 
 whileExp
 :   'while'
