@@ -7,13 +7,283 @@ options {
     k = 1;
 }
 
-//  prog
-//  :   exp
-//  ;
+program
+:   exp
+;
+
+exp
+:   infixExp
+//  |   assignment
+;
+
+infixExp
+:   orExp
+;
+
+orExp
+:   andExp
+    (   '|'
+        orExp
+    )?
+;
+
+andExp
+:   compExp
+    (   '&'
+        andExp
+    )?
+;
+
+compExp
+:   addExp
+    (   (   '='
+        |   '<>'
+        |   '>'
+        |   '<'
+        |   '>='
+        |   '<='
+        )
+        addExp
+    )?
+;
+
+addExp
+:   multExp
+    (   (   '+'
+        |   '-'
+        )
+        addExp
+    )?
+;
+
+multExp
+:   unaryExp
+    (   (   '*'
+        |   '/'
+        )
+        multExp
+    )?
+;
+
+unaryExp
+:   seqExp
+|   negExp
+|   callExp
+|   objCreate
+|   ifExp
+|   whileExp
+|   forExp
+|   letExp
+//  |   lValue
+|   STRINGLIT
+|   INTLIT
+|   'nil'
+|   'break'
+;
+
+
+seqExp
+:   '('
+    (   exp
+        (   ';'
+            exp
+        )*
+    )?
+    ')'
+;
+
+negExp
+:   '-'
+    unaryExp
+;
+
+callExp
+:   ID
+    '('
+    (   exp
+        (   ','
+            exp
+        )*
+    )?
+    ')'
+;
+
+objCreate
+:   TYID
+    (   '['
+        exp
+        ']'
+        'of'
+        unaryExp
+    |   '{'
+        (   fieldCreate
+            (   ','
+                fieldCreate
+            )*
+        )?
+        '}'
+    )
+;
+
+fieldCreate
+:   ID
+    '='
+    exp
+;
+
+ifExp
+:   'if' exp 'then' unaryExp if2
+;
+
+if2
+:   'else' unaryExp      // Cas "if exp then exp else exp"
+|                   // Cas "if exp then exp"
+;
+
+
+whileExp
+:   'while'
+    exp
+    'do'
+    unaryExp
+;
+
+forExp
+:   'for'
+    ID
+    ':='
+    exp
+    'to'
+    exp
+    'do'
+    unaryExp
+;
+
+letExp
+:   'let'
+    dec+
+    'in'
+    (   exp
+        (   ';'
+            exp
+        )*
+    )?
+    'end'
+;
+
+dec
+:   tyDec
+|   varDec
+|   funDec
+;
+
+tyDec
+:   'type'
+    TYID
+    '='
+    ty
+;
+
+ty
+:   TYID
+    arrTy
+    recTy
+;
+
+arrTy
+:   'array'
+    'of'
+    TYID
+;
+
+recTy
+:   '{'
+    (   fieldDec
+        (   ','
+            fieldDec
+    	)*
+    )?
+    '}'
+;
+
+fieldDec
+:   ID
+    ':'
+    TYID
+;
+
+funDec
+:   'function'
+    ID
+    '('
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
+    )?
+    ')'
+    '='
+    exp
+|   'function'
+    ID
+    '('
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
+    )?
+    ')'
+    ':'
+    TYID
+    '='
+    exp
+;
+
+varDec
+:   'var'
+    ID
+    ':='
+    exp
+|   'var'
+    ID
+    ':'
+    TYID
+    ':='
+    exp
+;
+
+lValue
+:   ID
+|   subscript
+|   fieldExp
+;
+
+subscript
+:   lValue
+    '['
+    exp
+    ']'
+;
+
+fieldExp
+:   lValue
+    '.'
+    ID
+;
+
+ID
+:   ('a'..'z')+
+;
+
+TYID
+:   ('A'..'Z')+
+;
 
 STRINGLIT
 :   '"'
     (   ' '..'~'
+    |   '#'..'['
+    |   ']'..'~'
     |   '\\'
         (   'n'
         |   't'
@@ -53,69 +323,4 @@ WS
     |   '\r'
     |   '\f'
     )+ {$channel = HIDDEN;}
-;
-
-letexp
-:   'let' dec+ 'in' (exp(';'exp)*)? 'end'
-;
-
-dec
-:   (   tydec
-    |   vardec
-    |   fundec
-    )
-;
-
-tydec
-:
-    'type' TYID '=' ty
-;
-
-ty
-:
-    (   TYID
-    |   arrty
-    |   recty
-    )
-;
-
-arrty
-:
-    'array' 'of' TYID
-;
-
-recty
-:   
-    '{' (fielddec(','fielddec)*)? '}'
-;
-
-fieldrec
-:
-     ID ':' TYID
-;
-
-fundrec
-:    (  'function' ID '(' (fielddec(','fielddec)*)? ')' = exp
-     |  'function' ID '(' (fielddec(','fielddec)*)? ')' : TYID = exp
-     )
-;
-
-vardec
-:    (  'var' ID ':=' exp
-     |  'var' ID ':' TYID ':=' exp
-     )
-;
-
-lvalue
-:    (   ID
-     |   subscript
-     |   fieldexp
-;
-
-subscript
-:    lvalue '[' exp ']'
-;
-
-fieldexp
-:    lvalue '.' ID
 ;
