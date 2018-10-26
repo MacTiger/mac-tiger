@@ -1,0 +1,3 @@
+in
+	print("Hello, world!")
+end
