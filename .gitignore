@@ -1,3 +1,6 @@
 .DS_Store
 chrono
 /bin
+/src/output
+/src/TigerLexer.java
+/src/TigerParser.java
