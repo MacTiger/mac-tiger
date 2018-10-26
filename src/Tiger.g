@@ -13,7 +13,6 @@ program
 
 exp
 :   infixExp
-//  |   assignment
 ;
 
 infixExp
@@ -68,19 +67,17 @@ multExp
 unaryExp
 :   seqExp
 |   negExp
-|   callExp
+|   valueExp
 |   objCreate
 |   ifExp
 |   whileExp
 |   forExp
-|   letExp
-//  |   lValue
+//  |   letExp
 |   STRINGLIT
 |   INTLIT
 |   'nil'
 |   'break'
 ;
-
 
 seqExp
 :   '('
@@ -97,9 +94,18 @@ negExp
     unaryExp
 ;
 
-callExp
+valueExp    // Gère l'ancien lValue, callExp et assignment
 :   ID
-    '('
+    (   seqArg          // Cas "callExp"
+    |   (   indexArg    // Cas "subscript"
+        |   fieldArg    // Cas "fieldExp"
+        )*
+        assignmentArg?
+    )
+;
+
+seqArg
+:   '('
     (   exp
         (   ','
             exp
@@ -108,7 +114,23 @@ callExp
     ')'
 ;
 
-objCreate
+indexArg
+:   '['
+    exp
+    ']'
+;
+
+fieldArg
+:   '.'
+    ID
+;
+
+assignmentArg
+:   ':='
+    unaryExp
+;
+
+objCreate   // Gère l'ancien arrCreate et recCreate
 :   TYID
     (   '['
         exp
@@ -250,25 +272,6 @@ varDec
     TYID
     ':='
     exp
-;
-
-lValue
-:   ID
-|   subscript
-|   fieldExp
-;
-
-subscript
-:   lValue
-    '['
-    exp
-    ']'
-;
-
-fieldExp
-:   lValue
-    '.'
-    ID
 ;
 
 ID
