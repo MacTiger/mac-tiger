@@ -49,5 +49,4 @@ On peut même écrire :
 plus: a=exp('+'^ exp)^*
 ```
 
-Dans ce cas, s'il n'y a qu'une expression, on n'aura pas de nœud parent '+', on aura directement l'expression. 
-
+Dans ce cas, s'il n'y a qu'une expression, on n'aura pas de nœud parent '+', on aura directement l'expression.
