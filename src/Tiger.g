@@ -32,17 +32,11 @@ andExp
         andExp
     )?
 ;
-/*
-compExpPrefix
-:    addExp
-    compExp
-; 
-*/
 
 compExp
 :   addExp
-    (   (	'<>'
-        |   '='
+    (   (   '='
+        |   '<>'
         |   '>'
         |   '<'
         |   '>='
@@ -78,7 +72,7 @@ unaryExp
 |   ifExp
 |   whileExp
 |   forExp
-//  |   letExp
+|   letExp
 |   STRINGLIT
 |   INTLIT
 |   'nil'
@@ -201,8 +195,8 @@ letExp
 
 dec
 :   tyDec
-|   varDecPrefix
-|   funDecPrefix
+|   varDec
+|   funDec
 ;
 
 tyDec
@@ -229,7 +223,7 @@ recTy
     (   fieldDec
         (   ','
             fieldDec
-    	)*
+        )*
     )?
     '}'
 ;
@@ -240,40 +234,29 @@ fieldDec
     TYID
 ;
 
-funDecPrefix:
-    'function'
+funDec
+:   'function'
     ID
     '('
-    (    fieldDec
-        (    ','
-	    fieldDec
-	)*
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
     )?
-    ')'funDec
-;
-
-funDec
-:   
-    '='
-    exp
-|   ':'
-    TYID
+    ')'
+    (   ':'
+        TYID
+    )?
     '='
     exp
 ;
-
-varDecPrefix
-:   'var'
-    ID
-;
-
 
 varDec
-:   
-    ':='
-    exp
-|   ':'
-    TYID
+:   'var'
+    ID
+    (   ':'
+        TYID
+    )?
     ':='
     exp
 ;
