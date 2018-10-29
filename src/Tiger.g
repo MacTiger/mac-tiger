@@ -283,9 +283,7 @@ ID
 ;
 
 TYID
-:   'A'..'Z'+
-|    ' int '
-|    ' string '
+:   ('A'..'Z')+
 ;
 
 STRINGLIT
