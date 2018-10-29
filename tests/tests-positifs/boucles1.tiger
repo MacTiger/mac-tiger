@@ -1,7 +1,7 @@
 let
-	var n : int := 4
-	var i : int := 0
-	var x : int := 0
+	var i : int := 4
+	var n : int := 0
+	var s : int := 0
 in
 	while i < n do
 	(
