@@ -78,7 +78,7 @@ unaryExp
 |   ifExp
 |   whileExp
 |   forExp
-//  |   letExp
+|   letExp
 |   STRINGLIT
 |   INTLIT
 |   'nil'
@@ -160,13 +160,9 @@ fieldCreate
 ;
 
 ifExp
-:   'if' exp 'then' unaryExp if2
+:   'if' exp 'then' unaryExp ( options {greedy=true;} : 'else' unaryExp)?
 ;
-
-if2
-:   'else' unaryExp      // Cas "if exp then exp else exp"
-|                   // Cas "if exp then exp"
-;
+// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
 
 
 whileExp
@@ -262,12 +258,6 @@ funDec
     exp
 ;
 
-varDecPrefix
-:   'var'
-    ID
-;
-
-
 varDec
 :   
     ':='
@@ -276,7 +266,17 @@ varDec
     TYID
     ':='
     exp
+    
 ;
+
+varDecPrefix
+:   'var'
+    ID
+    varDec
+;
+
+
+
 
 ID
 :   ('a'..'z')+
