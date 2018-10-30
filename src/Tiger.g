@@ -2,9 +2,15 @@ grammar Tiger;
 
 options {
     language = Java;
-    //  output = AST;
+    output = AST;
     backtrack = false;
     k = 1;
+}
+
+tokens {	 //Tokens imaginaires
+	EXP;
+	OR;
+	AND;
 }
 
 program
@@ -12,7 +18,7 @@ program
 ;
 
 exp
-:   infixExp
+:   infixExp ->^(EXP infixExp)
 ;
 
 infixExp
@@ -21,16 +27,20 @@ infixExp
 
 orExp
 :   andExp
-    (   '|'
-        orExp
-    )?
+    ((   '|'
+        andExp
+    )+ -> ^(OR andExp +)	// Cas où il y a plusieurs "addExp" de reconnus
+    |	-> andExp			// Cas où il n'y a qu'un "addExp" de reconnu
+    )
 ;
 
 andExp
 :   compExp
-    (   '&'
-        andExp
-    )?
+    ((   '&'
+        compExp
+    )+ -> ^(AND compExp+) // Cas où il y a plusieurs "comExp" de reconnus
+    |	-> compExp	// Cas où il n'y a qu'un "comExp" de reconnu
+    )
 ;
 /*
 compExpPrefix
@@ -47,7 +57,7 @@ compExp
         |   '<'
         |   '>='
         |   '<='
-        )
+        )^
         addExp
     )?
 ;
@@ -56,7 +66,7 @@ addExp
 :   multExp
     (   (   '+'
         |   '-'
-        )
+        )^
         addExp
     )?
 ;
@@ -65,7 +75,7 @@ multExp
 :   unaryExp
     (   (   '*'
         |   '/'
-        )
+        )^
         multExp
     )?
 ;
@@ -92,11 +102,11 @@ seqExp
             exp
         )*
     )?
-    ')'
+    ')' -> exp+
 ;
 
 negExp
-:   '-'
+:   '-'^
     unaryExp
 ;
 
@@ -321,6 +331,17 @@ STRINGLIT
 
 INTLIT
 :   '0'..'9'+
+;
+
+COMMENT
+:   (
+        '/*'
+        .*
+        (   COMMENT
+            .*
+        )*
+        '*/'
+    ) {$channel = HIDDEN;}
 ;
 
 WS
