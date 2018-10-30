@@ -159,7 +159,7 @@ ifExp
     'then'
     exp
     (options {
-        greedy=true;
+        greedy = true;
     }:  'else'
         exp
     )?
@@ -307,6 +307,17 @@ STRINGLIT
 
 INTLIT
 :   '0'..'9'+
+;
+
+COMMENT
+:   (
+        '/*'
+        .*
+        (   COMMENT
+            .*
+        )*
+        '*/'
+    ) {$channel = HIDDEN;}
 ;
 
 WS
