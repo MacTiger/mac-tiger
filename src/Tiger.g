@@ -19,6 +19,9 @@ program
 
 exp
 :   infixExp ->^(EXP infixExp)
+|   ifExp
+|   whileExp
+|   forExp
 ;
 
 infixExp
@@ -42,17 +45,11 @@ andExp
     |	-> compExp	// Cas où il n'y a qu'un "comExp" de reconnu
     )
 ;
-/*
-compExpPrefix
-:    addExp
-    compExp
-; 
-*/
 
 compExp
 :   addExp
-    (   (	'<>'
-        |   '='
+    (   (   '='
+        |   '<>'
         |   '>'
         |   '<'
         |   '>='
@@ -85,9 +82,6 @@ unaryExp
 |   negExp
 |   valueExp
 |   objCreate
-|   ifExp
-|   whileExp
-|   forExp
 |   letExp
 |   STRINGLIT
 |   INTLIT
@@ -170,16 +164,23 @@ fieldCreate
 ;
 
 ifExp
-:   'if' exp 'then' unaryExp ( options {greedy=true;} : 'else' unaryExp)?
+:   'if'
+    exp
+    'then'
+    exp
+    (options {
+        greedy = true;
+    }:  'else'
+        exp
+    )?
 ;
 // En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
-
 
 whileExp
 :   'while'
     exp
     'do'
-    unaryExp
+    exp
 ;
 
 forExp
@@ -190,7 +191,7 @@ forExp
     'to'
     exp
     'do'
-    unaryExp
+    exp
 ;
 
 letExp
@@ -207,8 +208,8 @@ letExp
 
 dec
 :   tyDec
-|   varDecPrefix
-|   funDecPrefix
+|   varDec
+|   funDec
 ;
 
 tyDec
@@ -235,7 +236,7 @@ recTy
     (   fieldDec
         (   ','
             fieldDec
-    	)*
+        )*
     )?
     '}'
 ;
@@ -246,47 +247,32 @@ fieldDec
     TYID
 ;
 
-funDecPrefix:
-    'function'
+funDec
+:   'function'
     ID
     '('
-    (    fieldDec
-        (    ','
-	    fieldDec
-	)*
+    (   fieldDec
+        (   ','
+            fieldDec
+        )*
     )?
-    ')'funDec
-;
-
-funDec
-:   
-    '='
-    exp
-|   ':'
-    TYID
+    ')'
+    (   ':'
+        TYID
+    )?
     '='
     exp
 ;
 
 varDec
-:   
-    ':='
-    exp
-|   ':'
-    TYID
-    ':='
-    exp
-    
-;
-
-varDecPrefix
 :   'var'
     ID
-    varDec
+    (   ':'
+        TYID
+    )?
+    ':='
+    exp
 ;
-
-
-
 
 ID
 :   ('a'..'z')+

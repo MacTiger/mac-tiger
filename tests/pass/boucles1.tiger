@@ -3,9 +3,9 @@ let
 	var i : int := 0
 	var x : int := 0
 in
-	while i < n do
-	(
+	while i < n
+	do
 		x := x + n
-	);
+	;
 	print(x)
 end
