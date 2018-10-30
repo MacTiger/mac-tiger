@@ -13,6 +13,9 @@ program
 
 exp
 :   infixExp
+|   ifExp
+|   whileExp
+|   forExp
 ;
 
 infixExp
@@ -69,9 +72,6 @@ unaryExp
 |   negExp
 |   valueExp
 |   objCreate
-|   ifExp
-|   whileExp
-|   forExp
 |   letExp
 |   STRINGLIT
 |   INTLIT
@@ -157,11 +157,11 @@ ifExp
 :   'if'
     exp
     'then'
-    unaryExp
+    exp
     (options {
         greedy=true;
     }:  'else'
-        unaryExp
+        exp
     )?
 ;
 // En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
@@ -170,7 +170,7 @@ whileExp
 :   'while'
     exp
     'do'
-    unaryExp
+    exp
 ;
 
 forExp
@@ -181,7 +181,7 @@ forExp
     'to'
     exp
     'do'
-    unaryExp
+    exp
 ;
 
 letExp
@@ -262,7 +262,6 @@ varDec
     )?
     ':='
     exp
-
 ;
 
 ID
