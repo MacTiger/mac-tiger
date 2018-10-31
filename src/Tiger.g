@@ -11,6 +11,10 @@ tokens {	 //Tokens imaginaires
 	EXP;
 	OR;
 	AND;
+	CALLEXP;
+	SUBSCRIPT;
+	FIELDEXP;	
+	IF;
 }
 
 program
@@ -18,7 +22,7 @@ program
 ;
 
 exp
-:   infixExp ->^(EXP infixExp)
+:   infixExp
 |   ifExp
 |   whileExp
 |   forExp
@@ -106,9 +110,9 @@ negExp
 
 valueExp    // Gère l'ancien lValue, callExp et assignment
 :   ID
-    (   seqArg          // Cas "callExp"
-    |   (   indexArg    // Cas "subscript"
-        |   fieldArg    // Cas "fieldExp"
+    (   seqArg        	-> ^(CALLEXP ID seqArg)  // Cas "callExp"
+    |   (   indexArg	-> ^(SUBSCRIPT ID indexArg)  // Cas "subscript"
+        |   fieldArg	-> ^(FIELDEXP ID fieldArg)    // Cas "fieldExp"
         )*
         assignmentArg?
     )
@@ -121,7 +125,7 @@ seqArg
             exp
         )*
     )?
-    ')'
+    ')' -> exp+
 ;
 
 indexArg
@@ -172,7 +176,7 @@ ifExp
         greedy = true;
     }:  'else'
         exp
-    )?
+    )?	-> ^(IF exp exp exp?)
 ;
 // En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
 
