@@ -9,5 +9,8 @@ test:
 
 clean:
 	rm -r -f bin/*
+	rm -f src/Tiger.tokens
+	rm -f src/TigerLexer.java
+	rm -f src/TigerParser.java
 
 .PHONY: build test clean
