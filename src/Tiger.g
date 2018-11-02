@@ -15,6 +15,8 @@ tokens {	 //Tokens imaginaires
 	SUBSCRIPT;
 	FIELDEXP;	
 	IF;
+	ARRAY;
+	LET;
 }
 
 program
@@ -211,28 +213,28 @@ letExp
 ;
 
 dec
-:   tyDec
-|   varDec
-|   funDec
+:   tyDec -> ^(tyDec)
+|   varDec -> ^(varDec)
+|   funDec -> ^(funDec)
 ;
 
 tyDec
 :   'type'
     TYID
     '='
-    ty
+    ty -> ^(LET TYID ty)
 ;
 
 ty
 :   TYID
     arrTy
-    recTy
+    recTy -> ^(TYID arrTy recTy)
 ;
 
 arrTy
 :   'array'
     'of'
-    TYID
+    TYID -> ^(ARRAY TYID)
 ;
 
 recTy
@@ -275,7 +277,7 @@ varDec
         TYID
     )?
     ':='
-    exp
+    exp -> ^(LET ID TYID? exp)
 ;
 
 ID
