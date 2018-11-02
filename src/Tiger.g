@@ -13,14 +13,14 @@ tokens {	 //Tokens imaginaires
 	AND;
 	CALLEXP;
 	SUBSCRIPT;
-	FIELDEXP;	
+	FIELDEXP;
 	IF;
 	ARRAY;
 	LET;
 }
 
 program
-:   exp
+:   exp EOF -> exp
 ;
 
 exp
