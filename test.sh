@@ -16,7 +16,7 @@ do
 		if [[ $file =~ $regexp ]]
 		then
 			file="tests/$dir/$file"
-			output=$(cat $file | java -cp bin:antlr/* Test 2>&1 > /dev/null)
+			output=$(java -cp bin:antlr/* Test 2>&1 > /dev/null < $file)
 			status=$((! $?))
 			if [[ $output != "" ]]
 			then
