@@ -17,6 +17,10 @@ tokens {	 //Tokens imaginaires
 	IF;
 	ARRAY;
 	LET;
+	INDEX;
+	FIELDCREATE;
+	FIELDARG;
+	SEQARG;
 }
 
 program
@@ -39,22 +43,20 @@ assignmentExp
 
 orExp
 :   andExp
-    (   '|'^
+    ((   '|'
         andExp
-        (   '|'!
-            andExp
-        )*
-    )?
+    )+ -> ^(OR andExp +)	// Cas où il y a plusieurs "addExp" de reconnus
+    |	-> andExp			// Cas où il n'y a qu'un "addExp" de reconnu
+    )
 ;
 
 andExp
 :   compExp
-    (   '&'^
+    ((   '&'
         compExp
-        (   '&'!
-            compExp
-        )*
-    )?
+    )+ -> ^(AND compExp+) // Cas où il y a plusieurs "comExp" de reconnus
+    |	-> compExp	// Cas où il n'y a qu'un "comExp" de reconnu
+    )
 ;
 
 compExp
@@ -131,18 +133,18 @@ seqArg
             exp
         )*
     )?
-    ')' -> exp+
+    ')' -> ^(SEQARG exp* )
 ;
 
 indexArg
 :   '['
     exp
-    ']'
+    ']'	-> ^(INDEX exp)
 ;
 
 fieldArg
 :   '.'
-    ID
+    ID	-> ^(FIELDARG ID)
 ;
 
 objCreate   // Gère l'ancien arrCreate et recCreate
@@ -165,7 +167,7 @@ objCreate   // Gère l'ancien arrCreate et recCreate
 fieldCreate
 :   ID
     '='
-    exp
+    exp	-> ^(FIELDCREATE ID exp)
 ;
 
 ifExp
