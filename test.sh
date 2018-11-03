@@ -1,5 +1,7 @@
 #!/bin/bash
 regexp='\.tiger$'
+i="0"
+j="0"
 for dir in $(ls tests)
 do
 	if [[ $dir == "pass" ]]
@@ -11,7 +13,7 @@ do
 	else
 		continue
 	fi
-	for file in $(ls tests/$dir)
+	for file in $(ls -A tests/$dir)
 	do
 		if [[ $file =~ $regexp ]]
 		then
@@ -25,9 +27,13 @@ do
 			if [[ $status == $refstatus ]]
 			then
 				echo -e "[\033[0;32mPASS\033[0m] $file"
+				i=$(($i + 1))
 			else
 				echo -e "[\033[0;31mFAIL\033[0m] $file"
+				j=$(($j + 1))
 			fi
 		fi
 	done
 done
+l=$(($i + $j))
+echo "$l tests, $i passed, $j failed"
