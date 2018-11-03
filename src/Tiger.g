@@ -20,18 +20,21 @@ tokens {	 //Tokens imaginaires
 }
 
 program
-:   exp EOF -> exp
+:   exp EOF!
 ;
 
 exp
-:   infixExp
+:   assignmentExp
 |   ifExp
 |   whileExp
 |   forExp
 ;
 
-infixExp
+assignmentExp
 :   orExp
+    (   ':='^
+        exp
+    )?
 ;
 
 orExp
@@ -70,8 +73,8 @@ addExp
     (   (   '+'
         |   '-'
         )^
-        addExp
-    )?
+        multExp
+    )*
 ;
 
 multExp
@@ -79,8 +82,8 @@ multExp
     (   (   '*'
         |   '/'
         )^
-        multExp
-    )?
+        unaryExp
+    )*
 ;
 
 unaryExp
@@ -116,7 +119,6 @@ valueExp    // Gère l'ancien lValue, callExp et assignment
     |   (   indexArg	-> ^(SUBSCRIPT ID indexArg)  // Cas "subscript"
         |   fieldArg	-> ^(FIELDEXP ID fieldArg)    // Cas "fieldExp"
         )*
-        assignmentArg?
     )
 ;
 
@@ -139,11 +141,6 @@ indexArg
 fieldArg
 :   '.'
     ID
-;
-
-assignmentArg
-:   ':='
-    unaryExp
 ;
 
 objCreate   // Gère l'ancien arrCreate et recCreate
