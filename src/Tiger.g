@@ -43,20 +43,22 @@ assignmentExp
 
 orExp
 :   andExp
-    ((   '|'
+    (   '|'^
         andExp
-    )+ -> ^(OR andExp +)	// Cas où il y a plusieurs "addExp" de reconnus
-    |	-> andExp			// Cas où il n'y a qu'un "addExp" de reconnu
-    )
+        (   '|'!
+            andExp
+        )*
+    )?
 ;
 
 andExp
 :   compExp
-    ((   '&'
+    (   '&'^
         compExp
-    )+ -> ^(AND compExp+) // Cas où il y a plusieurs "comExp" de reconnus
-    |	-> compExp	// Cas où il n'y a qu'un "comExp" de reconnu
-    )
+        (   '&'!
+            compExp
+        )*
+    )?
 ;
 
 compExp
@@ -129,7 +131,7 @@ seqExp
             exp
         )*
     )?
-    ')' -> exp+
+    ')' -> exp*
 ;
 
 negExp
