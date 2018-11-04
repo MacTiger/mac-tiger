@@ -72,19 +72,39 @@ compExp
 
 addExp
 :   multExp
-    (   (   '+'
-        |   '-'
-        )^
+    (   '+'^
         multExp
+        (   '+'!
+            multExp
+        )*
+    )?
+    (   '-'^
+        multExp
+        (   '+'^
+            multExp
+            (   '+'!
+                multExp
+            )*
+        )?
     )*
 ;
 
 multExp
 :   unaryExp
-    (   (   '*'
-        |   '/'
-        )^
+    (   '*'^
         unaryExp
+        (   '*'!
+            unaryExp
+        )*
+    )?
+    (   '/'^
+        unaryExp
+        (   '*'^
+            unaryExp
+            (   '*'!
+                unaryExp
+            )*
+        )?
     )*
 ;
 
