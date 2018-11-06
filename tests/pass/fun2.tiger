@@ -1,0 +1,5 @@
+let
+	function f(x:int) = 
+		nil
+in
+end
