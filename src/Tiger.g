@@ -7,20 +7,18 @@ options {
     k = 1;
 }
 
-tokens {	 //Tokens imaginaires
-	EXP;
-	OR;
-	AND;
-	CALLEXP;
-	SUBSCRIPT;
-	FIELDEXP;
-	IF;
-	ARRAY;
-	LET;
-	INDEX;
-	FIELDCREATE;
-	FIELDARG;
-	SEQARG;
+tokens { // Tokens imaginaires
+    IF;
+    ARR;
+    REC;
+    CALLEXP;
+    SUBSCRIPT;
+    FIELDEXP;
+    SEQARG;
+    INDEXARG;
+    FIELDARG;
+    LET;
+    ARRAY;
 }
 
 program
@@ -116,7 +114,6 @@ unaryExp
 :   seqExp
 |   negExp
 |   valueExp
-|   objCreate
 |   letExp
 |   STRINGLIT
 |   INTLIT
@@ -139,13 +136,44 @@ negExp
     unaryExp
 ;
 
-valueExp    // Gère l'ancien lValue, callExp et assignment
+valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
 :   ID
-    (   seqArg        	-> ^(CALLEXP ID seqArg)  // Cas "callExp"
-    |   (   indexArg	-> ^(SUBSCRIPT ID indexArg)  // Cas "subscript"
-        |   fieldArg	-> ^(FIELDEXP ID fieldArg)    // Cas "fieldExp"
+    (   seqArg
+        (-> ^(CALLEXP ID seqArg)) // Cas "callExp"
+    |   '['
+        exp
+        ']'
+        (   (-> ^(SUBSCRIPT ID)) // Cas "subscript"
+            (-> ^(INDEXARG exp))
+            (   indexArg
+                (-> ^(SUBSCRIPT ID indexArg)) // Cas "subscript"
+            |   fieldArg
+                (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
+            )*
+        |   'of'
+            unaryExp
+            (-> ^(ARR ID exp unaryExp)) // Cas "arrayCreate"
+        )
+    |   fieldArg
+        (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
+        (   indexArg
+            (-> ^(SUBSCRIPT ID indexArg)) // Cas "subscript"
+        |   fieldArg
+            (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
         )*
-    )
+    |   '{'
+        (   ID
+            '='
+            exp
+            (   ','
+                ID
+                '='
+                exp
+            )*
+        )?
+        '}'
+        (-> ^(REC ID (ID exp)*)) // Cas "recCreate"
+    )?
 ;
 
 seqArg
@@ -155,41 +183,18 @@ seqArg
             exp
         )*
     )?
-    ')' -> ^(SEQARG exp* )
+    ')' -> ^(SEQARG exp*)
 ;
 
 indexArg
 :   '['
     exp
-    ']'	-> ^(INDEX exp)
+    ']' -> ^(INDEXARG exp)
 ;
 
 fieldArg
 :   '.'
-    ID	-> ^(FIELDARG ID)
-;
-
-objCreate   // Gère l'ancien arrCreate et recCreate
-:   TYID
-    (   '['
-        exp
-        ']'
-        'of'
-        unaryExp
-    |   '{'
-        (   fieldCreate
-            (   ','
-                fieldCreate
-            )*
-        )?
-        '}'
-    )
-;
-
-fieldCreate
-:   ID
-    '='
-    exp	-> ^(FIELDCREATE ID exp)
+    ID -> ^(FIELDARG ID)
 ;
 
 ifExp
@@ -201,7 +206,7 @@ ifExp
         greedy = true;
     }:  'else'
         exp
-    )?	-> ^(IF exp exp exp?)
+    )? -> ^(IF exp exp exp?)
 ;
 // En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
 
@@ -243,21 +248,21 @@ dec
 
 tyDec
 :   'type'
-    TYID
+    ID
     '='
-    ty -> ^(LET TYID ty)
+    ty -> ^(LET ID ty)
 ;
 
 ty
-:   TYID
+:   ID
     arrTy
-    recTy -> ^(TYID arrTy recTy)
+    recTy -> ^(ID arrTy recTy)
 ;
 
 arrTy
 :   'array'
     'of'
-    TYID -> ^(ARRAY TYID)
+    ID -> ^(ARRAY ID)
 ;
 
 recTy
@@ -273,7 +278,7 @@ recTy
 fieldDec
 :   ID
     ':'
-    TYID
+    ID
 ;
 
 funDec
@@ -287,7 +292,7 @@ funDec
     )?
     ')'
     (   ':'
-        TYID
+        ID
     )?
     '='
     exp
@@ -297,18 +302,21 @@ varDec
 :   'var'
     ID
     (   ':'
-        TYID
+        ID
     )?
     ':='
-    exp -> ^(LET ID TYID? exp)
+    exp -> ^(LET ID ID? exp)
 ;
 
 ID
-:   ('a'..'z')+
-;
-
-TYID
-:   ('A'..'Z')+
+:   (   'A'..'Z'
+    |   'a'..'z'
+    )
+    (   '0'..'9'
+    |   'A'..'Z'
+    |   '_'
+    |   'a'..'z'
+    )*
 ;
 
 STRINGLIT
