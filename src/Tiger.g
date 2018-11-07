@@ -8,7 +8,6 @@ options {
 }
 
 tokens { // Tokens imaginaires
-    IF;
     ARR;
     REC;
     CALLEXP;
@@ -19,6 +18,7 @@ tokens { // Tokens imaginaires
     FIELDARG;
     LET;
     ARRAY;
+    IF;
 }
 
 program
@@ -197,37 +197,6 @@ fieldArg
     ID -> ^(FIELDARG ID)
 ;
 
-ifExp
-:   'if'
-    exp
-    'then'
-    exp
-    (options {
-        greedy = true;
-    }:  'else'
-        exp
-    )? -> ^(IF exp exp exp?)
-;
-// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
-
-whileExp
-:   'while'
-    exp
-    'do'
-    exp
-;
-
-forExp
-:   'for'
-    ID
-    ':='
-    exp
-    'to'
-    exp
-    'do'
-    exp
-;
-
 letExp
 :   'let'
     dec+
@@ -242,8 +211,8 @@ letExp
 
 dec
 :   tyDec -> ^(tyDec)
-|   varDec -> ^(varDec)
 |   funDec -> ^(funDec)
+|   varDec -> ^(varDec)
 ;
 
 tyDec
@@ -306,6 +275,37 @@ varDec
     )?
     ':='
     exp -> ^(LET ID ID? exp)
+;
+
+ifExp
+:   'if'
+    exp
+    'then'
+    exp
+    (options {
+        greedy = true;
+    }:  'else'
+        exp
+    )? -> ^(IF exp exp exp?)
+;
+// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
+
+whileExp
+:   'while'
+    exp
+    'do'
+    exp
+;
+
+forExp
+:   'for'
+    ID
+    ':='
+    exp
+    'to'
+    exp
+    'do'
+    exp
 ;
 
 ID
