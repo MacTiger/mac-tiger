@@ -18,7 +18,6 @@ tokens { // Tokens imaginaires
     FIELDARG;
     LET;
     ARRAY;
-    IF;
 }
 
 program
@@ -73,25 +72,25 @@ compExp
 ;
 
 addExp
-:   multExp
+:   mulExp
     (   '+'^
-        multExp
+        mulExp
         (   '+'!
-            multExp
+            mulExp
         )*
     )?
     (   '-'^
-        multExp
+        mulExp
         (   '+'^
-            multExp
+            mulExp
             (   '+'!
-                multExp
+                mulExp
             )*
         )?
     )*
 ;
 
-multExp
+mulExp
 :   unaryExp
     (   '*'^
         unaryExp
@@ -278,33 +277,33 @@ varDec
 ;
 
 ifExp
-:   'if'
+:   'if'^
     exp
-    'then'
+    'then'!
     exp
     (options {
         greedy = true;
-    }:  'else'
+    }:  'else'!
         exp
-    )? -> ^(IF exp exp exp?)
+    )?
 ;
 // En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
 
 whileExp
-:   'while'
+:   'while'^
     exp
-    'do'
+    'do'!
     exp
 ;
 
 forExp
-:   'for'
+:   'for'^
     ID
-    ':='
+    ':='!
     exp
-    'to'
+    'to'!
     exp
-    'do'
+    'do'!
     exp
 ;
 
