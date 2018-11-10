@@ -18,6 +18,8 @@ tokens { // Tokens imaginaires
     FIELDARG;
     LET;
     ARRAY;
+    TYPEARRAY;
+    TYPEDEC;
 }
 
 program
@@ -209,28 +211,28 @@ letExp
 ;
 
 dec
-:   tyDec -> ^(tyDec)
-|   funDec -> ^(funDec)
-|   varDec -> ^(varDec)
+:   tyDec
+|   funDec
+|   varDec
 ;
 
 tyDec
 :   'type'
     ID
     '='
-    ty -> ^(LET ID ty)
+    ty -> ^(TYPEDEC ID ty)
 ;
 
 ty
 :   ID
-    arrTy
-    recTy -> ^(ID arrTy recTy)
+|   arrTy
+|   recTy
 ;
 
 arrTy
 :   'array'
     'of'
-    ID -> ^(ARRAY ID)
+    ID -> ^(TYPEARRAY ID)
 ;
 
 recTy
