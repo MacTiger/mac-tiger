@@ -20,6 +20,7 @@ tokens { // Tokens imaginaires
     ARRAY;
     TYPEARRAY;
     TYPEDEC;
+    VARDEC;
 }
 
 program
@@ -138,7 +139,9 @@ negExp
 ;
 
 valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
-:   ID
+:   ID (
+		-> ID			// Cas "value", ie : un identifiant seul
+	|
     (   seqArg
         (-> ^(CALLEXP ID seqArg)) // Cas "callExp"
     |   '['
@@ -174,7 +177,7 @@ valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
         )?
         '}'
         (-> ^(REC ID (ID exp)*)) // Cas "recCreate"
-    )?
+    ))
 ;
 
 seqArg
@@ -200,7 +203,7 @@ fieldArg
 
 letExp
 :   'let'
-    dec+
+    dec+ 
     'in'
     (   exp
         (   ';'
@@ -208,6 +211,7 @@ letExp
         )*
     )?
     'end'
+    -> ^('let' dec+ exp*)
 ;
 
 dec
@@ -275,7 +279,7 @@ varDec
         ID
     )?
     ':='
-    exp -> ^(LET ID ID? exp)
+    exp -> ^(VARDEC ID ID? exp)
 ;
 
 ifExp
