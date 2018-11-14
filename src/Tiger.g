@@ -17,6 +17,9 @@ tokens { // Tokens imaginaires
     TYPEARRAY;
     TYPEDEC;
     VARDEC;
+    LET;
+    IN;
+    LETEXP;
 }
 
 program
@@ -200,7 +203,7 @@ letExp
         )*
     )?
     'end'
-    -> ^('let' dec+ exp*)
+    -> ^(LETEXP ^(LET dec+) ^(IN exp*))
 ;
 
 dec
