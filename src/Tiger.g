@@ -8,16 +8,12 @@ options {
 }
 
 tokens { // Tokens imaginaires
+    SEQ;
     ARR;
     REC;
-    CALLEXP;
-    SUBSCRIPT;
-    FIELDEXP;
-    SEQARG;
-    INDEXARG;
-    FIELDARG;
-    LET;
-    ARRAY;
+    CALL;
+    ITEM;
+    FIELD;
     TYPEARRAY;
     TYPEDEC;
     VARDEC;
@@ -130,7 +126,8 @@ seqExp
             exp
         )*
     )?
-    ')' -> exp*
+    ')'
+    (-> ^(SEQ exp*))
 ;
 
 negExp
@@ -139,31 +136,33 @@ negExp
 ;
 
 valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
-:   ID (
-		-> ID			// Cas "value", ie : un identifiant seul
-	|
-    (   seqArg
-        (-> ^(CALLEXP ID seqArg)) // Cas "callExp"
-    |   '['
-        exp
-        ']'
-        (   (-> ^(SUBSCRIPT ID)) // Cas "subscript"
-            (-> ^(INDEXARG exp))
+:   ID
+    (-> ID)
+    (   '('
+        (   exp
+            (   ','
+                exp
+            )*
+        )?
+        ')'
+        (-> ^(CALL $valueExp exp*)) // Cas "callExp"
+    |   indexArg
+        (   (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
             (   indexArg
-                (-> ^(SUBSCRIPT ID indexArg)) // Cas "subscript"
+                (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
             |   fieldArg
-                (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
+                (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
             )*
         |   'of'
             unaryExp
-            (-> ^(ARR ID exp unaryExp)) // Cas "arrayCreate"
+            (-> ^(ARR $valueExp indexArg unaryExp)) // Cas "arrayCreate"
         )
     |   fieldArg
-        (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
+        (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
         (   indexArg
-            (-> ^(SUBSCRIPT ID indexArg)) // Cas "subscript"
+            (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
         |   fieldArg
-            (-> ^(FIELDEXP ID fieldArg)) // Cas "fieldExp"
+            (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
         )*
     |   '{'
         (   ID
@@ -176,34 +175,24 @@ valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
             )*
         )?
         '}'
-        (-> ^(REC ID (ID exp)*)) // Cas "recCreate"
-    ))
-;
-
-seqArg
-:   '('
-    (   exp
-        (   ','
-            exp
-        )*
+        (-> ^(REC $valueExp (ID exp)*)) // Cas "recCreate"
     )?
-    ')' -> ^(SEQARG exp*)
 ;
 
 indexArg
-:   '['
+:   '['!
     exp
-    ']' -> ^(INDEXARG exp)
+    ']'!
 ;
 
 fieldArg
-:   '.'
-    ID -> ^(FIELDARG ID)
+:   '.'!
+    ID
 ;
 
 letExp
 :   'let'
-    dec+ 
+    dec+
     'in'
     (   exp
         (   ';'
