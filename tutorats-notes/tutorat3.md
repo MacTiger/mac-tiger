@@ -1,0 +1,107 @@
+# Tutorat 4
+
+## 1. Règle `exp`
+
+`exp` est ambiguë. Elle est présente sur le `if`, sur le `then` et sur le `for`. D'après la grammaire donnée par le cours, il est possible d'écrire
+
+```tige
+if exp then exp else exp + exp
+```
+
+Seulement, elle peut être comprise de deux façon différentes.
+
+```tig
+if exp then exp else (exp + exp) <-- Bon
+(if exp then exp else exp) + exp <-- Mauvais
+```
+
+On va supposer pour commencer que `if` ne renvoit rien.
+
+On peut effectuer une priorisation. On peut poser
+
+```antlr
+exp_sup -> if then else | while | exp
+```
+
+Cette règle contient toutes les règles non évaluables. En plus, on peut poser
+
+```antlr
+exp -> exp_min($exp_min)*
+exp_min -> ID | nbr | '-'exp | (exp) 
+```
+
+Après avoir réglé l'erreur liée au `exp`, il restera une erreur avec le `of`. En effet, antlr ne peut pas faire la différence entre
+
+
+
+```
+(val[] of exp) + exp
+val[] of (exp + exp)
+```
+
+
+
+## 2. Comment fonctionne la priorisation
+
+Supposons qu'on ait la règle suivante.
+
+```
+exp -> exp + exp | exp * exp | ID
+```
+
+Prioriser, c'est écrire à la place :
+
+```antl
+exp_1 -> exp_2 (+ exp_2)*
+exp_2 -> exp_3 (* exp_3)*
+exp_3 -> ID
+```
+
+## 3. Utilisation de l'option *greedy*
+
+Exemple typique de l'utilisation de *greedy* : les conditions.
+
+```antl
+'if' exp 'then' exp (options {greedy=true} 'else' exp)?
+```
+
+## 4. Remarques sur les crochets et les points
+
+Penser à faire des tests de la forme
+
+```tige
+idf[].idf
+idf.idf2[]
+```
+
+## 5. Points sur l'AST
+
+L'objectif de l'AST est le suivant. Redonnons nous notre `if exp1 then exp2 else exp3`. Ce qu'on veut faire, c'est le transformer en *un seul noeud* `IF` qui contient trois fils.
+
+En Java, on parcourra l'arbre pour générer le code. Tout d'abord, on a ce qu'on appelle les *tokens*. Au début de la grammaire, il faut définir *tous les tokens.* Voici la syntaxe.
+
+```
+tokens {
+    IF,
+    ...
+}
+```
+
+Voici la manière dont on va procéder pour construire l'AST.
+
+```antl
+if a=exp then b=exp else c=exp -> ^(IF $a $b $c)
+```
+
+On peut écrire :
+
+```antl
+if a = exp then b=exp (else c=exp -> ^(IFTHENELSE $a$b$c)
+                       |          -> ^(IFTHEN $a$b)
+                       )
+```
+
+```
+exp(',' exp)* -> ^(UN_TOKEN exp+)
+```
+

@@ -10,6 +10,7 @@ options {
 tokens { // Tokens imaginaires
     SEQ;
     ARR;
+    FUNDEC;
     REC;
     CALL;
     ITEM;
@@ -261,7 +262,7 @@ funDec
         ID
     )?
     '='
-    exp
+    exp -> ^(FUNDEC ID fieldDec* ID? exp)
 ;
 
 varDec
@@ -271,7 +272,8 @@ varDec
         ID
     )?
     ':='
-    exp -> ^(VARDEC ID ID? exp)
+    exp 
+    -> ^(VARDEC ID ID? exp)
 ;
 
 ifExp
