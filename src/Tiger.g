@@ -11,6 +11,7 @@ tokens { // Tokens imaginaires
     SEQ;
     ARR;
     FUNDEC;
+    FIELDEC;
     REC;
     CALL;
     ITEM;
@@ -245,7 +246,7 @@ recTy
 fieldDec
 :   ID
     ':'
-    ID
+    ID -> ID ID
 ;
 
 funDec
@@ -262,7 +263,7 @@ funDec
         ID
     )?
     '='
-    exp -> ^(FUNDEC ID fieldDec* ID? exp)
+    exp -> ^(FUNDEC ID ^(FIELDEC fieldDec*) ID? exp)
 ;
 
 varDec
