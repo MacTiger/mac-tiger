@@ -28,13 +28,6 @@ program
 ;
 
 exp
-:   assignmentExp
-|   ifExp
-|   whileExp
-|   forExp
-;
-
-assignmentExp
 :   orExp
     (   ':='^
         exp
@@ -116,6 +109,9 @@ unaryExp
 :   seqExp
 |   negExp
 |   valueExp
+|   ifExp
+|   whileExp
+|   forExp
 |   letExp
 |   STRINGLIT
 |   INTLIT
@@ -192,6 +188,37 @@ indexArg
 fieldArg
 :   '.'!
     ID
+;
+
+ifExp
+:   'if'^
+    exp
+    'then'!
+    unaryExp
+    (options {
+        greedy = true;
+    }:  'else'!
+        unaryExp
+    )?
+;
+// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
+
+whileExp
+:   'while'^
+    exp
+    'do'!
+    unaryExp
+;
+
+forExp
+:   'for'^
+    ID
+    ':='!
+    exp
+    'to'!
+    exp
+    'do'!
+    unaryExp
 ;
 
 letExp
@@ -272,39 +299,8 @@ varDec
         ID
     )?
     ':='
-    exp 
+    exp
     -> ^(VARDEC ID ID? exp)
-;
-
-ifExp
-:   'if'^
-    exp
-    'then'!
-    exp
-    (options {
-        greedy = true;
-    }:  'else'!
-        exp
-    )?
-;
-// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
-
-whileExp
-:   'while'^
-    exp
-    'do'!
-    exp
-;
-
-forExp
-:   'for'^
-    ID
-    ':='!
-    exp
-    'to'!
-    exp
-    'do'!
-    exp
 ;
 
 ID
