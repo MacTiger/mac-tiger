@@ -1,3 +1,0 @@
-a := (b.c).d[5][3+14] / -4 
-
-// probleme au niveau de ValueExp ? 
