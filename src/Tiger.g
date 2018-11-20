@@ -10,18 +10,14 @@ options {
 tokens { // Tokens imaginaires
     SEQ;
     ARR;
-    FUNDEC;
-    FIELDEC;
     REC;
     CALL;
     ITEM;
     FIELD;
-    TYPEARRAY;
-    TYPEDEC;
-    VARDEC;
-    LET;
-    IN;
-    LETEXP;
+    DEC;
+    ARRTYPE;
+    RECTYPE;
+    CALLTYPE;
 }
 
 program
@@ -114,8 +110,8 @@ unaryExp
 |   whileExp
 |   forExp
 |   letExp
-|   STRINGLIT
-|   INTLIT
+|   STR
+|   INT
 |   'nil'
 |   'break'
 ;
@@ -232,7 +228,7 @@ letExp
         )*
     )?
     'end'
-    -> ^(LETEXP ^(LET dec+) ^(IN exp*))
+    (-> ^('let' ^(DEC dec+) ^(SEQ exp*)))
 ;
 
 dec
@@ -245,11 +241,13 @@ tyDec
 :   'type'
     ID
     '='
-    ty -> ^(TYPEDEC ID ty)
+    ty
+    (-> ^('type' ID ty))
 ;
 
 ty
 :   ID
+    (-> ID)
 |   arrTy
 |   recTy
 ;
@@ -257,7 +255,8 @@ ty
 arrTy
 :   'array'
     'of'
-    ID -> ^(TYPEARRAY ID)
+    ID
+    (-> ^(ARRTYPE ID))
 ;
 
 recTy
@@ -268,12 +267,13 @@ recTy
         )*
     )?
     '}'
+    (-> ^(RECTYPE fieldDec*))
 ;
 
 fieldDec
 :   ID
-    ':'
-    ID -> ID ID
+    ':'!
+    ID
 ;
 
 funDec
@@ -290,7 +290,8 @@ funDec
         ID
     )?
     '='
-    exp -> ^(FUNDEC ID ^(FIELDEC fieldDec*) ID? exp)
+    exp
+    (-> ^('function' ID ^(CALLTYPE fieldDec*) ID? exp))
 ;
 
 varDec
@@ -301,7 +302,7 @@ varDec
     )?
     ':='
     exp
-    -> ^(VARDEC ID ID? exp)
+    (-> ^('var' ID ID? exp))
 ;
 
 ID
@@ -315,7 +316,7 @@ ID
     )*
 ;
 
-STRINGLIT
+STR
 :   '"'
     (   ' '..'!'
     |   '#'..'['
@@ -348,7 +349,7 @@ STRINGLIT
     '"'
 ;
 
-INTLIT
+INT
 :   '0'..'9'+
 ;
 
@@ -360,7 +361,8 @@ COMMENT
             .*
         )*
         '*/'
-    ) {$channel = HIDDEN;}
+    )
+    {$channel = HIDDEN;}
 ;
 
 WS
@@ -369,5 +371,6 @@ WS
     |   '\n'
     |   '\r'
     |   '\f'
-    )+ {$channel = HIDDEN;}
+    )+
+    {$channel = HIDDEN;}
 ;
