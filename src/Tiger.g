@@ -10,18 +10,14 @@ options {
 tokens { // Tokens imaginaires
     SEQ;
     ARR;
-    FUNDEC;
-    FIELDEC;
     REC;
     CALL;
     ITEM;
     FIELD;
-    TYPEARRAY;
-    TYPEDEC;
-    VARDEC;
-    LET;
-    IN;
-    LETEXP;
+    DEC;
+    ARRTYPE;
+    RECTYPE;
+    CALLTYPE;
 }
 
 program
@@ -114,8 +110,8 @@ unaryExp
 |   whileExp
 |   forExp
 |   letExp
-|   STRINGLIT
-|   INTLIT
+|   STR
+|   INT
 |   'nil'
 |   'break'
 ;
@@ -136,7 +132,7 @@ negExp
     unaryExp
 ;
 
-valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
+valueExp // Gère les anciens "lValue", "callExp", "arrCreate" et "recCreate"
 :   ID
     (-> ID)
     (   '('
@@ -147,23 +143,32 @@ valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
         )?
         ')'
         (-> ^(CALL $valueExp exp*)) // Cas "callExp"
-    |   indexArg
-        (   (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
-            (   indexArg
-                (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
-            |   fieldArg
-                (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
+    |   '['
+        exp
+        ']'
+        (   (-> ^(ITEM $valueExp exp)) // Cas "subscript"
+            (   '['
+                exp
+                ']'
+                (-> ^(ITEM $valueExp exp)) // Cas "subscript"
+            |   '.'
+                ID
+                (-> ^(FIELD $valueExp ID)) // Cas "fieldExp"
             )*
         |   'of'
             unaryExp
-            (-> ^(ARR $valueExp indexArg unaryExp)) // Cas "arrayCreate"
+            (-> ^(ARR $valueExp exp unaryExp)) // Cas "arrayCreate"
         )
-    |   fieldArg
-        (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
-        (   indexArg
-            (-> ^(ITEM $valueExp indexArg)) // Cas "subscript"
-        |   fieldArg
-            (-> ^(FIELD $valueExp fieldArg)) // Cas "fieldExp"
+    |   '.'
+        ID
+        (-> ^(FIELD $valueExp ID)) // Cas "fieldExp"
+        (   '['
+            exp
+            ']'
+            (-> ^(ITEM $valueExp exp)) // Cas "subscript"
+        |   '.'
+            ID
+            (-> ^(FIELD $valueExp ID)) // Cas "fieldExp"
         )*
     |   '{'
         (   ID
@@ -180,17 +185,6 @@ valueExp // Gère l'ancien lValue, callExp, arrCreate et recCreate
     )?
 ;
 
-indexArg
-:   '['!
-    exp
-    ']'!
-;
-
-fieldArg
-:   '.'!
-    ID
-;
-
 ifExp
 :   'if'^
     exp
@@ -202,7 +196,6 @@ ifExp
         unaryExp
     )?
 ;
-// En ascendante, conflit lecture/reduction : lire 'else' ou reduire ? Normalement lecture.
 
 whileExp
 :   'while'^
@@ -232,7 +225,7 @@ letExp
         )*
     )?
     'end'
-    -> ^(LETEXP ^(LET dec+) ^(IN exp*))
+    (-> ^('let' ^(DEC dec+) ^(SEQ exp*)))
 ;
 
 dec
@@ -245,52 +238,47 @@ tyDec
 :   'type'
     ID
     '='
-    ty -> ^(TYPEDEC ID ty)
-;
-
-ty
-:   ID
-|   arrTy
-|   recTy
-;
-
-arrTy
-:   'array'
-    'of'
-    ID -> ^(TYPEARRAY ID)
-;
-
-recTy
-:   '{'
-    (   fieldDec
-        (   ','
-            fieldDec
-        )*
-    )?
-    '}'
-;
-
-fieldDec
-:   ID
-    ':'
-    ID -> ID ID
+    (   ID
+        (-> ^('type' ID ID)) // Cas "ty"
+    |   'array'
+        'of'
+        ID
+        (-> ^('type' ID ^(ARRTYPE ID))) // Cas "arrTy"
+    |   '{'
+        (   ID
+            ':'
+            ID
+            (   ','
+                ID
+                ':'
+                ID
+            )*
+        )?
+        '}'
+        (-> ^('type' ID ^(RECTYPE (ID ID)*))) // Cas "recTy"
+    )
 ;
 
 funDec
 :   'function'
     ID
     '('
-    (   fieldDec
+    (   i += ID
+        ':'
+        j += ID
         (   ','
-            fieldDec
+            i += ID
+            ':'
+            j += ID
         )*
     )?
     ')'
     (   ':'
-        ID
+        k = ID
     )?
     '='
-    exp -> ^(FUNDEC ID ^(FIELDEC fieldDec*) ID? exp)
+    exp
+    (-> ^('function' ID ^(CALLTYPE ($i $j)*) $k? exp))
 ;
 
 varDec
@@ -301,7 +289,7 @@ varDec
     )?
     ':='
     exp
-    -> ^(VARDEC ID ID? exp)
+    (-> ^('var' ID ID? exp))
 ;
 
 ID
@@ -315,7 +303,7 @@ ID
     )*
 ;
 
-STRINGLIT
+STR
 :   '"'
     (   ' '..'!'
     |   '#'..'['
@@ -336,7 +324,7 @@ STRINGLIT
             |   '2'
                 '0'..'7'
             )
-        |   (   ' ' // Echappement de caractères blancs
+        |   (   ' ' // Échappement de caractères blancs
             |   '\t'
             |   '\n'
             |   '\r'
@@ -348,7 +336,7 @@ STRINGLIT
     '"'
 ;
 
-INTLIT
+INT
 :   '0'..'9'+
 ;
 
@@ -360,7 +348,8 @@ COMMENT
             .*
         )*
         '*/'
-    ) {$channel = HIDDEN;}
+    )
+    {$channel = HIDDEN;}
 ;
 
 WS
@@ -369,5 +358,6 @@ WS
     |   '\n'
     |   '\r'
     |   '\f'
-    )+ {$channel = HIDDEN;}
+    )+
+    {$channel = HIDDEN;}
 ;
