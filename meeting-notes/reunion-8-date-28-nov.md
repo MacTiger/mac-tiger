@@ -1,0 +1,52 @@
+# Réunion 8
+
+## 1. Informations
+
+- Date et heure : 28 novembre 2018 à 14 heures
+- Lieu : salle de travail
+
+## 2. Ordre du jour
+
+- Vérification des jalons
+
+## 3. Vérification des jalons
+
+David a commencé sa part du rapport, surtout au niveau de la priorisation des règles.
+
+Tristan a réfléchi à la TDS. La dernière fois, il avait évoqué une TDS "d'ordre zéro". C'est-à-dire que le type int doit être déclaré, et pré-existe avant que l'on lance le programme, ainsi que les fonctions de base comme print. Il faut bien noter que *int* n'est pas vraiment défini à partir de *typedef*, vu qu'il ne peut pas être généré à partir des autres types. Il faut aussi préciser la taille de int (32 ?) et string (taille d'un pointeur).
+
+Seulement, il faudra bien noter que si print n'est pas utilisé dans notre code, il ne devra pas être "importé" dans la TDS.
+
+Chose apparamment oubliée dans le tutorat. Dans la TDS qui a été proposée, on met le type de retour pour les fonctions. Sauf qu'en tiger, un type est aussi une forme de variable. Donc dans la TDS, il faut mettre un pointeur.
+
+Tristan propose de mettre les TDS dans un arbres.
+
+On utilisera Intellij.
+
+## 4. Jalons pour la prochaine réunion
+
+**Alexis.**
+
+- Faire la TDS
+- Coder un programme Tiger complexe
+- Effectuer cinq tests sémantiques
+
+**Philippe**.
+
+- Faire la TDS
+- Coder un programme Tiger complexe
+- Effectuer cinq tests sémantiques
+
+**David.**
+
+- Poursuivre le rapport
+- Coder un programme Tiger complexe
+- Effectuer cinq tests sémantiques
+
+**Tristan.**
+
+- Rédiger le manuel d'utilisation
+- Poursuivre le rapport
+- Coder un programme Tiger complexe
+- Effectuer cinq tests sémantiques
+
