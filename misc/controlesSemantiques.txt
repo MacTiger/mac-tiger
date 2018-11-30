@@ -1,0 +1,12 @@
+Contrôles sémantiques :
+	- Division par zéro (en clair).
+	- Division par zéro (géré dynamiquement dans le code généré).
+	- Dépassement d'Array (en clair).
+	- Dépassement d'Array (géré dynamiquement dans le code généré).
+	- L'index d'un subscript (Array) doit être entier à sa définition ET pour tout accès à ses valeurs.
+	- Variable utilisée dans sa portée de déclaration.
+	- Une négation ne porte que sur un INT, son résultat est un INT.
+Pour infixExp, pour les opérateurs :
+	- "+", "-", "*", "/" : les opérandes (et le résultat) sont de type INT
+	- "=","<>" : les opérandes sont de même type, le résultat est un INT
+	- ">","<","<=",">=" : les opérandes sont de même type, le résultat est un INT
