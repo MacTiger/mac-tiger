@@ -4,7 +4,7 @@ i="0"
 j="0"
 for dir in $(ls tests)
 do
-	if [[ $dir == "pass" ]]
+	if [[ $dir == "pass" ]] || [[ $dir == "prgm" ]]
 	then
 		refstatus="1"
 	elif [[ $dir == "fail" ]]
@@ -36,4 +36,4 @@ do
 	done
 done
 l=$(($i + $j))
-echo "$l tests, $i passed, $j failed"
+echo "$l tests: $i passed, $j failed"
