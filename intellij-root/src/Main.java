@@ -21,6 +21,8 @@ public class Main {
     }
 
     public static void buildSymbolTable(Tree tree) {
+        // Cette fonction doit créer la table de symboles depuis l'arbre tree
+        // Pour l'instant, elle ne fait qu'un parcours en profondeur de l'arbre et l'affiche en post-fixé
         for (int i = 0; i < tree.getChildCount(); i++) {
             buildSymbolTable(tree.getChild(i));
         }
