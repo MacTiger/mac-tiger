@@ -1,0 +1,7 @@
+let
+ type vector = {x : int , y : int}
+
+ var vec : vector := vector {x=5 , y=3 , z=4}
+in
+ vec.x=42
+end
