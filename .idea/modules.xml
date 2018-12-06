@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/intellij-root.iml" filepath="$PROJECT_DIR$/intellij-root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/graff24u.iml" filepath="$PROJECT_DIR$/.idea/graff24u.iml" />
     </modules>
   </component>
 </project>

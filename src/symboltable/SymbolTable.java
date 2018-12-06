@@ -1,7 +1,7 @@
 package symboltable;
 import java.util.ArrayList;
 
-public class SymbolTable extends ArrayList<STObject> {
+public class SymbolTable extends ArrayList<SymbolTableField> {
 
     private SymbolTable parent;
     private ArrayList<SymbolTable> children;
