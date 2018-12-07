@@ -7,13 +7,16 @@ public class Record extends Type {
     private ArrayList<String> fieldIdentifiers;
 
     public Record(String identifier, ArrayList<Type> fieldTypes, ArrayList<String> fieldIdentifiers) {
-        super(identifier, size(fieldTypes));
+        super(identifier);
+
         // On doit calculer la taille du record, qui est la somme de la taille de tous ses types
         int size = 0;
+
         for (Type type : fieldTypes) {
             size = size + type.getSize();
         }
-        super(identifier, size);
+
+        this.setSize(size);
         this.fieldTypes = fieldTypes;
         this.fieldIdentifiers = fieldIdentifiers;
     }
