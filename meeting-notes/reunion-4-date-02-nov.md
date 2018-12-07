@@ -1,10 +1,15 @@
-# Ordre du jour
+# Réunion 4
 
-1. Point sur la grammaire
-2. Faire le point sur ce qui avait été mentionné par Tristan sur Discord
-3. Faire le point sur l'avancement des AST
+**Date et heure.** 2 novembre 2018 à 16h00
 
-# Script
+**Prochaine réunion.** 7 novembre 2018 14h30
+
+**Ordre du jour.**
+
+1. Grammaire
+2. Travail à faire
+
+## 1. Grammaire
 
 Philippe a corrigés quelques bugs avec for. Les tests automatiques ne sont pas encore opérationnels, mais on peut faire les tests depuis antlr. Pas mal de choses ne passaient pas.
 
@@ -20,24 +25,28 @@ Il faut tester les AST sur nos tests. Il n'est pas nécessaire de réécrire tou
 
 Il faudrait commencer la table des symboles, et comment récupérer l'arbre abstrait en Java pour faire les contrôles sémantiques.
 
-# Travail à faire
+## 2. Travail à faire
 
-Chacun doit écrire au moins deux tests par règle. Il doivent être les plus petits possibles. On reprend les mêmes groupes qu'avant en ce qui concerne les règles de grammaires. Chacun doit poursuivre l'AST et la grammaire.
+**Alexis.**
 
-Tout le monde doit faire des tests.
++ Tester ses réécritures
++ Poursuivre l'AST
++ Écrire au moins deux tests par règle
 
-## Alexis
+**Philippe**.
 
-Tester les réécritures.
++ Étudier la table des symboles
++ Poursuivre l'AST
++ Écrire au moins deux tests par règle
 
-## Tristan
+**David.**
 
-Expliquer aux autres les problèmes de la grammaire.
++ Poursuivre l'AST
++ Écrire au moins deux tests par règle
++ Mettre en ligne le PDF de Antlr
 
-## David
+**Tristan.**
 
-Mettre en ligne le PDF de Antlr.
-
-## Philippe
-
-Étudier la table des symboles.
++ Expliquer aux autres les problèmes restants sur la grammaire
++ Poursuivre l'AST
++ Écrire au moins deux tests par règle

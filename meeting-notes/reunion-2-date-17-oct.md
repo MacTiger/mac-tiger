@@ -1,16 +1,16 @@
 # Réunion 2
 
-**Date et heure.** Mercredi 17 octobre 2018 à 14h00 
+**Date et heure.** 17 octobre 2018 à 14h00 
 
-**Prochaine réunion.** Mercredi 24 octobre 2018 14h30
+**Prochaine réunion.** 24 octobre 2018 à 14h30
 
 **Ordre du jour.**
 
-- Point sur les objectifs fixés à la dernière réunion
-- Répartition de la grammaire (à faire en 10 jours !)
-- Se répartir les règles à réécrire, par groupe de 2
+1. Jalons
+2. Répartition de la grammaire
+3. Travail à faire
 
-## Point sur les objectifs fixés
+## 1. Jalons
 
 On va voir comment se répartir les règles. On pourrait, d'après David, le faire par groupe de deux.
 
@@ -24,7 +24,7 @@ Il faudra mettre les comptes-rendus sur GIT. Tout le monde doit faire un `git cl
 
 Bilan sur le cours envoyé pas Mme. Colin. Il y a certains détails qui n'apparaissent pas dans la documentation de Tiger. Tout le monde a lu le sujet.
 
-## Répartition de la grammaire
+## 2. Répartition de la grammaire
 
 Nous allons répartir les tâches pour réaliser la grammaire. Notations de ANTLR.
 
@@ -44,20 +44,23 @@ On devra, dans l'ordre :
 
 On verra les commentaires plus tard. On pourra, d'après David, éventuellement télécharger un compilateur Tiger pour l'utiliser comme contrôle.
 
-## Travail à faire
+## 3. Travail à faire
 
-### Alexis
+**Alexis.**
 
-- Terminer le premier TP de traduction
-- Mettre les réunions en ligne
++ Terminer le premier TP de traduction
++ Mettre les réunion en ligne
++ Écrire les règles : tout ce qui est avant exp exclus plus letexp, et pour les terminaux, *tyid* et *id*
 
-### Tristan
+**Philippe**.
 
-- Télécharger un compilateur de *Tiger*
++ Écrire les règles : tout ce qui est avant exp exclus plus letexp, et pour les terminaux, *tyid* et *id*
 
-### Groupes pour la grammaire
+**David.**
 
-- Alexis et Philippe : tout ce qui est avant exp exclus plus letexp, et pour les terminaux, *tyid* et *id*
-- David et Tristan : tout ce qui est après exp inclus, tous les autres terminaux (*infixop*, *intlit*, *stringlit*)
++ Écrire les règles : tout ce qui est après exp inclus, tous les autres terminaux (*infixop*, *intlit*, *stringlit*)
 
-Penser à écrire les tests en même temps.
+**Tristan.**
+
++ Chercher en ligne un compilateur *Tiger*
++ Écrire les règles : tout ce qui est après exp inclus, tous les autres terminaux (*infixop*, *intlit*, *stringlit*)

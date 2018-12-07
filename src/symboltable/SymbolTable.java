@@ -6,6 +6,12 @@ public class SymbolTable extends ArrayList<SymbolTableField> {
     private SymbolTable parent;
     private ArrayList<SymbolTable> children;
 
+    public SymbolTable(SymbolTable parent, ArrayList<SymbolTable> children) {
+        super();
+        this.parent = parent;
+        this.children = children;
+    }
+
     public ArrayList<SymbolTable> getChildren() {
         return children;
     }

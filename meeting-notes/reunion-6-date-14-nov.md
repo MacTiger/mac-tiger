@@ -1,26 +1,25 @@
 # Réunion 6
 
-## 1. Informations
+**Date et heure.** 14 novembre 2018 à 14h30
 
-- Date et heure : 14 novembre 2018
-- Lieu : médiathèque
+**Prochaine réunion.** 21 novembre 2018 à 14h30
 
-## 2. Ordre du jour
+**Ordre du jour.**
 
-- Point sur les tâches effectuées
-- Remarques de Tristan
-- Commencer à parler de la TDS
-- Jalons pour la prochaine réunion
+1. Jalons
+2. Remarques de Tristan
+3. Table des symboles
+4. Travail à faire
 
-## 3. Point sur les tâches effectuées
+## 1. Jalons
 
 Alexis a testé toutes ses réécritures et elles sont fonctionnelles. Philippe a ajouté quelques tests ainsi que les exemples envoyés par les enseignants. Philippe a réécrit sa règle `fieldExp` et va écrire `funDec` qui n'avait pas été faite.
 
 David a débloqué Tristan et a fini l'AST du `letExp`, et a ajouté quelques tests pour voir si ça marchait bien.
 
-## 4. Remarques de Tristan
+## 2. Remarques de Tristan
 
-### 4.1. Retour sur le tutorat
+### 2.1. Retour sur le tutorat
 
 Ce tutorat a été utile car il a permet de mettre en lumière les problèmes qui n'étaient pas très clair. Philippe remarque que l'AST était particulièrement éclairant.
 
@@ -28,23 +27,23 @@ Mais les problèmes évoqués ont déjà été résolus. Par contre, tout ce qui
 
 Cela valide la liberté que l'on a prise d'autoriser n'importe quelle expression à gauche d'une affectation et pas seulement un identifiant, et de faire le test dans le contrôle sémantique. La structure proposée pendant le tutorat correspond à ce que nous avons fait.
 
-### 4.2. Remarque sur les crochets et les points
+### 2.2. Remarque sur les crochets et les points
 
 Dans ce que Tristan avait à faire : résolution d'un problème d'AST de David lié aux suites de points et de crochets qui n'incluaient que le dernier. Lorsque l'on faisait `a.b.c`, l'AST n'affichait que `a.c`. David avait déjà rencontré ce problème avant l'AST, mais tout a été résolu.
 
 Tristan a factorisé mercredi dernier les types et les identifiants.
 
-### 4.3. Tests
+### 2.3. Tests
 
 Tristan a mit une vingtaine de tests qui échouent, et ce volontairement.
 
-### 4.4. Coloration syntaxique
+### 2.4. Coloration syntaxique
 
 Tristan a créé un paquet Atom pour faire de la coloration syntaxique sur Tiger.
 
 On peut l'installer depuis Atom directement.
 
-### 4.5. Priorisation des tests et des boucles
+### 2.5. Priorisation des tests et des boucles
 
 Soit les tests suivants, écrits en Tiger (un par ligne) :
 
@@ -87,13 +86,13 @@ Ce test n'a aucun sens mais passe dans le deuxième cas.
 
 En somme, qu'est-ce qu'on fait ? Pour l'instant, tout ce passe comme si `if` ne renvoyait rien.
 
-### 4.6. Pour  le rapport
+### 2.5. Pour  le rapport
 
 - Priorisation du `if`
 - Priorisation de l'affectation
 - Arbres n-aires pour |, &, +, et *
 
-## 5. Table des symboles
+## 3. Table des symboles
 
 Il va falloir se lancer dessus pour la prochaine réunion. David remarque qu'il nous reste trois semaines. Il faut qu'on fasse :
 
@@ -101,7 +100,7 @@ Il va falloir se lancer dessus pour la prochaine réunion. David remarque qu'il 
 - Table des symbole
 - Finir la grammaire (déjà presque finie)
 
-## 6. Jalons pour la prochaine réunion
+## 4. Travail à faire
 
 **Alexis.**
 
@@ -131,4 +130,3 @@ Il va falloir se lancer dessus pour la prochaine réunion. David remarque qu'il 
 - Expliquer le EOF dans le rapport
 - Priorisation de l'affectation
 - Expliquer la factorisation de ID et TYID
-

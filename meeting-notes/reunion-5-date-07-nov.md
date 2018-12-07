@@ -1,9 +1,16 @@
-# Ordre du jour
+# Réunion 5
 
-1. Points sur les jalons de ce jour
+**Date et heure.** 7 novembre 2018 à 14h30
+
+**Prochaine réunion.** 14 novembre 2018 à 14h30
+
+**Ordre du jour.**
+
+1. Jalons
 2. Assignement de Tristan
+3. Travail à faire
 
-# Script
+## 1. Jalons
 
 On va commencer par le travail de chacun. Les règles de l'arbre abstraits ont été testées par Alexis, mais pas toutes.
 
@@ -23,18 +30,29 @@ David se demande à quelle point il faut avancer les tests. Tristan pense qu'il 
 
 Tristan évoque ses tests. Il en a ajouté pas mal qui testent surtout les opérations arithmétiques. Les affectations font aussi partie des opérations "arithmétiques". Suite à l'ajout des affectation, il y a plus de tests qui passent. Normalement, à son prochain commit, tous ses tests devraient passer, même s'il y a d'autres problèmes.
 
+## 2. Assignement de Tristan
+
 D'autres points étaient en suspens, notamment les affectations, TYID et ID posant problème. Les affectations sont détaillées sur gitlab dans un fichier ISSUES.md. Il explique pourquoi on avait un problème et comment il a été "résolu". Une affectation s'écrit lValue ':=' exp. Cela pose problème car quand on lit une expression, elle peut commencer par un lValue. Ce lValue, on ne sait pas s'il est en plein milieu d'une expression arithmétique ou s'il est associé à une affectation. Quand on analyse l'expression globale, on ne sait pas s'il va s'agir d'une affectation ou d'une multiplication, il faut lire des caractères en avance.
 
 Ce que l'on va faire, c'est considérer qu'il est valide d'écrire (a*b):=c d'un point de vu *syntaxique*, mais que sa *sémantique* est fausse.
 
-# Travail à faire
+## 3. Travail à faire
 
-Pour tout le monde : ajouter des tests plus complexes.
+**Alexis.**
 
-## Alexis
+- Ajouter des tests plus complexes
+- Tester les réécritures
 
-Tester les réécritures.
+**Philippe.**
 
-## Philippe
+- Ajouter des tests plus complexes
+- Effectuer au moins deux tests par règles
 
-Effectuer deux tests par règle.
+**David.**
+
+- Ajouter des tests plus complexes
+
+**Tristan.**
+
+- Ajouter des tests plus complexes
+

@@ -1,25 +1,21 @@
 # Réunion 1
 
-**Date et heure.** Mercredi 10 octobre 2018 à 14h30
+**Date et heure.** 10 octobre 2018 à 14h30
 
-**Prochaine réunion.** Mercredi 17 octobre 2018 à 14h00 
+**Prochaine réunion.** 17 octobre 2018 à 14h00 
 
 **Ordre du jour.**
 
-- Prise de connaissance du sujet
-- Déterminer le chef de groupe
-- Jalons pour la prochaine réunion
-- Création du dépôt GIT
-- Gestion du temps
-- Date de la prochaine réunion
+1. Prise de connaissance du sujet
+2. Chef de projet
+3. Gestion du temps
+4. Travail à faire
 
-## Prise de connaissance du sujet
+## 1. Prise de connaissance du sujet
 
 David résume le sujet. Il s'agit de programmer un compilateur *Tiger*. Il faut gérer les erreurs de compilation + numéros de lignes (tout type d'erreurs). Seules les erreurs sémantiques n'arrêtent pas la compilation.
 
 Tout au long du projet, on devra ajouter des tests et les garder.
-
----
 
 **Pour le 12 décembre.**
 
@@ -29,13 +25,9 @@ Tout au long du projet, on devra ajouter des tests et les garder.
 
 Il faut qu'on ait des jeux d'essais pour montrer le fonctionnement de la grammaire, de l'analyse syntaxique et de la TDS.
 
----
-
 **Pour le 23 avril**
 
 Génération du code assembleur de manière incrémentale.
-
----
 
 Il y aura aussi un GANTT qui évoluera au cours du temps et qui devra être présent à la fois dans le rapport partiel, et dans le rapport final.
 
@@ -45,17 +37,9 @@ David demande quand sera le TP sur ANTLR. Il aura lieu le vendredi 12 octobre de
 
 Alexis et Philippe irons à l'initiation de ANTLR le jeudi 11 octobre à 12 heures.
 
-## Chef de projet
+## 2. Chef de projet
 
 Philippe GRAFF sera le chef de projet. David sera animateur de réunion, et Alexis secrétaire.
-
-## Travail à faire
-
-Pour tout le monde.
-
-- Lire le texte de cours envoyé mar Mme Colin
-- Lecture complète du sujet et des documentations
-- Installer ANTLR
 
 Alexis et Philippe examineront la platforme Slack pour voir s'il est possible de s'en servir comme support pour le projet.
 
@@ -63,6 +47,37 @@ David réalisera le GANTT et Tristan le WBS.
 
 Tristan remarque que la grammaire semble déjà donnée. David propose de faire un GANTT avec seulement 3 étapes. David a fait un drive.
 
-## Gestion du temps
+## 3. Gestion du temps
 
 Une fois le WBS réalisé, on notera dans un fichier (latex ?) le nombre d'heures réalisées pour chaque tâches.
+
+## 4. Travail à faire
+
+**Alexis.**
+
++ Lire le texte de cours envoyé mar Mme Colin
++ Lecture complète du sujet et des documentations
++ Installer ANTLR
++ Examiner la plateforme Slack pour voir si on peut s'en servir comme support de gestion de projet
+
+**Philippe**.
+
++ Lire le texte de cours envoyé mar Mme Colin
++ Lecture complète du sujet et des documentations
++ Installer ANTLR
++ Examiner la plateforme Slack pour voir si on peut s'en servir comme support de gestion de projet
+
+**David.**
+
++ Lire le texte de cours envoyé mar Mme Colin
++ Lecture complète du sujet et des documentations
++ Installer ANTLR
++ Réaliser le Gantt
+
+**Tristan.**
+
++ Lire le texte de cours envoyé mar Mme Colin
++ Lecture complète du sujet et des documentations
++ Installer ANTLR
++ Réaliser un WBS
+

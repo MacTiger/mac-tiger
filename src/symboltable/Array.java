@@ -11,11 +11,22 @@ public class Array extends Type {
         this.type = type;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+        this.setSize(type.getSize() * this.length);
+    }
+
     public int getLength() {
         return length;
     }
 
     public void setLength(int length) {
+
         this.length = length;
+        this.setSize(type.getSize() * this.length);
     }
 }

@@ -1,16 +1,16 @@
 # Réunion 7
 
-## 1. Informations
+**Date et heure.** 21 novembre 2018 à 14h30
 
-- Date et heure : 21 novembre 2018
-- Lieu : médiathèque
+**Prochaine réunion.** 28 novembre 2018 à 14h00
 
-## 2. Ordre du jour
+**Ordre du jour.**
 
-- Vérification des jalons
-- TDS
+1. Jalons
+2. Table des symboles
+3. Travail à faire
 
-## 3. Vérification des jalons
+## 1. Jalons
 
 La partie explication de l'AST n'est pas complètement pertinente. Il faut faire une ou deux lignes pour les règles très simples, et expliquer plus en détails les règles de l'AST qui sont plus compliquées.
 
@@ -22,7 +22,7 @@ Tristan a revu ce qu'avait fait Philippe et a remarqué qu'il manquait l'AST de 
 
 Tristan n'a pas encore touché au rapport mais a lu. Il a changé les noms des sous-arbres que Philippe a utilisé.
 
-## 4. Table des symboles
+## 2. Table des symboles
 
 Tristan est allé au tutorat qui n'a pas été très long. La TDS a été évoqué. Chacun la fait à sa manière. Tout le monde produira des TDS différentes, que ce soit le nombre de tableaux, le nombre de lignes, etc. Il est possible de réaliser une TDS par bloc, *ie.* par boucle, fonction et let.
 
@@ -32,7 +32,7 @@ On pourrait créer une table des symboles *globale* qui pourrait contenir toutes
 
 David remarque qu'il nous reste trois semaines, et qu'il va falloir bosser la TDS. Tout le monde fait Anim'est sauf Tristan qui pourra miner le terrain pour la TDS. Un noeud de notre AST, ses fils sont les colonnes de la TDS.
 
-## 5. Jalons pour la prochaine réunion
+## 3. Travail à faire
 
 **Alexis.**
 

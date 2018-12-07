@@ -3,10 +3,18 @@
   <component name="ChangeListManager">
     <list default="true" id="018d49f4-2290-4b51-971e-500026e5a270" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-1-date-10-oct.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-1-date-10-oct.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-2-date-17-oct.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-2-date-17-oct.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-3-date-24-oct.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-3-date-24-oct.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-4-date-26-oct.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-5-date-07-nov.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-5-date-07-nov.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-6-date-14-nov.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-6-date-14-nov.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-7-date-21-nov.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-7-date-21-nov.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-8-date-28-nov.md" beforeDir="false" afterPath="$PROJECT_DIR$/meeting-notes/reunion-8-date-28-nov.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meeting-notes/reunion-9-date-05-nov.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/symboltable/Array.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/symboltable/Array.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/symboltable/Record.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/symboltable/Record.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/symboltable/Type.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/symboltable/Type.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/symboltable/Variable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/symboltable/Variable.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/symboltable/SymbolTable.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/symboltable/SymbolTable.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,11 +26,12 @@
     <session id="27561371">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="2" />
+          <entry key="project.closed" value="3" />
           <entry key="project.open.time.10" value="1" />
+          <entry key="project.open.time.11" value="1" />
           <entry key="project.open.time.4" value="1" />
           <entry key="project.open.time.8" value="1" />
-          <entry key="project.opened" value="3" />
+          <entry key="project.opened" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -41,12 +50,12 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="java" value="2626" />
+          <entry key="java" value="2937" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="JAVA" value="2626" />
+          <entry key="JAVA" value="2937" />
         </counts>
       </usages-collector>
     </session>
@@ -68,13 +77,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/symboltable/Array.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="10" column="25" lean-forward="true" selection-start-line="10" selection-start-column="25" selection-end-line="10" selection-end-column="25" />
+            <state relative-caret-position="285">
+              <caret line="19" column="24" lean-forward="true" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
               <folding>
-                <element signature="e#239#240#0" expanded="true" />
-                <element signature="e#268#269#0" expanded="true" />
-                <element signature="e#390#391#0" expanded="true" />
-                <element signature="e#426#427#0" expanded="true" />
+                <element signature="e#307#308#0" expanded="true" />
+                <element signature="e#334#335#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -83,8 +90,16 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/symboltable/Record.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" column="26" lean-forward="true" selection-start-line="9" selection-start-column="26" selection-end-line="9" selection-end-column="26" />
+            <state relative-caret-position="360">
+              <caret line="24" column="40" lean-forward="true" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="40" />
+              <folding>
+                <element signature="e#693#694#0" expanded="true" />
+                <element signature="e#726#727#0" expanded="true" />
+                <element signature="e#889#890#0" expanded="true" />
+                <element signature="e#928#929#0" expanded="true" />
+                <element signature="e#1003#1004#0" expanded="true" />
+                <element signature="e#1059#1060#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -93,7 +108,7 @@
         <entry file="file://$PROJECT_DIR$/src/symboltable/Function.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="345">
-              <caret line="23" column="26" lean-forward="true" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+              <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
               <folding>
                 <element signature="e#394#395#0" expanded="true" />
                 <element signature="e#427#428#0" expanded="true" />
@@ -111,11 +126,9 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/symboltable/Type.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="10" column="28" selection-start-line="10" selection-start-column="28" selection-end-line="10" selection-end-column="28" />
+            <state relative-caret-position="30">
+              <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
               <folding>
-                <element signature="e#222#223#0" expanded="true" />
-                <element signature="e#249#250#0" expanded="true" />
                 <element signature="e#380#381#0" expanded="true" />
                 <element signature="e#412#413#0" expanded="true" />
               </folding>
@@ -123,30 +136,20 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/symboltable/Variable.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="135">
-              <caret line="9" column="25" lean-forward="true" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
-              <folding>
-                <element signature="e#254#255#0" expanded="true" />
-                <element signature="e#280#281#0" expanded="true" />
-                <element signature="e#319#320#0" expanded="true" />
-                <element signature="e#338#339#0" expanded="true" />
-                <element signature="e#376#377#0" expanded="true" />
-                <element signature="e#404#405#0" expanded="true" />
-                <element signature="e#438#439#0" expanded="true" />
-                <element signature="e#472#473#0" expanded="true" />
-              </folding>
+              <caret line="9" column="25" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/symboltable/SymbolTable.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="22" column="5" lean-forward="true" selection-start-line="22" selection-start-column="5" selection-end-line="22" selection-end-column="5" />
+            <state relative-caret-position="165">
+              <caret line="11" column="33" lean-forward="true" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
               <folding>
                 <element signature="e#491#492#0" expanded="true" />
                 <element signature="e#527#528#0" expanded="true" />
@@ -189,17 +192,17 @@
         <option value="$PROJECT_DIR$/src/Test.java" />
         <option value="$PROJECT_DIR$/src/Main.java" />
         <option value="$PROJECT_DIR$/src/symboltable/STObject.java" />
-        <option value="$PROJECT_DIR$/src/symboltable/SymbolTable.java" />
         <option value="$PROJECT_DIR$/src/symboltable/SymbolTableObject.java" />
         <option value="$PROJECT_DIR$/src/symboltable/Function.java" />
         <option value="$PROJECT_DIR$/src/symboltable/Type.java" />
-        <option value="$PROJECT_DIR$/src/symboltable/Record.java" />
         <option value="$PROJECT_DIR$/src/symboltable/Variable.java" />
+        <option value="$PROJECT_DIR$/src/symboltable/SymbolTable.java" />
         <option value="$PROJECT_DIR$/src/symboltable/Array.java" />
+        <option value="$PROJECT_DIR$/src/symboltable/Record.java" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6" fullScreen="true">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="1280" />
     <option name="height" value="800" />
   </component>
@@ -211,8 +214,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -235,6 +236,8 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -283,7 +286,7 @@
     <frame x="0" y="0" width="1280" height="800" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25767368" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26171243" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -335,30 +338,55 @@
     <entry file="file://$PROJECT_DIR$/.idea/modules.xml">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/symboltable/Variable.java">
+    <entry file="file://$PROJECT_DIR$/src/symboltable/SymbolTableField.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
-          <caret line="9" column="25" lean-forward="true" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
+          <caret line="13" selection-start-line="13" selection-end-line="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/symboltable/SymbolTable.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="165">
+          <caret line="11" column="33" lean-forward="true" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
           <folding>
-            <element signature="e#254#255#0" expanded="true" />
-            <element signature="e#280#281#0" expanded="true" />
-            <element signature="e#319#320#0" expanded="true" />
-            <element signature="e#338#339#0" expanded="true" />
-            <element signature="e#376#377#0" expanded="true" />
-            <element signature="e#404#405#0" expanded="true" />
-            <element signature="e#438#439#0" expanded="true" />
-            <element signature="e#472#473#0" expanded="true" />
+            <element signature="e#491#492#0" expanded="true" />
+            <element signature="e#527#528#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/symboltable/Array.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="19" column="24" lean-forward="true" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+          <folding>
+            <element signature="e#307#308#0" expanded="true" />
+            <element signature="e#334#335#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/symboltable/Record.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="40" lean-forward="true" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="40" />
+          <folding>
+            <element signature="e#693#694#0" expanded="true" />
+            <element signature="e#726#727#0" expanded="true" />
+            <element signature="e#889#890#0" expanded="true" />
+            <element signature="e#928#929#0" expanded="true" />
+            <element signature="e#1003#1004#0" expanded="true" />
+            <element signature="e#1059#1060#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/symboltable/Type.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="28" selection-start-line="10" selection-start-column="28" selection-end-line="10" selection-end-column="28" />
+        <state relative-caret-position="30">
+          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
           <folding>
-            <element signature="e#222#223#0" expanded="true" />
-            <element signature="e#249#250#0" expanded="true" />
             <element signature="e#380#381#0" expanded="true" />
             <element signature="e#412#413#0" expanded="true" />
           </folding>
@@ -368,7 +396,7 @@
     <entry file="file://$PROJECT_DIR$/src/symboltable/Function.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="345">
-          <caret line="23" column="26" lean-forward="true" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+          <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
           <folding>
             <element signature="e#394#395#0" expanded="true" />
             <element signature="e#427#428#0" expanded="true" />
@@ -382,41 +410,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/symboltable/Array.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="25" lean-forward="true" selection-start-line="10" selection-start-column="25" selection-end-line="10" selection-end-column="25" />
-          <folding>
-            <element signature="e#239#240#0" expanded="true" />
-            <element signature="e#268#269#0" expanded="true" />
-            <element signature="e#390#391#0" expanded="true" />
-            <element signature="e#426#427#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/symboltable/Record.java">
+    <entry file="file://$PROJECT_DIR$/src/symboltable/Variable.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
-          <caret line="9" column="26" lean-forward="true" selection-start-line="9" selection-start-column="26" selection-end-line="9" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/symboltable/SymbolTableField.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="13" selection-start-line="13" selection-end-line="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/symboltable/SymbolTable.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="22" column="5" lean-forward="true" selection-start-line="22" selection-start-column="5" selection-end-line="22" selection-end-column="5" />
-          <folding>
-            <element signature="e#491#492#0" expanded="true" />
-            <element signature="e#527#528#0" expanded="true" />
-          </folding>
+          <caret line="9" column="25" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
         </state>
       </provider>
     </entry>

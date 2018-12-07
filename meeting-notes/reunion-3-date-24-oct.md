@@ -1,21 +1,20 @@
-# Réunion 2
+# Réunion 3
 
-**Date et heure.** Mercredi 24 octobre 2018 14h30
+**Date et heure.** 24 octobre 2018 à 14h30
 
-**Prochaine réunion.** 
+**Prochaine réunion.** 2 novembre 2018 à 16h00
 
 **Ordre du jour.**
 
-- Point sur les objectifs de la dernière réunion
-- Avancement de la grammaire
-- Tutorat de demain
-- Vacances
+1. Jalons
+2. Grammaire
+3. Travail à faire
 
-## Point sur les objectifs fixés
+## 1. Jalons
 
 Tristan a beaucoup réorganisé la grammaire afin que la priorisation soit faite. Tristan nous explique comment il a fait. Il a remit les terminaux à la fin. Les affectations n'ont pas été faites. Pour ce qui est des `if else`, il y a encore des ambigüités.
 
-## Avancement sur la grammaire
+## 2. Grammaire
 
 D'après David, on devrait pouvoir lancer une grammaire, malgré l'ambigüité, car ANTLR prends la première solution qu'il voit (on a toujours des warning, par contre).
 
@@ -23,10 +22,20 @@ Problèmes avec `unaryExp`. On a rendu `expression` synonyme de `infixExp`, qui 
 
 Tout le monde ira au tutorat. Il reste trois jours pour faire la grammaire. Après, il faudra commencer à faire l'AST.
 
-## Travail à faire
+## 3. Travail à faire
 
-### Groupes pour la grammaire
+**Alexis.**
 
-On garde la même organisation que la dernière fois, il faut finir les grammaires de préférence avant trois jours (ie. samedi inclus). 
++ Terminer les règles : tout ce qui est avant exp exclus plus letexp, et pour les terminaux, *tyid* et *id*
 
-L'AST doit être commencé au début des vacances, c'est-à-dire à partir de dimanche inclus.
+**Philippe**.
+
++ Terminer les règles : tout ce qui est avant exp exclus plus letexp, et pour les terminaux, *tyid* et *id*
+
+**David.**
+
++ Terminer les règles : tout ce qui est après exp inclus, tous les autres terminaux (*infixop*, *intlit*, *stringlit*)
+
+**Tristan.**
+
++ Terminer les règles : tout ce qui est après exp inclus, tous les autres terminaux (*infixop*, *intlit*, *stringlit*)

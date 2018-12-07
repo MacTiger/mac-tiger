@@ -1,15 +1,15 @@
 # Réunion 8
 
-## 1. Informations
+**Date et heure.** 28 novembre 2018 à 14 heures
 
-- Date et heure : 28 novembre 2018 à 14 heures
-- Lieu : salle de travail
+**Prochaine réunion.** 5 décembre 2018 à 15 heures
 
-## 2. Ordre du jour
+**Ordre du jour.**
 
-- Vérification des jalons
+1. Jalons
+2. Travail à faire
 
-## 3. Vérification des jalons
+## 1. Jalons
 
 David a commencé sa part du rapport, surtout au niveau de la priorisation des règles.
 
@@ -23,7 +23,7 @@ Tristan propose de mettre les TDS dans un arbres.
 
 On utilisera Intellij.
 
-## 4. Jalons pour la prochaine réunion
+## 2. Travail à faire
 
 **Alexis.**
 
