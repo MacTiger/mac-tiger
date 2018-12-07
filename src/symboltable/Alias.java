@@ -1,11 +1,11 @@
 package symboltable;
 
-public class Array extends Type {
+public class Alias extends Type {
 
     private Type type;
 
-    public Array(String identifier, Type type, int length) {
-        super(identifier, 4);
+    public Alias(String identifier, int size, Type type) {
+        super(identifier, size);
         this.type = type;
     }
 
