@@ -1,11 +1,12 @@
 package symboltable;
+import misc.Constants;
 
 public class Array extends Type {
 
     private Type type;
 
-    public Array(String identifier, Type type, int length) {
-        super(identifier, 4);
+    public Array(String identifier, Type type) {
+        super(identifier, Constants.pointerSize);
         this.type = type;
     }
 
