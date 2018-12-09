@@ -3,7 +3,7 @@ let
 	var MAX := 20	
 
 	type intArray = array of int
-	var arr := intArray[MAX]
+	var arr := intArray[MAX] of 0
 	
 
 	function indice(n : int,k : int) : int =
