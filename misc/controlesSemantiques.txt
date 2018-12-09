@@ -5,6 +5,7 @@ Contrôles sémantiques :
 	- Dépassement d'Array (géré dynamiquement dans le code généré).
 	- L'index d'un subscript (Array) doit être entier à sa définition ET pour tout accès à ses valeurs.
 	- Variable utilisée dans sa portée de déclaration.
+	- Le programme ne contient pas de double déclaration ; cela signifie qu'un même nom de variable n'est pas utilisé pour deux déclarations différentes. (sous entendu au niveau d'un même bloc)
 	- Une négation ne porte que sur un INT, son résultat est un INT.
 	- On entre le bon nombre d'arguments à une fonction
 	- Les types des arguments passés en paramètre correspondent

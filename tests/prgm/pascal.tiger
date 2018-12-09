@@ -36,7 +36,7 @@ let
 				print(pascal3(n,k));
 				print(" ")
 			);
-			print(\n)
+			print("\n")
 		)
 	)
 in
