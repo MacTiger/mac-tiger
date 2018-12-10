@@ -18,7 +18,7 @@ Ce dépôt contient :
 - la [grammaire](src/Tiger.g) *ANTLR3* du langage *Tiger*
 - le début d'un [analyseur sémantique](src/Main.java) écrit en *Java*
 - la [suite de tests](tests) de la grammaire et de la génération de l'arbre syntaxique abstrait
-- le [manuel d'utilisation](#manuel-d-utilisation)
+- le [manuel d'utilisation](#manuel-dutilisation)
 - les [notes](meeting-notes) prises lors des réunions
 - les [notes](tutorats-notes) prises lors des séances de tutorat
 - le [rapport](reports/report-1.pdf) de la première partie du projet
