@@ -91,10 +91,12 @@ let
 					in
 						quot := integer / 10;
 						rem := integer - quot * 10;
-						str := concat (chr (48 + rem), str)
+						integer := quot;
+						str := concat (chr (rem + 48), str)
 					end;
-				if neg then
-					str := concat ("-", str);
+				if neg then (
+					str := concat ("-", str)
+				);
 				str
 			end
 	var tree : BST := nil
