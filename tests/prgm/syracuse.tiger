@@ -1,21 +1,19 @@
 let
-  var resultat : int := 0
-
-  function syracuse ( u : int , n : int) : int =(
-    /* Renvoit le n-ieme terme de la suite de syracuse de premier terme u*/
-      for i := 1 to n do
-        if (u / 2) * 2 = u then 
-        /* Si u est pair*/
-          (u := u / 2)
-        else
-          (u := u * 3 + 1)
-        ;
-      u
-      )
-
+	var resultat : int := 0
+	function syracuse (u : int, n : int) : int = (
+		/* Renvoit le n-ieme terme de la suite de syracuse de premier terme u */
+		for i := 1 to n do
+			if (u / 2) * 2 = u then (
+				/* Si u est pair */
+				u := u / 2
+			) else (
+				u := u * 3 + 1
+			);
+		u
+	)
 in
-  resultat := syracuse(1);
-  printi(resultat);
-  resultat := syracuse(10);
-  printi(resultat)
+	resultat := syracuse (1);
+	printi (resultat);
+	resultat := syracuse (10);
+	printi (resultat)
 end

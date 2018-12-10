@@ -1,1 +1,6 @@
-if 1 then if x=5 then if a=42 then print("test") else print("greedy")
+if 1 then
+	if x = 5 then
+		if a = 42 then
+			print ("test")
+		else
+			print ("greedy")

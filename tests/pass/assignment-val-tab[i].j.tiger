@@ -1,11 +1,9 @@
 let
-	type data = { entOne : int , entTwo : int }
+	type data = {entOne: int, entTwo : int}
 	type dataArray = array of data
-	
-	var tab := dataArray[42] of nil
+	var tab := dataArray [42] of nil
 	var val : int := 0
 in
-
-	val:=tab[5].entOne;
-	val:=tab[5].entTwo
+	val := tab [5].entOne;
+	val := tab [5].entTwo
 end

@@ -17,7 +17,7 @@ let
 		);
 		print ("\n")
 	)
-	function try (c:int) =
+	function try (c : int) =
 		if c = N then
 			printboard ()
 		else

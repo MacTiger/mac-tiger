@@ -1,4 +1,4 @@
-let 
+let
 	var x := 1
 	var y : int := 2
 	var z := 3
