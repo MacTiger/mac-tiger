@@ -8,9 +8,10 @@ import java.io.InputStream;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		String path = "tests/prgm/manual.tiger";
-		InputStream file = new FileInputStream(new File(path));
-		ANTLRInputStream input = new ANTLRInputStream(file);
+		if (args.length >= 1 && !args[0].equals("")){
+			System.setIn(new FileInputStream(args[0]));
+		}
+		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		TigerParser parser = new TigerParser(tokens);

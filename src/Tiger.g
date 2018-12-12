@@ -27,7 +27,7 @@ program
 exp
 :   orExp
     (   ':='^
-        exp
+        orExp
     )?
 ;
 

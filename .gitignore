@@ -1,8 +1,10 @@
 .DS_Store
+*.iml
 /.classpath
 /.idea
 /.project
 /bin
+/out
 /src/output
 /src/Tiger.tokens
 /src/TigerLexer.java
