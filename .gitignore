@@ -3,6 +3,7 @@
 /.classpath
 /.idea
 /.project
+/antlr/output
 /bin
 /out
 /src/output

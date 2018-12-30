@@ -20,6 +20,10 @@ public class SymbolTable extends ArrayList<SymbolTableField> {
         this.children = children;
     }
 
+    public void addChild(SymbolTable child){
+        children.add(child);
+    }
+
     public SymbolTable getParent() {
         return parent;
     }
