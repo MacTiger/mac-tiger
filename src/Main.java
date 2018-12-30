@@ -20,14 +20,17 @@ public class Main {
 		TigerParser parser = new TigerParser(tokens);
 		TigerParser.program_return result = parser.program();
 		Tree tree = (Tree) result.getTree();
-		buildSymbolTable(tree);
+
+		SymbolTable rootSymbolTable = new SymbolTable(null, new ArrayList<>());
+
+		buildSymbolTable(tree, rootSymbolTable);
 	}
 
 	public static void buildSymbolTable2(Tree tree) {
 		// Cette fonction doit créer la table de symboles depuis l'arbre tree
 		// Pour l'instant, elle ne fait qu'un parcours en profondeur de l'arbre et l'affiche en post-fixé
 		for (int i = 0; i < tree.getChildCount(); i++) {
-			buildSymbolTable(tree.getChild(i));
+			buildSymbolTable2(tree.getChild(i));
 		}
 		// Pour l'instant, on ne fait qu'un print
 		System.out.println((String) tree.getText());
@@ -59,7 +62,7 @@ public class Main {
 				buildSymbolTable(tree.getChild(1), symbolTableArgs);	// Remplissage de la table des symboles contenant les arguments de la fonction
 
 				Function function = new Function(tree.getChild(0).toString(),returnType, symbolTableArgs);
-				symbolTable.add(function);	// Ajout de la fonction dans la table des symboles
+				symbolTable.addField(function);	// Ajout de la fonction dans la table des symboles
 
 				newSymbolTable = createSymbolTable(symbolTable);	// Création de la table des symboles de la fonction
 				buildSymbolTable(tree.getChild(indexOfBody),newSymbolTable);	// Remplissage de la table des symboles de la fonction
@@ -67,30 +70,41 @@ public class Main {
 
 			case "for" :
 				newSymbolTable = createSymbolTable(symbolTable);
-				newSymbolTable.add(new Variable(tree.getChild(0).toString(),new Type("int",64),-1));	// Ajout de la variable de boucle for dans sa table de symbole	//TODO : définir un type "int" de base //TODO : Calcul du shift
+				newSymbolTable.addField(new Variable(tree.getChild(0).toString(),new Type("int",64),-1));	// Ajout de la variable de boucle for dans sa table de symbole	//TODO : définir un type "int" de base //TODO : Calcul du shift
 				buildSymbolTable(tree.getChild(3),newSymbolTable);	// Remplissage de la table des symboles de la boucle for
 				break;
 
 			// Création de SymbolTableField :
 			case "var" :
-				Type type = findType(tree.getChild(1).toString());
-				symbolTable.add(new Variable(tree.getChild(0).toString(), type,-1));	//TODO : Calcul du shift
+				addVarToSymbolTable(tree.getChild(0).toString(),tree.getChild(1), symbolTable);
 				break;
+
 			case "type" :
 				int sizeType = 0;
-				Type newType = new Type(tree.getChild(0).toString(), sizeType);	//TODO : Calcul de sizeType
-				symbolTable.add(newType);
+				Type newType = new Type(tree.getChild(0).toString(), sizeType);	//TODO : Calcul de sizeType grâce à la somme des sizeType trouvés dans le RECTYPE (ou par alias de type)
+				symbolTable.addField(newType);
+				break;
+
+
+			// Autres cas :
+
+			case "CALLTYPE" :
+				for (int i = 0; i < tree.getChildCount()/2; i++) {
+					addVarToSymbolTable(tree.getChild(2*i).toString(),tree.getChild(2*i + 1),symbolTable);
+				}
+				break;
+
+			// Cas de parcours en profondeur (le "break;" du premier cas est omis volontairement car il faut parcourir de la même manière les deux arbres)
+			case "DEC" :
+			case "SEQ" :
+				for (int i = 0; i < tree.getChildCount(); i++) {	// Appel récursif sur tous les fils du noeud "DEC" ou "SEQ"
+					buildSymbolTable(tree.getChild(i), symbolTable);
+				}
 				break;
 
 			default:
 				break;
 		}
-
-		for (int i = 0; i < tree.getChildCount(); i++) {	//TODO : CALLTYPE, DEC
-			buildSymbolTable(tree.getChild(i), symbolTable);
-		}
-		// Pour l'instant, on ne fait qu'un print
-		System.out.println((String) tree.getText());
 	}
 
 	public static SymbolTable createSymbolTable(SymbolTable symbolTable){
@@ -105,6 +119,13 @@ public class Main {
 		// Retourne le type primitif correspondant au typeName passé en argument
 		//TODO : Stocker dans une collection les types primitifs et leur "size" pour renvoyer le bon
 		return new Type(typeName, 64);
+	}
+
+	public static void addVarToSymbolTable(String varName, Tree typeTree, SymbolTable symbolTable){
+		// Ajoute dans symbolTable la variable créée à partir de son identifiant varName, son type de nom typeName
+		int shift = 0;	// TODO : calculer shift à l'aide d'un paramètre de déplacement de symbolTable
+		Variable variable = new Variable(varName, findType(typeTree.toString()),shift);	// Gérer le cas où le type est un Reccord
+		symbolTable.addField(variable);
 	}
 
 

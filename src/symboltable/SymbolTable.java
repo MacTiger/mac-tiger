@@ -1,15 +1,17 @@
 package symboltable;
 import java.util.ArrayList;
 
-public class SymbolTable extends ArrayList<SymbolTableField> {
+public class SymbolTable{
 
     private SymbolTable parent;
     private ArrayList<SymbolTable> children;
+    private ArrayList<SymbolTableField> fields;
 
     public SymbolTable(SymbolTable parent, ArrayList<SymbolTable> children) {
         super();
         this.parent = parent;
         this.children = children;
+        this.fields = new ArrayList<>();
     }
 
     public ArrayList<SymbolTable> getChildren() {
@@ -22,6 +24,14 @@ public class SymbolTable extends ArrayList<SymbolTableField> {
 
     public void addChild(SymbolTable child){
         children.add(child);
+    }
+
+    public void addField(SymbolTableField field){
+        fields.add(field);
+    }
+
+    public ArrayList<SymbolTableField> getFields(){
+        return fields;
     }
 
     public SymbolTable getParent() {

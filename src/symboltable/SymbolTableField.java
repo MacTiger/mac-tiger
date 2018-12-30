@@ -2,9 +2,9 @@ package symboltable;
 
 public abstract class SymbolTableField {
 
-    private String identifier;
+    protected String identifier;
 
-    public SymbolTableField(String indentifier) {
+    public SymbolTableField(String identifier) {
         this.identifier = identifier;
     }
 
