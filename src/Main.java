@@ -58,19 +58,20 @@ public class Main {
 				}
 
 
-				SymbolTable symbolTableArgs = new SymbolTable(symbolTable, null); // Création de la table des symboles contenant les arguments de la fonction
-				buildSymbolTable(tree.getChild(1), symbolTableArgs);	// Remplissage de la table des symboles contenant les arguments de la fonction
+				newSymbolTable = createSymbolTable(symbolTable); // Création de la table des symboles de la fonction
+				buildSymbolTable(tree.getChild(1), newSymbolTable);	// Remplissage de la table des symboles contenant les arguments de la fonction
 
-				Function function = new Function(tree.getChild(0).toString(),returnType, symbolTableArgs);
+				Function function = new Function(tree.getChild(0).toString(),returnType, newSymbolTable);
 				symbolTable.addField(function);	// Ajout de la fonction dans la table des symboles
 
-				newSymbolTable = createSymbolTable(symbolTable);	// Création de la table des symboles de la fonction
-				buildSymbolTable(tree.getChild(indexOfBody),newSymbolTable);	// Remplissage de la table des symboles de la fonction
+				buildSymbolTable(tree.getChild(indexOfBody),newSymbolTable);	// Remplissage de la table des symboles de la fonction avec le corps de la fonction
 				break;
 
 			case "for" :
 				newSymbolTable = createSymbolTable(symbolTable);
 				newSymbolTable.addField(new Variable(tree.getChild(0).toString(),new Type("int",64),-1));	// Ajout de la variable de boucle for dans sa table de symbole	//TODO : définir un type "int" de base //TODO : Calcul du shift
+				buildSymbolTable(tree.getChild(1),symbolTable);	// Rempli la table des symboles pour la borne inférieure du for
+				buildSymbolTable(tree.getChild(2),symbolTable);	// Rempli la table des symboles pour la borne supérieur du for
 				buildSymbolTable(tree.getChild(3),newSymbolTable);	// Remplissage de la table des symboles de la boucle for
 				break;
 
