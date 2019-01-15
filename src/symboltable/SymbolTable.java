@@ -7,38 +7,22 @@ public class SymbolTable{
     private ArrayList<SymbolTable> children;
     private ArrayList<SymbolTableField> fields;
 
-    public SymbolTable(SymbolTable parent, ArrayList<SymbolTable> children) {
-        super();
+    public SymbolTable(SymbolTable parent) {
         this.parent = parent;
-        this.children = children;
-        this.fields = new ArrayList<>();
-    }
-
-    public ArrayList<SymbolTable> getChildren() {
-        return children;
-    }
-
-    public void setChildren(ArrayList<SymbolTable> children) {
-        this.children = children;
-    }
-
-    public void addChild(SymbolTable child){
-        children.add(child);
-    }
-
-    public void addField(SymbolTableField field){
-        fields.add(field);
-    }
-
-    public ArrayList<SymbolTableField> getFields(){
-        return fields;
+        this.children = new ArrayList<SymbolTable>();
+        this.fields = new ArrayList<SymbolTableField>();
     }
 
     public SymbolTable getParent() {
         return parent;
     }
 
-    public void setParent(SymbolTable parent) {
-        this.parent = parent;
+    public ArrayList<SymbolTable> getChildren() {
+        return children;
     }
+
+    public ArrayList<SymbolTableField> getFields() {
+        return fields;
+    }
+
 }

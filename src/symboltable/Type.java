@@ -1,23 +1,11 @@
 package symboltable;
 
-public class Type extends SymbolTableField {
-    private int size;
+abstract public class Type extends SymbolTableField {
 
     public Type(String identifier) {
         super(identifier);
-        this.size = 1;
     }
 
-    public Type(String identifier, int size) {
-        super(identifier);
-        this.size = size;
-    }
+    abstract public int getSize();
 
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
 }

@@ -21,7 +21,7 @@ public class Main {
 		TigerParser.program_return result = parser.program();
 		Tree tree = (Tree) result.getTree();
 
-		SymbolTable rootSymbolTable = new SymbolTable(null, new ArrayList<>());
+		SymbolTable rootSymbolTable = new SymbolTable(null);
 
 		buildSymbolTable(tree, rootSymbolTable);
 	}
@@ -50,26 +50,24 @@ public class Main {
 				break;
 
 			case "function" :
-				Type returnType = null;
-				int indexOfBody = 2;	// Numéro du child comprenant le corps de la fonction
-				if (tree.getChildCount() == 4){	// S'il y a un type de retour renseigné
-					returnType = new Type(tree.getChild(2).toString());
-					indexOfBody = 3;
-				}
-
+				Type returnType = tree.getChildCount() > 3 ? new Primitive(tree.getChild(3).toString(), 0) : null;
+				// TODO: distinguer les différents types de types
 
 				newSymbolTable = createSymbolTable(symbolTable); // Création de la table des symboles de la fonction
 				buildSymbolTable(tree.getChild(1), newSymbolTable);	// Remplissage de la table des symboles contenant les arguments de la fonction
 
-				Function function = new Function(tree.getChild(0).toString(),returnType, newSymbolTable);
-				symbolTable.addField(function);	// Ajout de la fonction dans la table des symboles
+				Function function = new Function(tree.getChild(0).toString());
+				function.setType(returnType);
+				symbolTable.getChildren().add(function);	// Ajout de la fonction dans la table des symboles
 
-				buildSymbolTable(tree.getChild(indexOfBody),newSymbolTable);	// Remplissage de la table des symboles de la fonction avec le corps de la fonction
+				buildSymbolTable(tree.getChild(2),newSymbolTable);	// Remplissage de la table des symboles de la fonction avec le corps de la fonction
 				break;
 
 			case "for" :
 				newSymbolTable = createSymbolTable(symbolTable);
-				newSymbolTable.addField(new Variable(tree.getChild(0).toString(),new Type("int",64),-1));	// Ajout de la variable de boucle for dans sa table de symbole	//TODO : définir un type "int" de base //TODO : Calcul du shift
+				Variable index = new Variable(tree.getChild(0).toString());
+				index.setType(new Primitive("int",64)));
+				newSymbolTable.getFields().add(index);	// Ajout de la variable de boucle for dans sa table de symbole	//TODO : définir un type "int" de base //TODO : Calcul du shift
 				buildSymbolTable(tree.getChild(1),symbolTable);	// Rempli la table des symboles pour la borne inférieure du for
 				buildSymbolTable(tree.getChild(2),symbolTable);	// Rempli la table des symboles pour la borne supérieur du for
 				buildSymbolTable(tree.getChild(3),newSymbolTable);	// Remplissage de la table des symboles de la boucle for
@@ -110,8 +108,8 @@ public class Main {
 
 	public static SymbolTable createSymbolTable(SymbolTable symbolTable){
 		// Création et ajout d'une nouvelle table de symboles
-		SymbolTable newSymbolTable = new SymbolTable(symbolTable,new ArrayList<SymbolTable>());
-		symbolTable.addChild(newSymbolTable);	// Informe le parent qu'il a une table de symboles de plus en fils
+		SymbolTable newSymbolTable = new SymbolTable(symbolTable);
+		symbolTable.getChildren().add(newSymbolTable);	// Informe le parent qu'il a une table de symboles de plus en fils
 
 		return newSymbolTable;
 	}
@@ -125,8 +123,10 @@ public class Main {
 	public static void addVarToSymbolTable(String varName, Tree typeTree, SymbolTable symbolTable){
 		// Ajoute dans symbolTable la variable créée à partir de son identifiant varName, son type de nom typeName
 		int shift = 0;	// TODO : calculer shift à l'aide d'un paramètre de déplacement de symbolTable
-		Variable variable = new Variable(varName, findType(typeTree.toString()),shift);	// Gérer le cas où le type est un Reccord
-		symbolTable.addField(variable);
+		Variable variable = new Variable(varName);	// Gérer le cas où le type est un Reccord
+		variable.setType(findType(typeTree.toString()));
+		variable.setShift(shift);
+		symbolTable.getChildren().add(variable);
 	}
 
 

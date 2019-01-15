@@ -4,17 +4,21 @@ public class Alias extends Type {
 
     private Type type;
 
-    public Alias(String identifier, Type type) {
+    public Alias(String identifier) {
         super(identifier);
-        this.type = type;
-        this.setSize(type.getSize());
+        this.type = null;
     }
 
-    public Type getType() {
-        return type;
+    public int getSize() {
+        return this.type != null ? this.type.getSize() : 0;
     }
 
     public void setType(Type type) {
         this.type = type;
     }
+
+    public Type getType() {
+        return this.type;
+    }
+
 }

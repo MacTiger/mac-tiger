@@ -2,17 +2,14 @@ package symboltable;
 
 public abstract class SymbolTableField {
 
-    protected String identifier;
+    private String identifier;
 
     public SymbolTableField(String identifier) {
         this.identifier = identifier;
     }
 
     public String getIdentifier() {
-        return identifier;
+        return this.identifier;
     }
 
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
 }

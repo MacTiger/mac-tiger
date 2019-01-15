@@ -3,28 +3,25 @@ import java.util.ArrayList;
 
 public class Function extends SymbolTableField {
 
-    private Type returnType;
+    private Type type;
     private SymbolTable symbolTable;
 
-    public Function(String identifier, Type returnType, SymbolTable symbolTable) {
+    public Function(String identifier, SymbolTable parent) {
         super(identifier);
-        this.returnType = returnType;
-        this.symbolTable = symbolTable;
+        this.type = null;
+        this.symbolTable = new SymbolTable(parent);
     }
 
-    public Type getReturnType() {
-        return returnType;
+    public void setType(Type type) {
+        this.type = type;
     }
 
-    public void setReturnType(Type returnType) {
-        this.returnType = returnType;
+    public Type getType() {
+        return this.type;
     }
 
     public SymbolTable getSymbolTable() {
         return symbolTable;
     }
 
-    public void setSymbolTable(SymbolTable symbolTable) {
-        this.symbolTable = symbolTable;
-    }
 }
