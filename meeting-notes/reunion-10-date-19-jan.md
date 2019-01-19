@@ -1,0 +1,90 @@
+# Réunion 10
+
+**Date et heure.** 19 janvier 2019 à 10 heures
+
+**Prochaine réunion.** 26 janvier 2019 à 10 heures
+
+**Ordre du jour.**
+
+1. Discussion sur la TDS
+2. Responsabilité des contrôles sémantiques
+3. Gantt pour la deuxième partie du projet
+4. Travail à faire
+
+## 1. Discussion sur la TDS
+
+### 1.1. Travail de David et problèmes rencontrés
+
+David évoque son travail sur la TDS. Il a rencontré quelques problèmes, en particulier :
+
+1. Au moment où l'on fait le contrôle sémantique, on a perdu les numéros des lignes depuis longtemps. David propose, suite aux conseils du tutorats, de ne pas le faire. Tristan propose d'ajouter une règle dans la grammaire qui compte les sauts de lignes. David remarque qu'il existe une fonctionnalité Antlr permettant de le faire.
+2. À un moment, on doit associer aux variables l'endroit où elles sont déclarées, c'est-à-dire le nombre de blocs à remonter à chaque utilisation pour retrouver sa déclaration. Ce nombre doit, d'après Tristan, est écrit en dur dans notre code assembleur. Tristan pense aussi que ce problème ne nous concernera pas avant la génération de code.
+3. La déclaration de types et des fonctions (mais pas les variables) peut être récursive. En effet, on a le droit de définir des types et fonctions récursives, à la première du bloc `let`, il se peut que des types se mentionnent mutuellements. On doit faire un algorithme de remplissage de la table des symboles qui permet de se référer à des types et des fonctions qui se trouvent plus loin dans le bloc en veillant à ce que les définitions soit cohérentes.
+
+Exemple pour le problème 3.
+
+```tiger
+type a = b
+type b = a
+```
+
+4. La classe `Type` ne devrait pas être instanciée. Elle doit être `abstract`. David avait utilisé *new type* dans le remplissage. David demande à Tristan s'il est possible de régler ce problème d'ici à la semaine prochaine. Tristan dit que cela est un problème simple à résoudre, et que ce problème est urgent. 
+
+5. Problème de portées des variables. Il y a trois genres d'espaces de noms dans Tiger : 
+
+   1. Types
+   2. Fonctions et variables
+   3. Attributs des dictionnaires
+
+   Les portées des variables dans ces différents espaces sont différents. On ne les a pas gérer (et c'est un contrôle sémantique). Tristan a créé une nouvelle classe qui gère les espaces de noms.
+
+### 1.2. Solutions
+
+Tristan a ajouté un type qui permet de représenter `int` et `string` (ces deux là sont les seuls à être primitifs).
+
+Tristan propose une solution élégante pour potentiellement éviter de calculer les shifts. Si on trouve une erreur sémantique, on arrête de calculer tous les shifts, car on n'a plus besoin de générer l'assembleur.
+
+David remarque, suite au tutorat, que Tiger possède des fonctions et types de bases. Ces fonctions et types ont un code qui doivent apparaître dans une "table des symboles d'ordre 0". Cela mène nécessairement vers la question de savoir si on élimine de ces fonctions et types lorsqu'ils ne sont pas utilisés dans le programme écrit par l'utilisateur.
+
+## 2. Responsabilité des contrôles sémantiques
+
+David propose de passer la main à Philippe et Alexis sur les contrôles sémantiques. Des contrôles de sémantiques seront faits pendant la création de la TDS.
+
+Deux types de contrôles à faire :
+
+- Non exécutables : on parcours le code ligne par ligne, lance le contrôle sémantique exécutable quand on rencontre $1+1$ par example. Il ne faut jamais évaluer les expressions de types $1+1$ pendant les contrôles sémantiques, mais seulement vérifier que les types et opérateurs utilisés ont du sens.
+- Exécutables
+
+Se référer au notes du tutorat 6 pour plus d'informations.
+
+Au tutorat, il a été fait mention d'une fonction `search(TDS, 'a')` permettant de renvoyer une instance de classe `Variable`, de `Type` ou de `Fonction`.
+
+Il ne faut pas hésiter à en dire beaucoup dans les messages d'erreurs. Ne pas chercher à savoir ce qu'à voulu dire l'utilisateur. Par exemple, si on déclare mal une variable, une erreur sémantique sera levé à chaque utilisation de cette variable.
+
+## 3. Gantt pour la deuxième partie du projet
+
+David propose que l'on se laisse jusqu'à samedi prochain pour finir l'implémentation de la TDS. À partir de là, deux semaines (jusqu'à 9 février exclu) pour finir les contrôles sémantiques. À partir de ce jour, on débute la génération de code.
+
+Par la suite, on avisera. On vérifiera que tous les tests sémantiques fonctionnent correctement et on réfléchira pour la génération de code.
+
+## 4. Travail à faire
+
+**Alexis.**
+
+- Écrire des codes `Tiger` qui doivent rater les contrôles sémantiques
+- Poursuivre la liste des contrôles sémantiques
+- Réfléchir à leur implémentation à partir du diagramme de classe actuel
+
+**Philippe**.
+
+- Écrire des codes `Tiger` qui doivent rater les contrôles sémantiques
+- Poursuivre la liste des contrôles sémantiques
+- Réfléchir à leur implémentation à partir du diagramme de classe actuel
+
+**David.**
+
+- Terminer la TDS
+
+**Tristan.**
+
+- Terminer la TDS
