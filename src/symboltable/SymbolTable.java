@@ -23,6 +23,15 @@ public class SymbolTable {
 		switch (tree.toString()) {
 			case "for": {
 				SymbolTable table = new SymbolTable(this);
+				Variable iterator = new Variable(0);
+				iterator.setType(null);	// TODO : remplacer "null" par le type primitif "int" déclaré dans la TDS d'ordre 0, on le cherche avec un findType appliqué sur la TDS d'ordre 0
+				table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
+
+				this.fillWith(tree.getChild(1));	// Rempli la table des symboles pour la borne inférieure du for
+				this.fillWith(tree.getChild(2));	// Rempli la table des symboles pour la borne supérieure du for
+
+				table.fillWith(tree.getChild(3));	// Remplissage de la table des symboles de la boucle for
+
 				break;
 			}
 			case "let": {
