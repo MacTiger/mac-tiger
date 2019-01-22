@@ -1,30 +1,25 @@
 package symboltable;
-import java.util.ArrayList;
 
-public class Function extends SymbolTableField {
+public class Function extends Symbol {
 
-    private Type returnType;
-    private SymbolTable symbolTable;
+	private Type type;
+	private Namespace namespace;
 
-    public Function(String identifier, Type returnType, SymbolTable symbolTable) {
-        super(identifier);
-        this.returnType = returnType;
-        this.symbolTable = symbolTable;
-    }
+	public Function() {
+		this.type = null;
+		this.namespace = new Namespace();
+	}
 
-    public Type getReturnType() {
-        return returnType;
-    }
+	public void setType(Type type) {
+		this.type = type;
+	}
 
-    public void setReturnType(Type returnType) {
-        this.returnType = returnType;
-    }
+	public Type getType() {
+		return this.type;
+	}
 
-    public SymbolTable getSymbolTable() {
-        return symbolTable;
-    }
+	public Namespace getNamespace() {
+		return this.namespace;
+	}
 
-    public void setSymbolTable(SymbolTable symbolTable) {
-        this.symbolTable = symbolTable;
-    }
 }
