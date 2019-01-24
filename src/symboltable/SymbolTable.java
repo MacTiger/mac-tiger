@@ -22,8 +22,15 @@ public class SymbolTable {
 	public void fillWith(Tree tree) {
 		switch (tree.toString()) {
 			case "for": {
-				SymbolTable table = new SymbolTable(this);
-				this.children.add(table);
+				SymbolTable table = new SymbolTable(this);				this.children.add(table);
+				Variable iterator = new Variable(0);
+				iterator.setType(null);	// TODO : remplacer "null" par le type primitif "int" déclaré dans la TDS d'ordre 0, on le cherche avec un findType appliqué sur la TDS d'ordre 0
+				table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
+
+				this.fillWith(tree.getChild(1));	// Rempli la table des symboles pour la borne inférieure du for
+				this.fillWith(tree.getChild(2));	// Rempli la table des symboles pour la borne supérieure du for
+
+				table.fillWith(tree.getChild(3));	// Remplissage de la table des symboles de la boucle for
 				break;
 			}
 			case "let": {
@@ -48,7 +55,7 @@ public class SymbolTable {
 										type = new Record();
 										Namespace namespace = ((Record) type).getNamespace();
 										for (int k = 1, lk = value.getChildCount(); k < lk; k += 2) {
-											namespace.set(value.getChild(i).toString(), null);
+											namespace.set(value.getChild(i).toString(), new Variable(0));
 										}
 										break;
 									}
