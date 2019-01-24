@@ -1,0 +1,5 @@
+let
+      var x : String
+in
+      x := "Hello" <> "Bye"
+end
