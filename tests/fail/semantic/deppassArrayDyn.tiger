@@ -5,7 +5,7 @@ let
 
 in
 
-	for cpt := 0 to i do
+	for cpt := 0 to i do(
 		a[cpt]=42
-
+	)
 end
