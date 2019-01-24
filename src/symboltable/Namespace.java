@@ -15,11 +15,14 @@ public class Namespace {
 	}
 
 	public void set(String name, Symbol symbol) {
-		if (name == null || symbol == null || this.symbols.containsKey(name)) {
-			/* TODO */
+		if (name == null) {
+			return;
 		}
+		boolean added = this.symbols.containsKey(name);
 		this.symbols.put(name, symbol);
-		this.lastSymbol = symbol;
+		if (added) {
+			this.lastSymbol = symbol;
+		}
 	}
 
 	public Symbol get(String name) {
