@@ -1,19 +1,20 @@
-Contrôles sémantiques :
-	- Division par zéro (en clair).
-	- Division par zéro (géré dynamiquement dans le code généré).
-	- Dépassement d'Array (en clair).
-	- Dépassement d'Array (géré dynamiquement dans le code généré).
-	- L'index d'un subscript (Array) doit être entier à sa définition ET pour tout accès à ses valeurs.
-	- Variable utilisée dans sa portée de déclaration.
-	- Le programme ne contient pas de double déclaration ; cela signifie qu'un même nom de variable n'est pas utilisé pour deux déclarations différentes. (sous entendu au niveau d'un même bloc)
-	- Une négation ne porte que sur un INT, son résultat est un INT.
-	- On entre le bon nombre d'arguments à une fonction
-	- Les types des arguments passés en paramètre correspondent
-	- Si on a défini un type de retour d'une fonction, il faut que l'on retourne un objet de même type. En tenir compte pour une éventuelle affectation.
-	- Si on définit un type contenant des champs, on ne peut pas chercher à modifier un champ n'ayant pas été déclaré. Cf tests/fail/structureFiled
+# Contrôles sémantiques :
 
-
-Pour infixExp, pour les opérateurs :
-	- "+", "-", "*", "/" : les opérandes (et le résultat) sont de type INT
-	- "=","<>" : les opérandes sont de même type, le résultat est un INT
-	- ">","<","<=",">=" : les opérandes sont de même type, le résultat est un INT
+- Division par zéro (en clair)
+- Division par zéro (calculé)
+- Dépassement d'Array (en clair)
+- Dépassement d'Array (calculé)
+- L'index d'un subscript (Array) doit être entier à sa définition ET pour tout accès à ses valeurs.
+- Variable utilisée dans sa portée de déclaration.
+- Le programme ne contient pas de double déclaration
+- Une négation ne porte que sur un INT, son résultat est un INT.
+- On entre le bon nombre d'arguments à une fonction
+- Les types des arguments passés en paramètre correspondent
+- Si on a défini un type de retour d'une fonction, il faut que l'on retourne un objet de même type. En tenir compte pour une éventuelle affectation.
+- Si on définit un type contenant des champs, on ne peut pas chercher à modifier un champ n'ayant pas été déclaré. Cf tests/fail/structureFiled
+- "+", "-", "*", "/" : les opérandes (et le résultat) sont de type INT
+- "=","<>" : les opérandes sont de même type, le résultat est un INT
+- ">","<","<=",">=" : les opérandes sont de même type, le résultat est un INT
+- On ne peut pas déclarer deux types en les assignant l'un à l'autre
+- Un dictionnaire ne peut avoir deux champs portant le même nom
+- On ne peut pas déclarer une variable en lui assignant une variable déclarée après
