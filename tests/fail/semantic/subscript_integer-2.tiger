@@ -1,0 +1,6 @@
+let
+      var x : string := "Hello"
+      var y := int [2] of 0
+in
+      y[x] := 1
+end

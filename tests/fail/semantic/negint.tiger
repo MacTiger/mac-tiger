@@ -1,0 +1,17 @@
+let 
+
+	var i:int:=0
+	var tab := int[2] of 42
+	var str : string := "test"
+	var test:int :=1
+	
+in
+
+	test:=-i;
+
+	test:=-tab;
+
+	test:=-str;
+
+
+end

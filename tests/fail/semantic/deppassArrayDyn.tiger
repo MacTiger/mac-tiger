@@ -1,0 +1,11 @@
+let
+
+	var a := int[2] of 0
+	var i : int :=3
+
+in
+
+	for cpt := 0 to i do(
+		a[cpt]=42
+	)
+end
