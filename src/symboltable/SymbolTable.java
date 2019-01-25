@@ -23,7 +23,7 @@ public class SymbolTable {
 		switch (tree.toString()) {
 			case "for": {
 				SymbolTable table = new SymbolTable(this);				this.children.add(table);
-				Variable iterator = new Variable(0);
+				Variable iterator = new Variable();
 				iterator.setType(null);	// TODO : remplacer "null" par le type primitif "int" déclaré dans la TDS d'ordre 0, on le cherche avec un findType appliqué sur la TDS d'ordre 0
 				table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
 
@@ -54,8 +54,8 @@ public class SymbolTable {
 									case "RECTYPE": {
 										type = new Record();
 										Namespace namespace = ((Record) type).getNamespace();
-										for (int k = 1, lk = value.getChildCount(); k < lk; k += 2) {
-											namespace.set(value.getChild(i).toString(), new Variable(0));
+										for (int k = 0, lk = value.getChildCount(); k < lk; k += 2) {
+											namespace.set(value.getChild(k).toString(), new Variable());
 										}
 										break;
 									}
@@ -63,7 +63,7 @@ public class SymbolTable {
 							}
 							this.types.set(key.toString(), type);
 							int j = i;
-							while (i++ < li && (symbol = dec.getChild(i)).toString().equals("type")) {
+							while (++i < li && (symbol = dec.getChild(i)).toString().equals("type")) {
 								key = symbol.getChild(0);
 								value = symbol.getChild(1);
 								type = null;
@@ -76,8 +76,8 @@ public class SymbolTable {
 										case "RECTYPE": {
 											type = new Record();
 											Namespace namespace = ((Record) type).getNamespace();
-											for (int k = 1, lk = value.getChildCount(); k < lk; k += 2) {
-												namespace.set(value.getChild(i).toString(), null);
+											for (int k = 0, lk = value.getChildCount(); k < lk; k += 2) {
+												namespace.set(value.getChild(k).toString(), new Variable());
 											}
 											break;
 										}
@@ -85,7 +85,7 @@ public class SymbolTable {
 								}
 								this.types.set(key.toString(), type);
 							}
-							for (; j < i; j++) {
+							for (i--; j < i; j++) {
 								this.fillWith(dec.getChild(j));
 							}
 							break;
@@ -93,17 +93,18 @@ public class SymbolTable {
 						case "function": {
 							this.functionsAndVariables.set(key.toString(), new Function());
 							int j = i;
-							while (i++ < li && (symbol = dec.getChild(i)).toString().equals("function")) {
-								this.functionsAndVariables.set(symbol.getChild(0).toString(), new Function());
+							while (++i < li && (symbol = dec.getChild(i)).toString().equals("function")) {
+								key = symbol.getChild(0);
+								this.functionsAndVariables.set(key.toString(), new Function());
 							}
-							for (; j < i; j++) {
+							for (i--; j < i; j++) {
 								this.fillWith(dec.getChild(j));
 							}
 							break;
 						}
 						case "var": {
 							this.fillWith(symbol);
-							this.functionsAndVariables.set(key.toString(), new Variable(0));
+							this.functionsAndVariables.set(key.toString(), new Variable());
 							break;
 						}
 					}
@@ -136,13 +137,13 @@ public class SymbolTable {
 				} else if (type instanceof Record) {
 					Record record = (Record) type;
 					Namespace namespace = record.getNamespace();
-					for (int i = 1, l = shape.getChildCount(); i < l; i += 2) {
+					for (int i = 0, li = shape.getChildCount(); i < li; i += 2) {
 						Tree key = shape.getChild(i);
 						Tree value = shape.getChild(i + 1);
 						Variable field = (Variable) namespace.get(key.toString());
 						Type fieldType = field.getType();
 						if (fieldType == null) {
-							fieldType = (Type) this.findType(value.toString());
+							fieldType = (Type) this.findType(key.toString());
 							if (fieldType == null) {
 								/* TODO */
 							} else {
@@ -162,10 +163,10 @@ public class SymbolTable {
 				Tree returnType = tree.getChildCount() > 3 ? tree.getChild(3) : null;
 				Function function = (Function) this.functionsAndVariables.get(name.toString()); /* TODO */
 				table.functionsAndVariables = function.getNamespace();
-				for (int i = 0, l = callType.getChildCount(); i < l; i += 2) {
+				for (int i = 0, li = callType.getChildCount(); i < li; i += 2) {
 					Tree key = callType.getChild(i);
 					// Tree value = callType.getChild(i + 1);
-					Variable argument = new Variable(0);
+					Variable argument = new Variable();
 					// argument.setType();
 					table.functionsAndVariables.set(key.toString(), argument);
 				}
@@ -180,7 +181,7 @@ public class SymbolTable {
 				break;
 			}
 			default: {
-				for (int i = 0, l = tree.getChildCount(); i < l; i++) {
+				for (int i = 0, li = tree.getChildCount(); i < li; i++) {
 					this.fillWith(tree.getChild(i));
 				}
 			}
