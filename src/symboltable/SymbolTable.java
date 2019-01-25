@@ -190,12 +190,32 @@ public class SymbolTable {
 
 	private Symbol findType(String name) {
 		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou `null` sinon
-		return null;
+
+		Symbol type = types.get(name);
+		if(type != null){	// Si le type est trouvé dans cette table des symboles
+			return type;
+		}
+		else if (parent == null){	// Si le type n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+			return null;
+		}
+		else {
+			return parent.findType(name);
+		}
 	}
 
 	private Symbol findFunctionOrVariable(String name) {
 		// recherche la fonction ou la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
-		return null;
+
+		Symbol functionOrVariable = functionsAndVariables.get(name);
+		if(functionOrVariable != null){	// Si la fonction ou variable est trouvé dans cette table des symboles
+			return functionOrVariable;
+		}
+		else if (parent == null){	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+			return null;
+		}
+		else {
+			return parent.findFunctionOrVariable(name);
+		}
 	}
 
 }
