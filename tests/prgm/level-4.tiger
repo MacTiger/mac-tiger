@@ -1,6 +1,6 @@
 let
 	type vector = {x : int, y : int}
-	
+	type data = {v : vector, to_add : int}
 	type dataArray = array of data
 	var d1 := data {v = vector {x = 0, y = 0}, to_add = 1}
 	var d2 := data {v = vector {x = 1, y = 1}, to_add = 1}

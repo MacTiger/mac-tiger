@@ -3,10 +3,10 @@
 /.classpath
 /.idea
 /.project
-/antlr/output
 /bin
+/lib/output
 /out
-/src/output
-/src/Tiger.tokens
+/res/output
+/res/Tiger.tokens
 /src/TigerLexer.java
 /src/TigerParser.java

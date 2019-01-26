@@ -15,7 +15,7 @@ Ce dépôt contient les sources du compilateur du langage *Tiger* en code assemb
 
 Ce dépôt contient :
 
-- la [grammaire](src/Tiger.g) *ANTLR3* du langage *Tiger*
+- la [grammaire](res/Tiger.g) *ANTLR3* du langage *Tiger*
 - le début d'un [analyseur sémantique](src/Main.java) écrit en *Java*
 - la [suite de tests](tests) de la grammaire et de la génération de l'arbre syntaxique abstrait
 - le [manuel d'utilisation](#manuel-dutilisation)
@@ -37,7 +37,7 @@ $ cd graff24u
 Ajoutez *ANTLR3* à la variable d'environnement `CLASSPATH` en remplaçant `<path>` par le chemin absolu du projet :
 
 ```shell
-echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/antlr/antlr-3.5.2-complete.jar' >> ~/.bashrc
+echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/lib/antlr-3.5.2-complete.jar' >> ~/.bashrc
 ```
 
 Fermez le terminal puis rouvrez-en un nouveau.
