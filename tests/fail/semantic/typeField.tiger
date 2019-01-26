@@ -1,0 +1,13 @@
+let
+	type data = {v : int, nom : string}
+	type test = {d:data,ent : int}
+
+	var t1 := test  {d=data{v=10,nom="name"} }
+	var t2 := test  {d=data{v=10,nom="name"},nom="nombre",a=32}
+
+in
+
+	
+
+end
+
