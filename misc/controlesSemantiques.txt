@@ -13,11 +13,12 @@ Ceux qui sont cochés ont un test écrit dans `tests/fail/semantic/`. Ils n'ont 
 - [x] On entre le bon nombre d'arguments à une fonction
 - [x] Les types des arguments passés en paramètre correspondent
 - [x] Si on a défini un type de retour d'une fonction, il faut que l'on retourne un objet de même type. En tenir compte pour une éventuelle affectation.
-- [] Si on définit un type contenant des champs, on ne peut pas chercher à modifier un champ n'ayant pas été déclaré. Cf tests/fail/structureFiled
+- [x] Si on définit un type contenant des champs, on ne peut pas chercher à modifier un champ n'ayant pas été déclaré. Cf tests/fail/structureFiled
+- [] Accès à une variable d'un dictionnaire qui n'existe pasa
 - [x] "+", "-", "*", "/" : les opérandes (et le résultat) sont de type INT
 - [x] "=","<>" : les opérandes sont de même type, le résultat est un INT
 - [x] ">","<","<=",">=" : les opérandes sont de même type, le résultat est un INT
 - [x] On ne peut pas déclarer deux types en les assignant l'un à l'autre
-- [] Un dictionnaire ne peut avoir deux champs portant le même nom
+- [x] Un dictionnaire ne peut avoir deux champs portant le même nom
 - [x] On ne peut pas déclarer une variable en lui assignant une variable déclarée après
-- [] Une fonction ne peut pas avoir de paramètres ayant le même nom
+- [x] Une fonction ne peut pas avoir de paramètres ayant le même nom
