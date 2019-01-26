@@ -45,7 +45,7 @@ Fermez le terminal puis rouvrez-en un nouveau.
 Retournez dans le projet, puis générez les analyseurs lexical (`/src/TigerLexer.java`) et syntaxique (`/src/TigerParser.java`) avec la commande suivante :
 
 ```shell
-$ make build
+$ make init
 ```
 
 ### Test d'un programme *Tiger*
@@ -53,9 +53,8 @@ $ make build
 Pour tester si un programme *Tiger* en particulier est valide syntaxiquement, exécutez les commandes suivantes à la racine du projet en remplaçant `<file>` par le chemin vers le fichier contenant le programme :
 
 ```shell
-$ mkdir -p bin
-$ javac -d bin src/TigerLexer.java src/TigerParser.java src/Test.java
-$ java -cp bin:antlr/* Test 2>&1 > /dev/null < <file>
+$ make build
+$ java -cp bin:lib/* Main --syntax-only 2>&1 > /dev/null < <file>
 ```
 
 Si le programme est invalide, des messages d'erreurs seront affichés sur la sortie standard.

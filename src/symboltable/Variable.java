@@ -5,7 +5,7 @@ public class Variable extends Symbol {
 	private Type type;
 	private int shift;
 
-	public Variable(int shift) {
+	public Variable() {
 		this.type = null;
 		this.shift = 0;
 	}
@@ -16,6 +16,10 @@ public class Variable extends Symbol {
 
 	public Type getType() {
 		return this.type;
+	}
+
+	public void setShift(int shift) {
+		this.shift = shift;
 	}
 
 	public int getShift() {
