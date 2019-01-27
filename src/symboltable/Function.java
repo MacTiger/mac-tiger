@@ -3,11 +3,11 @@ package symboltable;
 public class Function extends Symbol {
 
 	private Type type;
-	private Namespace namespace;
+	private SymbolTable symbolTable;
 
 	public Function() {
 		this.type = null;
-		this.namespace = new Namespace();
+		this.symbolTable = null;
 	}
 
 	public void setType(Type type) {
@@ -18,8 +18,12 @@ public class Function extends Symbol {
 		return this.type;
 	}
 
-	public Namespace getNamespace() {
-		return this.namespace;
+	public void setSymbolTable(SymbolTable symbolTable) {
+		this.symbolTable = symbolTable;
+	}
+
+	public SymbolTable getSymbolTable() {
+		return this.symbolTable;
 	}
 
 }

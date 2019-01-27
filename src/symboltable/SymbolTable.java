@@ -21,6 +21,27 @@ public class SymbolTable {
 
 	public void fillWith(Tree tree) {
 		switch (tree.toString()) {
+			// case ":=":
+			// case "|":
+			// case "&":
+			// case "=":
+			// case "<>":
+			// case ">":
+			// case "<":
+			// case ">=":
+			// case "<=":
+			// case "+":
+			// case "-":
+			// case "*":
+			// case "/":
+			// case "SEQ"
+			// case "ARR"
+			// case "REC"
+			// case "CALL"
+			// case "ITEM"
+			// case "FIELD"
+			// case "if":
+			// case "while":
 			case "for": {
 				SymbolTable table = new SymbolTable(this);				this.children.add(table);
 				Variable iterator = new Variable();
@@ -38,73 +59,164 @@ public class SymbolTable {
 				this.children.add(table);
 				Tree dec = tree.getChild(0);
 				Tree seq = tree.getChild(1);
-				for (int i = 0, li = dec.getChildCount(); i < li; i++) {
+				for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 					Tree symbol = dec.getChild(i);
-					Tree key = symbol.getChild(0);
 					switch (symbol.toString()) {
 						case "type": {
-							Tree value = symbol.getChild(1);
-							Type type = null;
-							if (value.getChildCount() > 0) {
-								switch (value.toString()) {
+							int lj = i;
+							int remainingAliases = 0;
+							boolean remainsAliases = false;
+							boolean remainsArraysAndRecords = false;
+							do {
+								String name = symbol.getChild(0).toString();
+								Tree shape = symbol.getChild(1);
+								Type type = null;
+								switch (shape.toString()) {
 									case "ARRTYPE": {
 										type = new Array();
+										if (!remainsArraysAndRecords) {
+											remainsArraysAndRecords = true;
+										}
 										break;
 									}
 									case "RECTYPE": {
 										type = new Record();
-										Namespace namespace = ((Record) type).getNamespace();
-										for (int k = 0, lk = value.getChildCount(); k < lk; k += 2) {
-											namespace.set(value.getChild(k).toString(), new Variable());
+										if (!remainsArraysAndRecords) {
+											remainsArraysAndRecords = true;
 										}
 										break;
 									}
-								}
-							}
-							this.types.set(key.toString(), type);
-							int j = i;
-							while (++i < li && (symbol = dec.getChild(i)).toString().equals("type")) {
-								key = symbol.getChild(0);
-								value = symbol.getChild(1);
-								type = null;
-								if (value.getChildCount() > 0) {
-									switch (value.toString()) {
-										case "ARRTYPE": {
-											type = new Array();
-											break;
-										}
-										case "RECTYPE": {
-											type = new Record();
-											Namespace namespace = ((Record) type).getNamespace();
-											for (int k = 0, lk = value.getChildCount(); k < lk; k += 2) {
-												namespace.set(value.getChild(k).toString(), new Variable());
-											}
-											break;
+									default: {
+										remainingAliases++;
+										if (!remainsAliases) {
+											remainsAliases = true;
 										}
 									}
 								}
-								this.types.set(key.toString(), type);
+								if (table.types.get(name) != null) {
+									/* TODO */
+								} else {
+									table.types.set(name, type);
+								}
+							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
+							aliases: while (remainsAliases) {
+								remainsAliases = false;
+								for (int j = i; j < lj; ++j) {
+									symbol = dec.getChild(j);
+									String name = symbol.getChild(0).toString();
+									Tree shape = symbol.getChild(1);
+									Type type = (Type) table.types.get(name);
+									if (type == null) {
+										type = (Type) this.findType(shape.toString());
+										if (type == null) {
+											/* TODO */
+										} else {
+											this.types.set(name, type);
+											if (remainingAliases == 1) {
+												break aliases;
+											} else {
+												remainingAliases--;
+												if (!remainsAliases) {
+													remainsAliases = true;
+												}
+											}
+										}
+									}
+								}
 							}
-							for (i--; j < i; j++) {
-								this.fillWith(dec.getChild(j));
+							if (remainsArraysAndRecords) {
+								for (int j = i; j < lj; ++j) {
+									symbol = dec.getChild(j);
+									String name = symbol.getChild(0).toString();
+									Tree shape = symbol.getChild(1);
+									Type type = (Type) table.types.get(name);
+									if (type instanceof Array) {
+										Array array = (Array) type;
+										Type itemType = (Type) this.findType(shape.getChild(0).toString());
+										if (itemType == null) {
+											/* TODO */
+										} else {
+											array.setType(itemType);
+										}
+									} else if (type instanceof Record) {
+										Record record = (Record) type;
+										Namespace namespace = record.getNamespace();
+										for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
+											String fieldName = shape.getChild(k).toString();
+											Variable field = new Variable();
+											Type fieldType = (Type) table.findType(shape.getChild(k + 1).toString());
+											if (fieldType == null) {
+												/* TODO */
+											} else {
+												field.setType(fieldType);
+											}
+											if (namespace.get(fieldName) != null) {
+												/* TODO */
+											} else {
+												namespace.set(fieldName, field);
+											}
+										}
+									}
+								}
 							}
+							i = lj - 1;
 							break;
 						}
 						case "function": {
-							this.functionsAndVariables.set(key.toString(), new Function());
-							int j = i;
-							while (++i < li && (symbol = dec.getChild(i)).toString().equals("function")) {
-								key = symbol.getChild(0);
-								this.functionsAndVariables.set(key.toString(), new Function());
+							int lj = i;
+							do {
+								SymbolTable subTable = new SymbolTable(table);
+								table.children.add(subTable);
+								String name = symbol.getChild(0).toString();
+								Tree callType = symbol.getChild(1);
+								Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
+								Function function = new Function();
+								function.setSymbolTable(subTable);
+								for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
+									String argumentName = callType.getChild(k).toString();
+									Variable argument = new Variable();
+									Type argumentType = (Type) this.findType(callType.getChild(k + 1).toString());
+									if (argumentType == null) {
+										/* TODO */
+									} else {
+										argument.setType(argumentType);
+									}
+									if (subTable.functionsAndVariables.get(argumentName) != null) {
+										/* TODO */
+									} else {
+										subTable.functionsAndVariables.set(argumentName, argument);
+									}
+								}
+								if (type != null) {
+									Type returnType = (Type) this.findType(type.toString());
+									if (returnType == null) {
+										/* TODO */
+									} else {
+										function.setType(returnType);
+									}
+								}
+								if (table.functionsAndVariables.get(name) != null) {
+									/* TODO */
+								} else {
+	  								table.functionsAndVariables.set(name, function);
+								}
+							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
+							for (int j = i; j < lj; ++j) {
+								symbol = dec.getChild(j);
+								String name = symbol.getChild(0).toString();
+								Tree body = symbol.getChild(2);
+								Function function = (Function) table.functionsAndVariables.get(name);
+								SymbolTable subTable = function.getSymbolTable();
+								subTable.fillWith(body);
 							}
-							for (i--; j < i; j++) {
-								this.fillWith(dec.getChild(j));
-							}
+							i = lj - 1;
 							break;
 						}
 						case "var": {
-							this.fillWith(symbol);
-							this.functionsAndVariables.set(key.toString(), new Variable());
+							String name = symbol.getChild(0).toString();
+							Tree exp = symbol.getChild(1);
+							this.fillWith(exp);
+							this.functionsAndVariables.set(name, new Variable());
 							break;
 						}
 					}
@@ -112,76 +224,10 @@ public class SymbolTable {
 				this.fillWith(seq);
 				break;
 			}
-			case "type": {
-				Tree alias = tree.getChild(0);
-				Tree shape = tree.getChild(1);
-				Type type = (Type) this.types.get(alias.toString());
-				if (type == null) {
-					type = (Type) this.findType(shape.getChild(0).toString());
-					if (type == null) {
-						/* TODO */
-					} else {
-						this.types.set(alias.toString(), type);
-					}
-				} else if (type instanceof Array) {
-					Array array = (Array) type;
-					Type itemType = array.getType();
-					if (itemType == null) {
-						itemType = (Type) this.findType(shape.getChild(0).toString());
-						if (itemType == null) {
-							/* TODO */
-						} else {
-							array.setType(itemType);
-						}
-					}
-				} else if (type instanceof Record) {
-					Record record = (Record) type;
-					Namespace namespace = record.getNamespace();
-					for (int i = 0, li = shape.getChildCount(); i < li; i += 2) {
-						Tree key = shape.getChild(i);
-						Tree value = shape.getChild(i + 1);
-						Variable field = (Variable) namespace.get(key.toString());
-						Type fieldType = field.getType();
-						if (fieldType == null) {
-							fieldType = (Type) this.findType(key.toString());
-							if (fieldType == null) {
-								/* TODO */
-							} else {
-								field.setType(fieldType);
-							}
-						}
-					}
-				}
-				break;
-			}
-			case "function": {
-				SymbolTable table = new SymbolTable(this);
-				this.children.add(table);
-				Tree name = tree.getChild(0);
-				Tree callType = tree.getChild(1);
-				Tree body = tree.getChild(2);
-				Tree returnType = tree.getChildCount() > 3 ? tree.getChild(3) : null;
-				Function function = (Function) this.functionsAndVariables.get(name.toString()); /* TODO */
-				table.functionsAndVariables = function.getNamespace();
-				for (int i = 0, li = callType.getChildCount(); i < li; i += 2) {
-					Tree key = callType.getChild(i);
-					// Tree value = callType.getChild(i + 1);
-					Variable argument = new Variable();
-					// argument.setType();
-					table.functionsAndVariables.set(key.toString(), argument);
-				}
-				if (returnType != null) {
-					// function.setType(returnType);
-				}
-				/* TODO */
-				this.fillWith(body);
-				break;
-			}
-			case "var": {
-				break;
-			}
+			// case "nil":
+			// case "break":
 			default: {
-				for (int i = 0, li = tree.getChildCount(); i < li; i++) {
+				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.fillWith(tree.getChild(i));
 				}
 			}
