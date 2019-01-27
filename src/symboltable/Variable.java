@@ -1,6 +1,6 @@
 package symboltable;
 
-public class Variable extends Symbol {
+public class Variable extends FunctionOrVariable {
 
 	private Type type;
 	private int shift;

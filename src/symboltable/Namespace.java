@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class Namespace {
+public class Namespace<Symbol> {
 
 	private Map<String, Symbol> symbols;
 	private Symbol lastSymbol;

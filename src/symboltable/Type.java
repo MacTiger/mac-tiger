@@ -1,7 +1,7 @@
 package symboltable;
 
-abstract public class Type extends Symbol {
+public abstract class Type extends Symbol {
 
-	abstract public int getSize();
+	public abstract int getSize();
 
 }

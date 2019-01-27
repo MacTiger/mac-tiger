@@ -1,13 +1,13 @@
 package symboltable;
 
-public class Function extends Symbol {
+public class Function extends FunctionOrVariable {
 
 	private Type type;
-	private SymbolTable symbolTable;
+	private SymbolTable table;
 
 	public Function() {
 		this.type = null;
-		this.symbolTable = null;
+		this.table = null;
 	}
 
 	public void setType(Type type) {
@@ -18,12 +18,12 @@ public class Function extends Symbol {
 		return this.type;
 	}
 
-	public void setSymbolTable(SymbolTable symbolTable) {
-		this.symbolTable = symbolTable;
+	public void setSymbolTable(SymbolTable table) {
+		this.table = table;
 	}
 
 	public SymbolTable getSymbolTable() {
-		return this.symbolTable;
+		return this.table;
 	}
 
 }

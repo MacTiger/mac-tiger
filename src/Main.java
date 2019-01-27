@@ -28,7 +28,7 @@ public class Main {
 		TigerParser.program_return result = parser.program();
 		Tree tree = (Tree) result.getTree();
 		if (!syntaxOnly) {
-			SymbolTable root = new SymbolTable(null);
+			SymbolTable root = new SymbolTable();
 			root.fillWith(tree);
 		}
 	}

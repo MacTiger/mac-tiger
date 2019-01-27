@@ -5,21 +5,140 @@ import java.util.List;
 
 import org.antlr.runtime.tree.Tree;
 
+import misc.Constants;
+
 public class SymbolTable {
+
+	private static Type intType;
+	private static Type stringType;
+	private static SymbolTable root;
+
+	static {
+		Type intType = new Primitive(Constants.intSize);
+		Type stringType = new Primitive(Constants.pointerSize);
+		Variable intVariable = new Variable();
+		intVariable.setType(intType);
+		Variable stringVariable = new Variable();
+		stringVariable.setType(stringType);
+		SymbolTable root = new SymbolTable();
+		root.types.set("int", intType);
+		root.types.set("string", stringType);
+		{
+			Function function = new Function();
+			function.setType(stringType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("i", intVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("chr", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(stringType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("s1", stringVariable);
+			functionsAndVariables.set("s2", stringVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("concat", function);
+		}
+		{
+			Function function = new Function();
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("i", intVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("exit", function);
+		}
+		{
+			Function function = new Function();
+			SymbolTable table = new SymbolTable(root);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("flush", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(stringType);
+			SymbolTable table = new SymbolTable(root);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("getchar", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(intType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("i", intVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("not", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(intType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("s", stringVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("ord", function);
+		}
+		{
+			Function function = new Function();
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("s", stringVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("print", function);
+		}
+		// {
+		// 	Function function = new Function();
+		// SymbolTable table = new SymbolTable(root);
+		// Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+		// 	functionsAndVariables.set("i", intVariable);
+		// function.setSymbolTable(table);
+		// 	root.functionsAndVariables.set("printi", function);
+		// }
+		{
+			Function function = new Function();
+			function.setType(intType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("s", stringVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("size", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(stringType);
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("s", stringVariable);
+			functionsAndVariables.set("first", intVariable);
+			functionsAndVariables.set("n", intVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("substring", function);
+		}
+		SymbolTable.intType = intType;
+		SymbolTable.stringType = stringType;
+		SymbolTable.root = root;
+	}
 
 	private SymbolTable parent;
 	private ArrayList<SymbolTable> children;
-	private Namespace types;
-	private Namespace functionsAndVariables;
+	private Namespace<Type> types;
+	private Namespace<FunctionOrVariable> functionsAndVariables;
 
-	public SymbolTable(SymbolTable parent) {
-		this.parent = parent;
-		this.children = new ArrayList<SymbolTable>();
-		this.types = new Namespace();
-		this.functionsAndVariables = new Namespace();
+	public SymbolTable() {
+		this(SymbolTable.root);
 	}
 
-	public void fillWith(Tree tree) {
+	private SymbolTable(SymbolTable parent) {
+		this.parent = parent;
+		this.children = new ArrayList<SymbolTable>();
+		this.types = new Namespace<Type>();
+		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
+	}
+
+	public Type fillWith(Tree tree) {
 		switch (tree.toString()) {
 			// case ":=":
 			// case "|":
@@ -45,14 +164,13 @@ public class SymbolTable {
 			case "for": {
 				SymbolTable table = new SymbolTable(this);				this.children.add(table);
 				Variable iterator = new Variable();
-				iterator.setType(null);	// TODO : remplacer "null" par le type primitif "int" déclaré dans la TDS d'ordre 0, on le cherche avec un findType appliqué sur la TDS d'ordre 0
+				iterator.setType(SymbolTable.intType);
 				table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
-
 				this.fillWith(tree.getChild(1));	// Rempli la table des symboles pour la borne inférieure du for
 				this.fillWith(tree.getChild(2));	// Rempli la table des symboles pour la borne supérieure du for
 
 				table.fillWith(tree.getChild(3));	// Remplissage de la table des symboles de la boucle for
-				break;
+				return null;
 			}
 			case "let": {
 				SymbolTable table = new SymbolTable(this);
@@ -95,9 +213,8 @@ public class SymbolTable {
 								}
 								if (table.types.get(name) != null) {
 									/* TODO */
-								} else {
-									table.types.set(name, type);
 								}
+								table.types.set(name, type);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
 							aliases: while (remainsAliases) {
 								remainsAliases = false;
@@ -105,9 +222,9 @@ public class SymbolTable {
 									symbol = dec.getChild(j);
 									String name = symbol.getChild(0).toString();
 									Tree shape = symbol.getChild(1);
-									Type type = (Type) table.types.get(name);
+									Type type = table.types.get(name);
 									if (type == null) {
-										type = (Type) this.findType(shape.toString());
+										type = this.findType(shape.toString());
 										if (type == null) {
 											/* TODO */
 										} else {
@@ -129,10 +246,10 @@ public class SymbolTable {
 									symbol = dec.getChild(j);
 									String name = symbol.getChild(0).toString();
 									Tree shape = symbol.getChild(1);
-									Type type = (Type) table.types.get(name);
+									Type type = table.types.get(name);
 									if (type instanceof Array) {
 										Array array = (Array) type;
-										Type itemType = (Type) this.findType(shape.getChild(0).toString());
+										Type itemType = this.findType(shape.getChild(0).toString());
 										if (itemType == null) {
 											/* TODO */
 										} else {
@@ -140,11 +257,11 @@ public class SymbolTable {
 										}
 									} else if (type instanceof Record) {
 										Record record = (Record) type;
-										Namespace namespace = record.getNamespace();
+										Namespace<Variable> namespace = record.getNamespace();
 										for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
 											String fieldName = shape.getChild(k).toString();
 											Variable field = new Variable();
-											Type fieldType = (Type) table.findType(shape.getChild(k + 1).toString());
+											Type fieldType = table.findType(shape.getChild(k + 1).toString());
 											if (fieldType == null) {
 												/* TODO */
 											} else {
@@ -152,9 +269,8 @@ public class SymbolTable {
 											}
 											if (namespace.get(fieldName) != null) {
 												/* TODO */
-											} else {
-												namespace.set(fieldName, field);
 											}
+											namespace.set(fieldName, field);
 										}
 									}
 								}
@@ -175,7 +291,7 @@ public class SymbolTable {
 								for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
 									String argumentName = callType.getChild(k).toString();
 									Variable argument = new Variable();
-									Type argumentType = (Type) this.findType(callType.getChild(k + 1).toString());
+									Type argumentType = this.findType(callType.getChild(k + 1).toString());
 									if (argumentType == null) {
 										/* TODO */
 									} else {
@@ -183,12 +299,11 @@ public class SymbolTable {
 									}
 									if (subTable.functionsAndVariables.get(argumentName) != null) {
 										/* TODO */
-									} else {
-										subTable.functionsAndVariables.set(argumentName, argument);
 									}
+									subTable.functionsAndVariables.set(argumentName, argument);
 								}
 								if (type != null) {
-									Type returnType = (Type) this.findType(type.toString());
+									Type returnType = this.findType(type.toString());
 									if (returnType == null) {
 										/* TODO */
 									} else {
@@ -197,9 +312,8 @@ public class SymbolTable {
 								}
 								if (table.functionsAndVariables.get(name) != null) {
 									/* TODO */
-								} else {
-	  								table.functionsAndVariables.set(name, function);
 								}
+  								table.functionsAndVariables.set(name, function);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 							for (int j = i; j < lj; ++j) {
 								symbol = dec.getChild(j);
@@ -221,8 +335,7 @@ public class SymbolTable {
 						}
 					}
 				}
-				this.fillWith(seq);
-				break;
+				return this.fillWith(seq);
 			}
 			// case "nil":
 			// case "break":
@@ -230,37 +343,52 @@ public class SymbolTable {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.fillWith(tree.getChild(i));
 				}
+				return null;
 			}
 		}
 	}
 
-	private Symbol findType(String name) {
+	private Type findType(String name) {
 		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou `null` sinon
-
-		Symbol type = types.get(name);
-		if(type != null){	// Si le type est trouvé dans cette table des symboles
+		Type type = types.get(name);
+		if (type != null) {	// Si le type est trouvé dans cette table des symboles
 			return type;
-		}
-		else if (parent == null){	// Si le type n'est pas trouvé ici, on cherche dans la table parent, si elle existe
-			return null;
-		}
-		else {
+		} else if (parent != null) {	// Si le type n'est pas trouvé ici, on cherche dans la table parent, si elle existe
 			return parent.findType(name);
+		} else {
+			return null;
 		}
 	}
 
-	private Symbol findFunctionOrVariable(String name) {
+	private Function findFunction(String name) {
 		// recherche la fonction ou la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
-
-		Symbol functionOrVariable = functionsAndVariables.get(name);
-		if(functionOrVariable != null){	// Si la fonction ou variable est trouvé dans cette table des symboles
-			return functionOrVariable;
-		}
-		else if (parent == null){	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
+		if (functionOrVariable != null) {	// Si la fonction ou variable est trouvé dans cette table des symboles
+			if (functionOrVariable instanceof Function) {
+				return (Function) functionOrVariable;
+			} else {
+				return null;
+			}
+		} else if (this.parent != null) {	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+			return this.parent.findFunction(name);
+		} else {
 			return null;
 		}
-		else {
-			return parent.findFunctionOrVariable(name);
+	}
+
+	private Variable findVariable(String name) {
+		// recherche la fonction ou la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
+		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
+		if (functionOrVariable != null) {	// Si la fonction ou variable est trouvé dans cette table des symboles
+			if (functionOrVariable instanceof Variable) {
+				return (Variable) functionOrVariable;
+			} else {
+				return null;
+			}
+		} else if (this.parent != null) {	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+			return this.parent.findVariable(name);
+		} else {
+			return null;
 		}
 	}
 
