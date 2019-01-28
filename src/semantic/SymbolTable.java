@@ -6,6 +6,7 @@ import java.util.List;
 import org.antlr.runtime.tree.Tree;
 
 import misc.Constants;
+import misc.Helpers;
 
 import static syntactic.TigerParser.ARRTYPE;
 import static syntactic.TigerParser.RECTYPE;
@@ -223,7 +224,7 @@ public class SymbolTable {
 									}
 								}
 								if (table.types.get(name) != null) {
-									/* TODO */
+									Helpers.alert(symbol.getChild(0), "double définition du type `" + name + "`");
 								}
 								table.types.set(name, type);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
@@ -235,11 +236,11 @@ public class SymbolTable {
 									Tree shape = symbol.getChild(1);
 									Type type = table.types.get(name);
 									if (type == null) {
-										type = this.findType(shape.toString());
+										type = table.findType(shape.toString());
 										if (type == null) {
 											/* TODO */
 										} else {
-											this.types.set(name, type);
+											table.types.set(name, type);
 											if (remainingAliases == 1) {
 												break aliases;
 											} else {
@@ -260,9 +261,9 @@ public class SymbolTable {
 									Type type = table.types.get(name);
 									if (type instanceof Array) {
 										Array array = (Array) type;
-										Type itemType = this.findType(shape.getChild(0).toString());
+										Type itemType = table.findType(shape.getChild(0).toString());
 										if (itemType == null) {
-											/* TODO */
+											Helpers.alert(shape.getChild(0), "type `" + shape.getChild(0).toString() + "` non défini");
 										} else {
 											array.setType(itemType);
 										}
@@ -274,12 +275,12 @@ public class SymbolTable {
 											Variable field = new Variable();
 											Type fieldType = table.findType(shape.getChild(k + 1).toString());
 											if (fieldType == null) {
-												/* TODO */
+												Helpers.alert(shape.getChild(k + 1), "type `" + shape.getChild(k + 1).toString() + "` non défini");
 											} else {
 												field.setType(fieldType);
 											}
 											if (namespace.get(fieldName) != null) {
-												/* TODO */
+												Helpers.alert(shape.getChild(k), "double définition du champ `" + fieldName + "`");
 											}
 											namespace.set(fieldName, field);
 										}
@@ -302,27 +303,27 @@ public class SymbolTable {
 								for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
 									String argumentName = callType.getChild(k).toString();
 									Variable argument = new Variable();
-									Type argumentType = this.findType(callType.getChild(k + 1).toString());
+									Type argumentType = table.findType(callType.getChild(k + 1).toString());
 									if (argumentType == null) {
-										/* TODO */
+										Helpers.alert(callType.getChild(k + 1), "type `" + callType.getChild(k + 1).toString() + "` non défini");
 									} else {
 										argument.setType(argumentType);
 									}
 									if (subTable.functionsAndVariables.get(argumentName) != null) {
-										/* TODO */
+										Helpers.alert(callType.getChild(k), "double définition du paramètre `" + argumentName + "`");
 									}
 									subTable.functionsAndVariables.set(argumentName, argument);
 								}
 								if (type != null) {
-									Type returnType = this.findType(type.toString());
+									Type returnType = table.findType(type.toString());
 									if (returnType == null) {
-										/* TODO */
+										Helpers.alert(type, "type `" + type.toString() + "` non défini");
 									} else {
 										function.setType(returnType);
 									}
 								}
 								if (table.functionsAndVariables.get(name) != null) {
-									/* TODO */
+									Helpers.alert(symbol.getChild(0), "double définition de la fonction ou variable `" + name + "`");
 								}
   								table.functionsAndVariables.set(name, function);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -340,13 +341,16 @@ public class SymbolTable {
 						case "var": {
 							String name = symbol.getChild(0).toString();
 							Tree exp = symbol.getChild(1);
-							this.fillWith(exp);
-							this.functionsAndVariables.set(name, new Variable());
+							table.fillWith(exp);
+							if (table.functionsAndVariables.get(name) != null) {
+								Helpers.alert(symbol.getChild(0), "double définition de la fonction ou variable `" + name + "`");
+							}
+							table.functionsAndVariables.set(name, new Variable());
 							break;
 						}
 					}
 				}
-				return this.fillWith(seq);
+				return table.fillWith(seq);
 			}
 			// case "nil":
 			// case "break":
