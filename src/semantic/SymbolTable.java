@@ -224,7 +224,7 @@ public class SymbolTable {
 									}
 								}
 								if (table.types.get(name) != null) {
-									Helpers.alert(symbol.getChild(0), "double définition du type `" + name + "`");
+									Helpers.alert(symbol.getChild(0), "redéclaration du type `" + name + "`");
 								}
 								table.types.set(name, type);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
@@ -237,9 +237,7 @@ public class SymbolTable {
 									Type type = table.types.get(name);
 									if (type == null) {
 										type = table.findType(shape.toString());
-										if (type == null) {
-											/* TODO */
-										} else {
+										if (type != null) {
 											table.types.set(name, type);
 											if (remainingAliases == 1) {
 												break aliases;
@@ -253,7 +251,7 @@ public class SymbolTable {
 									}
 								}
 							}
-							if (remainsArraysAndRecords) {
+							if (!remainsAliases || remainsArraysAndRecords) {
 								for (int j = i; j < lj; ++j) {
 									symbol = dec.getChild(j);
 									String name = symbol.getChild(0).toString();
@@ -263,7 +261,7 @@ public class SymbolTable {
 										Array array = (Array) type;
 										Type itemType = table.findType(shape.getChild(0).toString());
 										if (itemType == null) {
-											Helpers.alert(shape.getChild(0), "type `" + shape.getChild(0).toString() + "` non défini");
+											Helpers.alert(shape.getChild(0), "type `" + shape.getChild(0).toString() + "` non déclaré");
 										} else {
 											array.setType(itemType);
 										}
@@ -275,15 +273,17 @@ public class SymbolTable {
 											Variable field = new Variable();
 											Type fieldType = table.findType(shape.getChild(k + 1).toString());
 											if (fieldType == null) {
-												Helpers.alert(shape.getChild(k + 1), "type `" + shape.getChild(k + 1).toString() + "` non défini");
+												Helpers.alert(shape.getChild(k + 1), "type `" + shape.getChild(k + 1).toString() + "` non déclaré");
 											} else {
 												field.setType(fieldType);
 											}
 											if (namespace.get(fieldName) != null) {
-												Helpers.alert(shape.getChild(k), "double définition du champ `" + fieldName + "`");
+												Helpers.alert(shape.getChild(k), "redéclaration du champ `" + fieldName + "`");
 											}
 											namespace.set(fieldName, field);
 										}
+									} else if (type == null) {
+										Helpers.alert(symbol.getChild(0), "définition cyclique du type `" + name + "`");
 									}
 								}
 							}
@@ -305,25 +305,25 @@ public class SymbolTable {
 									Variable argument = new Variable();
 									Type argumentType = table.findType(callType.getChild(k + 1).toString());
 									if (argumentType == null) {
-										Helpers.alert(callType.getChild(k + 1), "type `" + callType.getChild(k + 1).toString() + "` non défini");
+										Helpers.alert(callType.getChild(k + 1), "type `" + callType.getChild(k + 1).toString() + "` non déclaré");
 									} else {
 										argument.setType(argumentType);
 									}
 									if (subTable.functionsAndVariables.get(argumentName) != null) {
-										Helpers.alert(callType.getChild(k), "double définition du paramètre `" + argumentName + "`");
+										Helpers.alert(callType.getChild(k), "redéclaration du paramètre `" + argumentName + "`");
 									}
 									subTable.functionsAndVariables.set(argumentName, argument);
 								}
 								if (type != null) {
 									Type returnType = table.findType(type.toString());
 									if (returnType == null) {
-										Helpers.alert(type, "type `" + type.toString() + "` non défini");
+										Helpers.alert(type, "type `" + type.toString() + "` non déclaré");
 									} else {
 										function.setType(returnType);
 									}
 								}
 								if (table.functionsAndVariables.get(name) != null) {
-									Helpers.alert(symbol.getChild(0), "double définition de la fonction ou variable `" + name + "`");
+									Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
 								}
   								table.functionsAndVariables.set(name, function);
 							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -343,7 +343,7 @@ public class SymbolTable {
 							Tree exp = symbol.getChild(1);
 							table.fillWith(exp);
 							if (table.functionsAndVariables.get(name) != null) {
-								Helpers.alert(symbol.getChild(0), "double définition de la fonction ou variable `" + name + "`");
+								Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
 							}
 							table.functionsAndVariables.set(name, new Variable());
 							break;
