@@ -217,7 +217,7 @@ public class SymbolTable {
 			// case "<":
 			// case ">=":
 			// case "<=":
-			// case "+":
+			case "+": return this.fillWithNAire(tree, SymbolTable.intType);
 			// case "-":
 			// case "*":
 			// case "/":
@@ -242,6 +242,34 @@ public class SymbolTable {
 
 	private Type fillWithINT(Tree tree) {
 		return SymbolTable.intType;
+	}
+
+	private Type fillWithNAire(Tree tree, Type operandsType){
+		/* Complète la TDS pour un opérateur n-aire ayant par défaut les propriétés suivantes :
+		* - les types des opérandes doivent être identiques
+		* - le type du résultat est toujours du même type que celui des opérandes, sauf en cas d'erreur sémantique : il vaudra null
+		* Le paramètre operandsType indique le type accepté pour les opérandes : s'il vaut null, alors on détermine le type des opérandes par inférence.
+		* 	C'est à dire que le type du premier opérande déterminera le type que les autres opérandes doivent suivre.
+		*
+		* Si l'un des opérandes n'est pas du type operandsType, on renvoit le type null
+		* */
+
+		int i = 0;
+		if (operandsType == null){	// Gère cas où le type est déterminé par inférence
+			operandsType = fillWith(tree.getChild(0));
+			i++;
+		}
+
+		Tree operand = null;
+
+		for (int li = tree.getChildCount(); i < li; ++i){
+			operand = tree.getChild(i);
+			if (! (this.fillWith(operand) == operandsType)){	// Si le type du ieme opérande n'est pas operandsType
+				Helpers.alert(operand,"types de "+ operand.getText() +" non consistant dans l'opération : " + tree.toString());	// TODO : afficher l'expression de tree ?
+				return null;
+			}
+		}
+		return operandsType;
 	}
 
 	private Type fillWithFor(Tree tree) {
