@@ -151,237 +151,6 @@ public class SymbolTable {
 		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
 	}
 
-	public Type fillWith(Tree tree) {
-		switch (tree.getType ()) {
-			// case SEQ:
-			// case ARR:
-			// case REC:
-			// case CALL:
-			// case ITEM:
-			// case FIELD:
-			// case ID:
-			case STR: {
-				return SymbolTable.stringType;
-			}
-			case INT: {
-				return SymbolTable.intType;
-			}
-		}
-		switch (tree.toString()) {
-			// case ":=":
-			// case "|":
-			// case "&":
-			// case "=":
-			// case "<>":
-			// case ">":
-			// case "<":
-			// case ">=":
-			// case "<=":
-			// case "+":
-			// case "-":
-			// case "*":
-			// case "/":
-			// case "if":
-			// case "while":
-			case "for": {
-				SymbolTable table = new SymbolTable(this);				this.children.add(table);
-				Variable iterator = new Variable();
-				iterator.setType(SymbolTable.intType);
-				table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
-				this.fillWith(tree.getChild(1));	// Rempli la table des symboles pour la borne inférieure du for
-				this.fillWith(tree.getChild(2));	// Rempli la table des symboles pour la borne supérieure du for
-
-				table.fillWith(tree.getChild(3));	// Remplissage de la table des symboles de la boucle for
-				return null;
-			}
-			case "let": {
-				SymbolTable table = new SymbolTable(this);
-				this.children.add(table);
-				Tree dec = tree.getChild(0);
-				Tree seq = tree.getChild(1);
-				for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
-					Tree symbol = dec.getChild(i);
-					switch (symbol.toString()) {
-						case "type": {
-							int lj = i;
-							int remainingAliases = 0;
-							boolean remainsAliases = false;
-							boolean remainsArraysAndRecords = false;
-							do {
-								String name = symbol.getChild(0).toString();
-								Tree shape = symbol.getChild(1);
-								Type type = null;
-								switch (shape.getType()) {
-									case ARRTYPE: {
-										type = new Array();
-										if (!remainsArraysAndRecords) {
-											remainsArraysAndRecords = true;
-										}
-										break;
-									}
-									case RECTYPE: {
-										type = new Record();
-										if (!remainsArraysAndRecords) {
-											remainsArraysAndRecords = true;
-										}
-										break;
-									}
-									default: {
-										remainingAliases++;
-										if (!remainsAliases) {
-											remainsAliases = true;
-										}
-									}
-								}
-								if (table.types.get(name) != null) {
-									Helpers.alert(symbol.getChild(0), "redéclaration du type `" + name + "`");
-								}
-								table.types.set(name, type);
-							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
-							aliases: while (remainsAliases) {
-								remainsAliases = false;
-								for (int j = i; j < lj; ++j) {
-									symbol = dec.getChild(j);
-									String name = symbol.getChild(0).toString();
-									Tree shape = symbol.getChild(1);
-									Type type = table.types.get(name);
-									if (type == null) {
-										type = table.findType(shape.toString());
-										if (type != null) {
-											table.types.set(name, type);
-											if (remainingAliases == 1) {
-												break aliases;
-											} else {
-												remainingAliases--;
-												if (!remainsAliases) {
-													remainsAliases = true;
-												}
-											}
-										}
-									}
-								}
-							}
-							if (!remainsAliases || remainsArraysAndRecords) {
-								for (int j = i; j < lj; ++j) {
-									symbol = dec.getChild(j);
-									String name = symbol.getChild(0).toString();
-									Tree shape = symbol.getChild(1);
-									Type type = table.types.get(name);
-									if (type instanceof Array) {
-										Array array = (Array) type;
-										Type itemType = table.findType(shape.getChild(0).toString());
-										if (itemType == null) {
-											Helpers.alert(shape.getChild(0), "type `" + shape.getChild(0).toString() + "` non déclaré");
-										} else {
-											array.setType(itemType);
-										}
-									} else if (type instanceof Record) {
-										Record record = (Record) type;
-										Namespace<Variable> namespace = record.getNamespace();
-										for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
-											String fieldName = shape.getChild(k).toString();
-											Variable field = new Variable();
-											Type fieldType = table.findType(shape.getChild(k + 1).toString());
-											if (fieldType == null) {
-												Helpers.alert(shape.getChild(k + 1), "type `" + shape.getChild(k + 1).toString() + "` non déclaré");
-											} else {
-												field.setType(fieldType);
-											}
-											if (namespace.get(fieldName) != null) {
-												Helpers.alert(shape.getChild(k), "redéclaration du champ `" + fieldName + "`");
-											}
-											namespace.set(fieldName, field);
-										}
-									} else if (type == null) {
-										Helpers.alert(symbol.getChild(0), "définition cyclique du type `" + name + "`");
-									}
-								}
-							}
-							i = lj - 1;
-							break;
-						}
-						case "function": {
-							int lj = i;
-							do {
-								SymbolTable subTable = new SymbolTable(table);
-								table.children.add(subTable);
-								String name = symbol.getChild(0).toString();
-								Tree callType = symbol.getChild(1);
-								Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
-								Function function = new Function();
-								function.setSymbolTable(subTable);
-								for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
-									String argumentName = callType.getChild(k).toString();
-									Variable argument = new Variable();
-									Type argumentType = table.findType(callType.getChild(k + 1).toString());
-									if (argumentType == null) {
-										Helpers.alert(callType.getChild(k + 1), "type `" + callType.getChild(k + 1).toString() + "` non déclaré");
-									} else {
-										argument.setType(argumentType);
-									}
-									if (subTable.functionsAndVariables.get(argumentName) != null) {
-										Helpers.alert(callType.getChild(k), "redéclaration du paramètre `" + argumentName + "`");
-									}
-									subTable.functionsAndVariables.set(argumentName, argument);
-								}
-								if (type != null) {
-									Type returnType = table.findType(type.toString());
-									if (returnType == null) {
-										Helpers.alert(type, "type `" + type.toString() + "` non déclaré");
-									} else {
-										function.setType(returnType);
-									}
-								}
-								if (table.functionsAndVariables.get(name) != null) {
-									Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
-								}
-  								table.functionsAndVariables.set(name, function);
-							} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
-							for (int j = i; j < lj; ++j) {
-								symbol = dec.getChild(j);
-								String name = symbol.getChild(0).toString();
-								Tree body = symbol.getChild(2);
-								Function function = (Function) table.functionsAndVariables.get(name);
-								SymbolTable subTable = function.getSymbolTable();
-								subTable.fillWith(body);
-							}
-							i = lj - 1;
-							break;
-						}
-						case "var": {
-							String name = symbol.getChild(0).toString();
-							Tree exp = symbol.getChild(1);
-							table.fillWith(exp);
-							if (table.functionsAndVariables.get(name) != null) {
-								Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
-							}
-							table.functionsAndVariables.set(name, new Variable());
-							break;
-						}
-					}
-				}
-				return table.fillWith(seq);
-			}
-			// case "nil":
-			case "break": {
-				Tree parent = tree;
-				while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
-					if (parent.toString().equals("while") || parent.toString().equals("for")) {
-						return null;
-					}
-				}
-				Helpers.alert(tree, "utilisation de `break` en dehors d'une boucle");
-				return null;
-			}
-			default: {
-				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-					this.fillWith(tree.getChild(i));
-				}
-				return null;
-			}
-		}
-	}
-
 	private Type findType(String name) {
 		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou `null` sinon
 		Type type = types.get(name);
@@ -424,6 +193,246 @@ public class SymbolTable {
 		} else {
 			return null;
 		}
+	}
+
+	public Type fillWith(Tree tree) {
+		switch (tree.getType ()) {
+			// case SEQ:
+			// case ARR:
+			// case REC:
+			// case CALL:
+			// case ITEM:
+			// case FIELD:
+			// case ID:
+			case STR: return this.fillWithSTR(tree);
+			case INT: return this.fillWithINT(tree);
+		}
+		switch (tree.toString()) {
+			// case ":=":
+			// case "|":
+			// case "&":
+			// case "=":
+			// case "<>":
+			// case ">":
+			// case "<":
+			// case ">=":
+			// case "<=":
+			// case "+":
+			// case "-":
+			// case "*":
+			// case "/":
+			// case "if":
+			// case "while":
+			case "for": return this.fillWithFor(tree);
+			case "let": return this.fillWithLet(tree);
+			// case "nil":
+			case "break": return this.fillWithBreak(tree);
+			default: { /* TODO: à retirer lorsque tous les contrôles sémantiques seront faits */
+				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
+					this.fillWith(tree.getChild(i));
+				}
+				return null;
+			}
+		}
+	}
+
+	private Type fillWithSTR(Tree tree) {
+		return SymbolTable.stringType;
+	}
+
+	private Type fillWithINT(Tree tree) {
+		return SymbolTable.intType;
+	}
+
+	private Type fillWithFor(Tree tree) {
+		SymbolTable table = new SymbolTable(this);				this.children.add(table);
+		Variable iterator = new Variable();
+		iterator.setType(SymbolTable.intType);
+		table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
+		this.fillWith(tree.getChild(1));	// Rempli la table des symboles pour la borne inférieure du for
+		this.fillWith(tree.getChild(2));	// Rempli la table des symboles pour la borne supérieure du for
+		table.fillWith(tree.getChild(3));	// Remplissage de la table des symboles de la boucle for
+		return null;
+	}
+
+	private Type fillWithLet(Tree tree) {
+		SymbolTable table = new SymbolTable(this);
+		this.children.add(table);
+		Tree dec = tree.getChild(0);
+		Tree seq = tree.getChild(1);
+		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
+			Tree symbol = dec.getChild(i);
+			switch (symbol.toString()) {
+				case "type": {
+					int lj = i;
+					int remainingAliases = 0;
+					boolean remainsAliases = false;
+					boolean remainsArraysAndRecords = false;
+					do {
+						String name = symbol.getChild(0).toString();
+						Tree shape = symbol.getChild(1);
+						Type type = null;
+						switch (shape.getType()) {
+							case ARRTYPE: {
+								type = new Array();
+								if (!remainsArraysAndRecords) {
+									remainsArraysAndRecords = true;
+								}
+								break;
+							}
+							case RECTYPE: {
+								type = new Record();
+								if (!remainsArraysAndRecords) {
+									remainsArraysAndRecords = true;
+								}
+								break;
+							}
+							default: {
+								remainingAliases++;
+								if (!remainsAliases) {
+									remainsAliases = true;
+								}
+							}
+						}
+						if (table.types.get(name) != null) {
+							Helpers.alert(symbol.getChild(0), "redéclaration du type `" + name + "`");
+						}
+						table.types.set(name, type);
+					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
+					aliases: while (remainsAliases) {
+						remainsAliases = false;
+						for (int j = i; j < lj; ++j) {
+							symbol = dec.getChild(j);
+							String name = symbol.getChild(0).toString();
+							Tree shape = symbol.getChild(1);
+							Type type = table.types.get(name);
+							if (type == null) {
+								type = table.findType(shape.toString());
+								if (type != null) {
+									table.types.set(name, type);
+									if (remainingAliases == 1) {
+										break aliases;
+									} else {
+										remainingAliases--;
+										if (!remainsAliases) {
+											remainsAliases = true;
+										}
+									}
+								}
+							}
+						}
+					}
+					if (!remainsAliases || remainsArraysAndRecords) {
+						for (int j = i; j < lj; ++j) {
+							symbol = dec.getChild(j);
+							String name = symbol.getChild(0).toString();
+							Tree shape = symbol.getChild(1);
+							Type type = table.types.get(name);
+							if (type instanceof Array) {
+								Array array = (Array) type;
+								Type itemType = table.findType(shape.getChild(0).toString());
+								if (itemType == null) {
+									Helpers.alert(shape.getChild(0), "type `" + shape.getChild(0).toString() + "` non déclaré");
+								} else {
+									array.setType(itemType);
+								}
+							} else if (type instanceof Record) {
+								Record record = (Record) type;
+								Namespace<Variable> namespace = record.getNamespace();
+								for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
+									String fieldName = shape.getChild(k).toString();
+									Variable field = new Variable();
+									Type fieldType = table.findType(shape.getChild(k + 1).toString());
+									if (fieldType == null) {
+										Helpers.alert(shape.getChild(k + 1), "type `" + shape.getChild(k + 1).toString() + "` non déclaré");
+									} else {
+										field.setType(fieldType);
+									}
+									if (namespace.get(fieldName) != null) {
+										Helpers.alert(shape.getChild(k), "redéclaration du champ `" + fieldName + "`");
+									}
+									namespace.set(fieldName, field);
+								}
+							} else if (type == null) {
+								Helpers.alert(symbol.getChild(0), "définition cyclique du type `" + name + "`");
+							}
+						}
+					}
+					i = lj - 1;
+					break;
+				}
+				case "function": {
+					int lj = i;
+					do {
+						SymbolTable subTable = new SymbolTable(table);
+						table.children.add(subTable);
+						String name = symbol.getChild(0).toString();
+						Tree callType = symbol.getChild(1);
+						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
+						Function function = new Function();
+						function.setSymbolTable(subTable);
+						for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
+							String argumentName = callType.getChild(k).toString();
+							Variable argument = new Variable();
+							Type argumentType = table.findType(callType.getChild(k + 1).toString());
+							if (argumentType == null) {
+								Helpers.alert(callType.getChild(k + 1), "type `" + callType.getChild(k + 1).toString() + "` non déclaré");
+							} else {
+								argument.setType(argumentType);
+							}
+							if (subTable.functionsAndVariables.get(argumentName) != null) {
+								Helpers.alert(callType.getChild(k), "redéclaration du paramètre `" + argumentName + "`");
+							}
+							subTable.functionsAndVariables.set(argumentName, argument);
+						}
+						if (type != null) {
+							Type returnType = table.findType(type.toString());
+							if (returnType == null) {
+								Helpers.alert(type, "type `" + type.toString() + "` non déclaré");
+							} else {
+								function.setType(returnType);
+							}
+						}
+						if (table.functionsAndVariables.get(name) != null) {
+							Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
+						}
+						table.functionsAndVariables.set(name, function);
+					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
+					for (int j = i; j < lj; ++j) {
+						symbol = dec.getChild(j);
+						String name = symbol.getChild(0).toString();
+						Tree body = symbol.getChild(2);
+						Function function = (Function) table.functionsAndVariables.get(name);
+						SymbolTable subTable = function.getSymbolTable();
+						subTable.fillWith(body);
+					}
+					i = lj - 1;
+					break;
+				}
+				case "var": {
+					String name = symbol.getChild(0).toString();
+					Tree exp = symbol.getChild(1);
+					table.fillWith(exp);
+					if (table.functionsAndVariables.get(name) != null) {
+						Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
+					}
+					table.functionsAndVariables.set(name, new Variable());
+					break;
+				}
+			}
+		}
+		return table.fillWith(seq);
+	}
+
+	private Type fillWithBreak(Tree tree) {
+		Tree parent = tree;
+		while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
+			if (parent.toString().equals("while") || parent.toString().equals("for")) {
+				return null;
+			}
+		}
+		Helpers.alert(tree, "utilisation de `break` en dehors d'une boucle");
+		return null;
 	}
 
 }
