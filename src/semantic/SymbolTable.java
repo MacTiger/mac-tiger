@@ -208,19 +208,26 @@ public class SymbolTable {
 			case INT: return this.fillWithINT(tree);
 		}
 		switch (tree.toString()) {
-			// case ":=":
-			// case "|":
-			// case "&":
-			// case "=":
-			// case "<>":
-			// case ">":
-			// case "<":
-			// case ">=":
-			// case "<=":
-			case "+": return this.fillWithNAire(tree, SymbolTable.intType);
-			// case "-":
-			// case "*":
-			// case "/":
+//            case ":=":
+            // case "=":
+            // case "<>":
+            // case ">":
+            // case "<":
+            // case ">=":
+            // case "<=":
+
+            // "+", "-", "*", "/", "&" et "|" ont tous le même comportement pour les types de leurs opérandes :
+            case "+":
+            case "-":
+            case "*":
+            case "/":
+            case "|":
+            case "&":
+                Type expType = SymbolTable.intType;
+                for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
+                     this.checkType(tree.getChild(i), expType);
+                 }
+                 return SymbolTable.intType;
 			// case "if":
 			// case "while":
 			case "for": return this.fillWithFor(tree);
@@ -271,6 +278,18 @@ public class SymbolTable {
 		}
 		return operandsType;
 	}
+
+    private Type checkType(Tree tree, Type type) {
+        Type expType = this.fillWith(tree);
+        if (type == null) {
+            return expType;
+        } else if (type == expType) {
+            return type;
+        } else {
+            Helpers.alert(tree, tree.getText() +" est de type différent que celui attendu.");
+            return null;
+        }
+    }
 
 	private Type fillWithFor(Tree tree) {
 		SymbolTable table = new SymbolTable(this);				this.children.add(table);
