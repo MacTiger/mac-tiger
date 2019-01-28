@@ -1,4 +1,4 @@
-package symboltable;
+package semantic;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-package symboltable;
+package semantic;
 
 import misc.Constants;
 

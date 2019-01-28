@@ -1,4 +1,4 @@
-package symboltable;
+package semantic;
 
 public class Function extends FunctionOrVariable {
 

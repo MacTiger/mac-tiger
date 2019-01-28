@@ -1,4 +1,4 @@
-package symboltable;
+package semantic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,15 @@ import java.util.List;
 import org.antlr.runtime.tree.Tree;
 
 import misc.Constants;
+
+import static syntactic.TigerParser.ARRTYPE;
+import static syntactic.TigerParser.RECTYPE;
+import static syntactic.TigerParser.SEQ;
+import static syntactic.TigerParser.ARR;
+import static syntactic.TigerParser.REC;
+import static syntactic.TigerParser.CALL;
+import static syntactic.TigerParser.ITEM;
+import static syntactic.TigerParser.FIELD;
 
 public class SymbolTable {
 
@@ -139,6 +148,14 @@ public class SymbolTable {
 	}
 
 	public Type fillWith(Tree tree) {
+		switch (tree.getType ()) {
+			// case SEQ:
+			// case ARR:
+			// case REC:
+			// case CALL:
+			// case ITEM:
+			// case FIELD:
+		}
 		switch (tree.toString()) {
 			// case ":=":
 			// case "|":
@@ -153,12 +170,6 @@ public class SymbolTable {
 			// case "-":
 			// case "*":
 			// case "/":
-			// case "SEQ"
-			// case "ARR"
-			// case "REC"
-			// case "CALL"
-			// case "ITEM"
-			// case "FIELD"
 			// case "if":
 			// case "while":
 			case "for": {
@@ -189,15 +200,15 @@ public class SymbolTable {
 								String name = symbol.getChild(0).toString();
 								Tree shape = symbol.getChild(1);
 								Type type = null;
-								switch (shape.toString()) {
-									case "ARRTYPE": {
+								switch (shape.getType()) {
+									case ARRTYPE: {
 										type = new Array();
 										if (!remainsArraysAndRecords) {
 											remainsArraysAndRecords = true;
 										}
 										break;
 									}
-									case "RECTYPE": {
+									case RECTYPE: {
 										type = new Record();
 										if (!remainsArraysAndRecords) {
 											remainsArraysAndRecords = true;

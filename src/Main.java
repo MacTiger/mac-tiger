@@ -4,7 +4,9 @@ import org.antlr.runtime.ANTLRInputStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.tree.Tree;
 
-import symboltable.SymbolTable;
+import lexical.TigerLexer;
+import syntactic.TigerParser;
+import semantic.SymbolTable;
 
 public class Main {
 
@@ -20,7 +22,7 @@ public class Main {
 		Main.compile(System.in, syntaxOnly);
 	}
 
-	public static void compile (InputStream stream, boolean syntaxOnly) throws Exception {
+	public static void compile(InputStream stream, boolean syntaxOnly) throws Exception {
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);

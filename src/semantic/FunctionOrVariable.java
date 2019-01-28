@@ -1,3 +1,3 @@
-package symboltable;
+package semantic;
 
 public abstract class FunctionOrVariable extends Symbol {}

@@ -8,5 +8,5 @@
 /out
 /res/output
 /res/Tiger.tokens
-/src/TigerLexer.java
-/src/TigerParser.java
+/src/lexical/TigerLexer.java
+/src/syntactic/TigerParser.java

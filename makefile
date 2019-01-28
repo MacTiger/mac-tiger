@@ -1,8 +1,12 @@
 init:
 	java -cp res:lib/* -jar lib/antlr-3.5.2-complete.jar res/Tiger.g
 	mv Tiger.tokens res/Tiger.tokens
-	mv res/TigerLexer.java src/TigerLexer.java
-	mv res/TigerParser.java src/TigerParser.java
+	mkdir -p src/lexical
+	mkdir -p src/syntactic
+	sed -i '1s/^/package lexical;\n/' res/TigerLexer.java
+	sed -i '1s/^/package syntactic;\n/' res/TigerParser.java
+	mv res/TigerLexer.java src/lexical/TigerLexer.java
+	mv res/TigerParser.java src/syntactic/TigerParser.java
 	mkdir -p bin
 
 build:
@@ -17,8 +21,8 @@ test:
 clean:
 	rm -r -f bin/*
 	rm -f res/Tiger.tokens
-	rm -f src/TigerLexer.java
-	rm -f src/TigerParser.java
+	rm -f src/lexical/TigerLexer.java
+	rm -f src/syntactic/TigerParser.java
 
 antlrworks:
 	java -jar lib/antlrworks-1.5.1.jar
