@@ -16,6 +16,9 @@ import static syntactic.TigerParser.REC;
 import static syntactic.TigerParser.CALL;
 import static syntactic.TigerParser.ITEM;
 import static syntactic.TigerParser.FIELD;
+import static syntactic.TigerParser.ID;
+import static syntactic.TigerParser.STR;
+import static syntactic.TigerParser.INT;
 
 public class SymbolTable {
 
@@ -156,6 +159,13 @@ public class SymbolTable {
 			// case CALL:
 			// case ITEM:
 			// case FIELD:
+			// case ID:
+			case STR: {
+				return SymbolTable.stringType;
+			}
+			case INT: {
+				return SymbolTable.intType;
+			}
 		}
 		switch (tree.toString()) {
 			// case ":=":
@@ -353,7 +363,16 @@ public class SymbolTable {
 				return table.fillWith(seq);
 			}
 			// case "nil":
-			// case "break":
+			case "break": {
+				Tree parent = tree;
+				while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
+					if (parent.toString().equals("while") || parent.toString().equals("for")) {
+						return null;
+					}
+				}
+				Helpers.alert(tree, "utilisation de `break` en dehors d'une boucle");
+				return null;
+			}
 			default: {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.fillWith(tree.getChild(i));
