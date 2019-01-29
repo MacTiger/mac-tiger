@@ -164,15 +164,15 @@ public class SymbolTable {
 	}
 
 	private Function findFunction(String name) {
-		// recherche la fonction ou la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
+		// recherche la fonction indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
-		if (functionOrVariable != null) {	// Si la fonction ou variable est trouvé dans cette table des symboles
+		if (functionOrVariable != null) {	// Si la fonction est trouvé dans cette table des symboles
 			if (functionOrVariable instanceof Function) {
 				return (Function) functionOrVariable;
 			} else {
 				return null;
 			}
-		} else if (this.parent != null) {	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+		} else if (this.parent != null) {	// Si la fonction n'est pas trouvé ici, on cherche dans la table parent, si elle existe
 			return this.parent.findFunction(name);
 		} else {
 			return null;
@@ -180,15 +180,15 @@ public class SymbolTable {
 	}
 
 	private Variable findVariable(String name) {
-		// recherche la fonction ou la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
+		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou `null` sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
-		if (functionOrVariable != null) {	// Si la fonction ou variable est trouvé dans cette table des symboles
+		if (functionOrVariable != null) {	// Si la variable est trouvé dans cette table des symboles
 			if (functionOrVariable instanceof Variable) {
 				return (Variable) functionOrVariable;
 			} else {
 				return null;
 			}
-		} else if (this.parent != null) {	// Si la fonction ou variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
+		} else if (this.parent != null) {	// Si la variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
 			return this.parent.findVariable(name);
 		} else {
 			return null;
@@ -207,14 +207,30 @@ public class SymbolTable {
 			case STR: return this.fillWithSTR(tree);
 			case INT: return this.fillWithINT(tree);
 		}
+		Type expType;
 		switch (tree.toString()) {
-//            case ":=":
-            // case "=":
-            // case "<>":
-            // case ">":
-            // case "<":
-            // case ">=":
-            // case "<=":
+
+			// case ":=":
+
+             case "=":
+             case "<>":
+             	expType = fillWith(tree.getChild(0));
+             	checkType(tree.getChild(1),expType, false);
+             	return SymbolTable.intType;
+
+             case ">":
+             case "<":
+             case ">=":
+             case "<=":
+	             expType = fillWith(tree.getChild(0));
+	             if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)){
+		             Helpers.alert(tree.getChild(0), "les types non primitifs (ie : autre que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
+	             }
+	             Type secondType = checkType(tree.getChild(1),expType, true);
+	             if ((secondType != SymbolTable.intType) && (secondType != SymbolTable.stringType)){
+	             	Helpers.alert(tree.getChild(1), "les types non primitifs (ie : autres que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
+             }
+	             return SymbolTable.intType;
 
             // "+", "-", "*", "/", "&" et "|" ont tous le même comportement pour les types de leurs opérandes :
             case "+":
@@ -223,9 +239,9 @@ public class SymbolTable {
             case "/":
             case "|":
             case "&":
-                Type expType = SymbolTable.intType;
+                expType = SymbolTable.intType;
                 for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-                     this.checkType(tree.getChild(i), expType);
+                     this.checkType(tree.getChild(i), expType, false);
                  }
                  return SymbolTable.intType;
 			// case "if":
@@ -279,7 +295,13 @@ public class SymbolTable {
 		return operandsType;
 	}
 
-    private Type checkType(Tree tree, Type type) {
+    private Type checkType(Tree tree, Type type, boolean returnTreeType) {
+		// Vérifie que le type de l'expression de 'tree' est bien 'type'
+	    // Si 'type' vaut null, alors le type de 'tree' est renvoyé
+	    // Si le type de 'tree' n'est pas 'type' :
+	    // - null est renvoyé si 'returnTreeType' est faux
+	    // - le type de l'expression de 'tree' est renvoyé sinon
+
         Type expType = this.fillWith(tree);
         if (type == null) {
             return expType;
@@ -287,7 +309,10 @@ public class SymbolTable {
             return type;
         } else {
             Helpers.alert(tree, tree.getText() +" est de type différent que celui attendu.");
-            return null;
+            if (returnTreeType) {
+	            return expType;
+            }
+	        return null;
         }
     }
 
