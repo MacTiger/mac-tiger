@@ -210,27 +210,16 @@ public class SymbolTable {
 		Type expType;
 		switch (tree.toString()) {
 
-			// case ":=":
+			// case ":=":		//TODO : définition de type par inférence de l'expression à droite du =
 
              case "=":
-             case "<>":
-             	expType = fillWith(tree.getChild(0));
-             	checkType(tree.getChild(1),expType, false);
-             	return SymbolTable.intType;
+             case "<>": return fillWithEqualOrNot(tree);
 
              case ">":
              case "<":
              case ">=":
-             case "<=":
-	             expType = fillWith(tree.getChild(0));
-	             if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)){
-		             Helpers.alert(tree.getChild(0), "les types non primitifs (ie : autre que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
-	             }
-	             Type secondType = checkType(tree.getChild(1),expType, true);
-	             if ((secondType != SymbolTable.intType) && (secondType != SymbolTable.stringType)){
-	             	Helpers.alert(tree.getChild(1), "les types non primitifs (ie : autres que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
-             }
-	             return SymbolTable.intType;
+             case "<=": return this.fillWithComparator(tree);
+
 
             // "+", "-", "*", "/", "&" et "|" ont tous le même comportement pour les types de leurs opérandes :
             case "+":
@@ -238,12 +227,8 @@ public class SymbolTable {
             case "*":
             case "/":
             case "|":
-            case "&":
-                expType = SymbolTable.intType;
-                for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-                     this.checkType(tree.getChild(i), expType, false);
-                 }
-                 return SymbolTable.intType;
+            case "&": return this.fillWithIntOperator(tree);
+
 			// case "if":
 			// case "while":
 			case "for": return this.fillWithFor(tree);
@@ -264,6 +249,31 @@ public class SymbolTable {
 	}
 
 	private Type fillWithINT(Tree tree) {
+		return SymbolTable.intType;
+	}
+
+	private Type fillWithEqualOrNot(Tree tree){
+		Type expType = fillWith(tree.getChild(0));
+		checkType(tree.getChild(1),expType, false);
+		return SymbolTable.intType;
+	}
+
+	private Type fillWithComparator(Tree tree){
+		Type expType = fillWith(tree.getChild(0));
+		if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)){
+			Helpers.alert(tree.getChild(0), "les types non primitifs (ie : autre que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
+		}
+		Type secondType = checkType(tree.getChild(1),expType, true);
+		if ((secondType != SymbolTable.intType) && (secondType != SymbolTable.stringType)){
+			Helpers.alert(tree.getChild(1), "les types non primitifs (ie : autres que int et string) ne sont pas acceptés pour cet opérateur : "+ tree.getText());
+		}
+		return SymbolTable.intType;
+	}
+
+	private Type fillWithIntOperator(Tree tree){
+		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
+			this.checkType(tree.getChild(i), SymbolTable.intType, false);
+		}
 		return SymbolTable.intType;
 	}
 
@@ -308,7 +318,7 @@ public class SymbolTable {
         } else if (type == expType) {
             return type;
         } else {
-            Helpers.alert(tree, tree.getText() +" est de type différent que celui attendu.");
+            Helpers.alert(tree, tree.getText() +" est de type différent de celui attendu.");
             if (returnTreeType) {
 	            return expType;
             }
