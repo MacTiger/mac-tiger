@@ -1,0 +1,4 @@
+let
+      type vector = {x : int, x : int}
+in
+end

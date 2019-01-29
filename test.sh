@@ -1,4 +1,5 @@
 #!/bin/bash
+time=$SECONDS
 regexp='\.tiger$'
 i="0"
 j="0"
@@ -18,7 +19,7 @@ do
 		if [[ $file =~ $regexp ]]
 		then
 			file="tests/$dir/$file"
-			output=$(java -cp bin:antlr/* Test 2>&1 > /dev/null < $file)
+			output=$(java -cp bin:lib/* Main --syntax-only 2>&1 > /dev/null < $file)
 			status=$((! $?))
 			if [[ $output != "" ]]
 			then
@@ -36,4 +37,5 @@ do
 	done
 done
 l=$(($i + $j))
-echo "$l tests: $i passed, $j failed"
+time=$(($SECONDS - time))
+echo "$l tests: $i passed, $j failed ($time seconds)"

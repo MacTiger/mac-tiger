@@ -1,0 +1,5 @@
+let
+var x : int := 1
+var x : string := 2
+in
+end

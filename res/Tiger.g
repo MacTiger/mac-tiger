@@ -278,7 +278,7 @@ funDec
     )?
     '='
     exp
-    (-> ^('function' ID ^(CALLTYPE ($i $j)*) $k? exp))
+    (-> ^('function' ID ^(CALLTYPE ($i $j)*) exp $k?))
 ;
 
 varDec

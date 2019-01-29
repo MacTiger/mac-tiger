@@ -4,8 +4,9 @@
 /.idea
 /.project
 /bin
+/lib/output
 /out
-/src/output
-/src/Tiger.tokens
-/src/TigerLexer.java
-/src/TigerParser.java
+/res/output
+/res/Tiger.tokens
+/src/lexical/TigerLexer.java
+/src/syntactic/TigerParser.java

@@ -1,32 +1,38 @@
-import org.antlr.runtime.*;
+import java.io.InputStream;
+
+import org.antlr.runtime.ANTLRInputStream;
+import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.tree.Tree;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import lexical.TigerLexer;
+import syntactic.TigerParser;
+import semantic.SymbolTable;
 
 public class Main {
 
-	public static void main(String[] args) throws Exception {
-		if (args.length >= 1 && !args[0].equals("")){
-			System.setIn(new FileInputStream(args[0]));
+	public static void main(String[] arguments) throws Exception {
+		boolean syntaxOnly = false;
+		for (String argument: arguments) {
+			if (argument.equals("--syntax-only") && !syntaxOnly) {
+				syntaxOnly = true;
+			} else {
+				throw new Exception("Illegal argument");
+			}
 		}
+		Main.compile(System.in, syntaxOnly);
+	}
+
+	public static void compile(InputStream stream, boolean syntaxOnly) throws Exception {
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		TigerParser parser = new TigerParser(tokens);
 		TigerParser.program_return result = parser.program();
 		Tree tree = (Tree) result.getTree();
-		buildSymbolTable(tree);
+		if (!syntaxOnly) {
+			SymbolTable root = new SymbolTable();
+			root.fillWith(tree);
+		}
 	}
 
-	public static void buildSymbolTable(Tree tree) {
-		// Cette fonction doit créer la table de symboles depuis l'arbre tree
-		// Pour l'instant, elle ne fait qu'un parcours en profondeur de l'arbre et l'affiche en post-fixé
-		for (int i = 0; i < tree.getChildCount(); i++) {
-			buildSymbolTable(tree.getChild(i));
-		}
-		// Pour l'instant, on ne fait qu'un print
-		System.out.println((String) tree.getText());
-	}
 }
