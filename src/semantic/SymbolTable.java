@@ -338,14 +338,17 @@ public class SymbolTable {
 	}
 
 	private Type fillWithLet(Tree tree) {
-		SymbolTable table = new SymbolTable(this);
-		this.children.add(table);
+		SymbolTable supTable = this;
+		SymbolTable table = this;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
 				case "type": {
+					table = new SymbolTable(supTable);
+					supTable.children.add(table);
+					supTable = table;
 					int lj = i;
 					int remainingAliases = 0;
 					boolean remainsAliases = false;
@@ -444,6 +447,9 @@ public class SymbolTable {
 					break;
 				}
 				case "function": {
+					table = new SymbolTable(supTable);
+					supTable.children.add(table);
+					supTable = table;
 					int lj = i;
 					do {
 						SymbolTable subTable = new SymbolTable(table);
@@ -476,7 +482,7 @@ public class SymbolTable {
 							}
 						}
 						if (table.functionsAndVariables.get(name) != null) {
-							Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
+							Helpers.alert(symbol.getChild(0), "redéclaration de la fonction `" + name + "`");
 						}
 						table.functionsAndVariables.set(name, function);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -495,8 +501,10 @@ public class SymbolTable {
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
 					table.fillWith(exp);
-					if (table.functionsAndVariables.get(name) != null) {
-						Helpers.alert(symbol.getChild(0), "redéclaration de la fonction ou variable `" + name + "`");
+					if (table == this || table.functionsAndVariables.get(name) != null) {
+						table = new SymbolTable(supTable);
+						supTable.children.add(table);
+						supTable = table;
 					}
 					table.functionsAndVariables.set(name, new Variable());
 					break;
