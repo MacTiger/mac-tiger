@@ -508,9 +508,12 @@ public class SymbolTable {
 
 	private Type fillWithBreak(Tree tree) {
 		Tree parent = tree;
+		Tree child = tree;
 		while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
-			if (parent.toString().equals("while") || parent.toString().equals("for")) {
+			if (parent.toString().equals("while") || parent.toString().equals("for") && child == parent.getChild(3)) {
 				return null;
+			} else {
+				child = parent;
 			}
 		}
 		Helpers.alert(tree, "utilisation de `break` en dehors d'une boucle");
