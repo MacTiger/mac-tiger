@@ -1,5 +1,0 @@
-let
-      var x : string
-in
-      x := "Hello" <> "Bye"
-end

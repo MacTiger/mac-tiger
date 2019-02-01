@@ -1,5 +1,5 @@
 let
-      var x : string
+      var x : string = ""
       function f() : int = (
             0
       )

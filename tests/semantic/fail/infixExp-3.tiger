@@ -1,5 +1,5 @@
 let
-      var x : String
+      var x : string = ""
 in
       x := "Hello" <> "Bye"
 end

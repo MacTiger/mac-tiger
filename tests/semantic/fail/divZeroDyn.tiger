@@ -1,8 +1,0 @@
-let 
-	var n := 5
-	var m := 2
-	var test := 42
-in
-	n := -3-m+n;
-	test := test/n
-end

@@ -1,5 +1,5 @@
 let
-      var x : int
+      var x : int = 0
 in
       x := "Hello" < 1
 end

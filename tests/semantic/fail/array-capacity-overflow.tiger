@@ -1,5 +1,0 @@
-let
-      var x := int [2] of 0
-in
-      x[2] = 1
-end
