@@ -1,5 +1,5 @@
 let
-      var x : String
+      var x : int := 0
 in
-      x := "Hello" <> "Bye"
+      x := "Hello" <> 1
 end

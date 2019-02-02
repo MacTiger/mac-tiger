@@ -1,5 +1,0 @@
-let
-      var x : int
-in
-      x := "Hello" < 1
-end
