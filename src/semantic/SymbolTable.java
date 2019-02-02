@@ -2,6 +2,7 @@ package semantic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.runtime.tree.Tree;
 
@@ -140,6 +141,22 @@ public class SymbolTable {
 	private Namespace<Type> types;
 	private Namespace<FunctionOrVariable> functionsAndVariables;
 
+	public SymbolTable getParent() {
+		return parent;
+	}
+
+	public ArrayList<SymbolTable> getChildren() {
+		return children;
+	}
+
+	private Namespace<Type> getTypes() {
+		return types;
+	}
+
+	private Namespace<FunctionOrVariable> getFunctionsAndVariables() {
+		return functionsAndVariables;
+	}
+
 	public SymbolTable() {
 		this(SymbolTable.root);
 	}
@@ -196,18 +213,67 @@ public class SymbolTable {
 	}
 
 	public Type fillWith(Tree tree, Notifier notifier) {
+		Type expType = null;
 		switch (tree.getType ()) {
-			// case SEQ:
-			// case ARR:
-			// case REC:
-			// case CALL:
+
+			/* # Séquence d'expressions
+			 *
+			 * Aucun contrôle sémantique à effectuer
+			 */
+			case SEQ:
+				for (int i = 0; i < tree.getChildCount(); i++) {
+					expType = this.fillWith(tree.getChild(i), notifier);
+				}
+				return expType;
+
+				// case ARR:
+				// case REC:
+
+
+			/* # Appel d'une fonction
+
+			 * Contrôles sémantiques à effectuer :
+			 * - (1) La fonction existe
+			 * - (2) Bon nombre d'arguments
+			 * - (3) Bon type des arguments
+			 */
+			case CALL:
+				String functionName = tree.getChild(0).toString();
+				Function function = this.findFunction(functionName);
+
+				// Test sémantique (1)
+				if (function == null) {
+					System.err.println("[!] Appel d'une fonction inexistante.");
+					return null;
+				}
+
+				SymbolTable functionSymbolTable = function.getSymbolTable();
+				Namespace argsNameSpace = functionSymbolTable.getFunctionsAndVariables();
+				ArrayList<Variable> expectedArgs = new ArrayList<>();
+
+				argsNameSpace.getSymbols().forEach((identifier, symbol) -> {
+					expectedArgs.add((Variable) symbol);
+				});
+
+				// Test sémantique (2)
+				if (expectedArgs.size() != tree.getChildCount() - 1) {
+					System.err.println("[!] Mauvais nombre d'arguments lors de l'appel d'une fonction");
+					return null;
+				}
+
+				// Test sémantique (3)
+				for (int i = 0; i < expectedArgs.size(); i++) {
+					this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType(), false);
+				}
+
+				return function.getType();
+
 			// case ITEM:
 			// case FIELD:
 			// case ID:
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
 		}
-		Type expType;
 		switch (tree.toString()) {
 
 			// case ":=":		//TODO : définition de type par inférence de l'expression à droite du =
@@ -527,5 +593,4 @@ public class SymbolTable {
 		notifier.semanticError(tree, "utilisation de 'break' en dehors d'une boucle");
 		return null;
 	}
-
 }

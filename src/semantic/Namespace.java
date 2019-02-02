@@ -9,6 +9,10 @@ public class Namespace<Symbol> {
 	private Map<String, Symbol> symbols;
 	private Symbol lastSymbol;
 
+	public Map<String, Symbol> getSymbols() {
+		return symbols;
+	}
+
 	public Namespace() {
 		this.symbols = new LinkedHashMap<String, Symbol>();
 		this.lastSymbol = null;
