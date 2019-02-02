@@ -2,7 +2,7 @@
 
 **Date et heure.** 26 janvier 2019 à 10 heures
 
-**Prochaine réunion.** 
+**Prochaine réunion.** 2 février 2019 à 10 heures
 
 **Ordre du jour.**
 
