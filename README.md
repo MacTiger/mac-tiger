@@ -42,7 +42,7 @@ echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/lib/antlr-3.5.2-complete.jar' 
 
 Fermez le terminal puis rouvrez-en un nouveau.
 
-Retournez dans le projet, puis générez les analyseurs lexical (`/src/TigerLexer.java`) et syntaxique (`/src/TigerParser.java`) avec la commande suivante :
+Retournez dans le projet, puis générez les analyseurs lexical (`/src/lexical/TigerLexer.java`) et syntaxique (`/src/syntactic/TigerParser.java`) avec la commande suivante :
 
 ```shell
 $ make init

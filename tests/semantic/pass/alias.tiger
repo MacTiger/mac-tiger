@@ -1,0 +1,6 @@
+0 + let
+	type a = int
+	var b : a := 1
+in
+	b
+end + 2

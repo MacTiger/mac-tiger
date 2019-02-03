@@ -491,7 +491,7 @@ public class SymbolTable {
 							}
 						}
 						if (table.types.get(name) != null) {
-							notifier.semanticError(symbol.getChild(0), "redéclaration du type '" + name + "'");
+							notifier.semanticError(symbol.getChild(0), "redéclaration du type %s", name);
 						}
 						table.types.set(name, type);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
@@ -528,7 +528,7 @@ public class SymbolTable {
 								Array array = (Array) type;
 								Type itemType = table.findType(shape.getChild(0).toString());
 								if (itemType == null) {
-									notifier.semanticError(shape.getChild(0), "type '" + shape.getChild(0).toString() + "' non déclaré");
+									notifier.semanticError(shape.getChild(0), "type %s non déclaré", shape.getChild(0).toString());
 								} else {
 									array.setType(itemType);
 								}
@@ -540,17 +540,17 @@ public class SymbolTable {
 									Variable field = new Variable();
 									Type fieldType = table.findType(shape.getChild(k + 1).toString());
 									if (fieldType == null) {
-										notifier.semanticError(shape.getChild(k + 1), "type '" + shape.getChild(k + 1).toString() + "' non déclaré");
+										notifier.semanticError(shape.getChild(k + 1), "type %s non déclaré", shape.getChild(k + 1).toString());
 									} else {
 										field.setType(fieldType);
 									}
 									if (namespace.get(fieldName) != null) {
-										notifier.semanticError(shape.getChild(k), "redéclaration du champ '" + fieldName + "'");
+										notifier.semanticError(shape.getChild(k), "redéclaration du champ %s", fieldName);
 									}
 									namespace.set(fieldName, field);
 								}
 							} else if (type == null) {
-								notifier.semanticError(symbol.getChild(0), "définition cyclique du type '" + name + "'");
+								notifier.semanticError(symbol.getChild(0), "définition cyclique du type %s", name);
 							}
 						}
 					}
@@ -575,25 +575,25 @@ public class SymbolTable {
 							Variable argument = new Variable();
 							Type argumentType = table.findType(callType.getChild(k + 1).toString());
 							if (argumentType == null) {
-								notifier.semanticError(callType.getChild(k + 1), "type '" + callType.getChild(k + 1).toString() + "' non déclaré");
+								notifier.semanticError(callType.getChild(k + 1), "type %s non déclaré", callType.getChild(k + 1).toString());
 							} else {
 								argument.setType(argumentType);
 							}
 							if (subTable.functionsAndVariables.get(argumentName) != null) {
-								notifier.semanticError(callType.getChild(k), "redéclaration du paramètre '" + argumentName + "'");
+								notifier.semanticError(callType.getChild(k), "redéclaration du paramètre %s", argumentName);
 							}
 							subTable.functionsAndVariables.set(argumentName, argument);
 						}
 						if (type != null) {
 							Type returnType = table.findType(type.toString());
 							if (returnType == null) {
-								notifier.semanticError(type, "type '" + type.toString() + "' non déclaré");
+								notifier.semanticError(type, "type %s non déclaré", type.toString());
 							} else {
 								function.setType(returnType);
 							}
 						}
 						if (table.functionsAndVariables.get(name) != null) {
-							notifier.semanticError(symbol.getChild(0), "redéclaration de la fonction '" + name + "'");
+							notifier.semanticError(symbol.getChild(0), "redéclaration de la fonction %s", name);
 						}
 						table.functionsAndVariables.set(name, function);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -656,7 +656,7 @@ public class SymbolTable {
 				child = parent;
 			}
 		}
-		notifier.semanticError(tree, "utilisation de 'break' en dehors d'une boucle");
+		notifier.semanticError(tree, "utilisation de %s en dehors d'une boucle", tree.toString());
 		return null;
 	}
 }

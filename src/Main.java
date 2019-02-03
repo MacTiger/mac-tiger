@@ -26,11 +26,11 @@ public class Main {
 	}
 
 	public static int compile(InputStream stream, boolean syntaxOnly) throws Exception {
-		Notifier notifier = new Notifier();
+		Notifier notifier = new Notifier(TigerParser.tokenNames);
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input) {
 			public void reportError(RecognitionException exception) {
-				notifier.lexicalError(exception, super.getErrorMessage(exception, TigerParser.tokenNames));
+				notifier.lexicalError(this, exception);
 			}
 			public String getCharErrorDisplay(int character) {
 				return "\033[0;33m" + super.getCharErrorDisplay(character) + "\033[0m";
@@ -42,7 +42,7 @@ public class Main {
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		TigerParser parser = new TigerParser(tokens) {
 			public void reportError(RecognitionException exception) {
-				notifier.syntacticError(exception, super.getErrorMessage(exception, TigerParser.tokenNames).replaceAll("(?<= )(EOF|'[\\S\\s]+'$)(?!\\033\\[0m)", "\033[0;33m$1\033[0m"));
+				notifier.syntacticError(this, exception);
 			}
 			public String getTokenErrorDisplay(Token token) {
 				return "\033[0;33m" + super.getTokenErrorDisplay(token) + "\033[0m";
