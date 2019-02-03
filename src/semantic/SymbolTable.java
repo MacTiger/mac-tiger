@@ -1,6 +1,7 @@
 package semantic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -270,13 +271,13 @@ public class SymbolTable {
 
 			// case ITEM:
 			// case FIELD:
-			// case ID:
+			case ID: return this.fillWithID(tree, notifier);
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
 		}
 		switch (tree.toString()) {
 
-			// case ":=":		//TODO : définition de type par inférence de l'expression à droite du =
+			 case ":=":	return this.fillWithAssignment(tree, notifier);
 
              case "=":
              case "<>": return fillWithEqualOrNot(tree, notifier);
@@ -310,8 +311,52 @@ public class SymbolTable {
 		}
 	}
 
+	private Type fillWithAssignment(Tree tree, Notifier notifier){
+
+		List<Integer> lValueTypes = Arrays.asList(ID, ITEM, FIELD);	// La liste des tokens imaginaires d'ANTLR correspondant à un lValue
+//		Vérification que l'expression à gauche du ":=" est un lValue
+		int lTypeANTLR = tree.getChild(0).getType();
+		if (!(lValueTypes.contains(lTypeANTLR)) ){
+			notifier.semanticError(tree.getChild(0), "the expression on the left of the operator ':=' isn't a lValue");
+		}
+
+		Type lType = null;
+		switch (lTypeANTLR){
+			case ID : lType = fillWithID(tree.getChild(0), notifier);
+				break;
+			case ITEM : lType = fillWithITEM(tree.getChild(0), notifier);
+				break;
+			case FIELD : lType = fillWithFIELD(tree.getChild(0), notifier);
+				break;
+		}
+//		Vérification de cohérence de type entre l'expression gauche et droite
+		if (lType != fillWith(tree.getChild(1), notifier)){
+			notifier.semanticError(tree, "types doesn't match between the two sides of the operator ':='");
+		}
+
+		return null;
+	}
+
 	private Type fillWithSTR(Tree tree, Notifier notifier) {
 		return SymbolTable.stringType;
+	}
+
+	private Type fillWithID(Tree tree, Notifier notifier) {
+		Variable variable = this.findVariable(tree.getText());
+		if (variable == null){
+			notifier.semanticError(tree, "the variable isn't defined");
+		} else{
+			return variable.getType();
+		}
+		return null;
+	}
+
+	private Type fillWithITEM(Tree tree, Notifier notifier){	//TODO !
+		return null;
+	}
+
+	private Type fillWithFIELD(Tree tree, Notifier notifier){	//TODO !
+		return null;
 	}
 
 	private Type fillWithINT(Tree tree, Notifier notifier) {
@@ -566,13 +611,34 @@ public class SymbolTable {
 				case "var": {
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
-					table.fillWith(exp, notifier);
+					Type expType = table.fillWith(exp, notifier);
 					if (table == this || table.functionsAndVariables.get(name) != null) {
 						table = new SymbolTable(supTable);
 						supTable.children.add(table);
 						supTable = table;
 					}
-					table.functionsAndVariables.set(name, new Variable());
+
+					// Détermination du type de la variable : il est soit renseigné dans la déclaration, soit par inférence
+					Type typeOfVar;
+					if (symbol.getChildCount() == 3){	// Cas où le type de la variable est renseigné dans la déclaration
+						Tree typeTree = symbol.getChild(2);
+						if ((typeOfVar = this.findType(typeTree.getText())) == null){
+							notifier.semanticError(symbol.getChild(2), "the type in declaration doesn't exist");
+						} else{
+							if (typeOfVar != expType){
+								notifier.semanticError(symbol.getChild(2), "the type of the declaration doesn't match the one of the initizialisation");
+							}
+						}
+					}
+					else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
+						typeOfVar = expType;
+					}
+
+					// Création de la variable déclarée et spécification de son type :
+					Variable variable = new Variable();
+					variable.setType(typeOfVar);
+
+					table.functionsAndVariables.set(name, variable);
 					break;
 				}
 			}

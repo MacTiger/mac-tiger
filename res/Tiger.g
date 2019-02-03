@@ -285,11 +285,11 @@ varDec
 :   'var'
     ID
     (   ':'
-        ID
+        k = ID
     )?
     ':='
     exp
-    (-> ^('var' ID ID? exp))
+    (-> ^('var' ID exp $k?))
 ;
 
 ID
