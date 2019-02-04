@@ -313,24 +313,22 @@ public class SymbolTable {
 
 	private Type fillWithAssignment(Tree tree, Notifier notifier){
 
-		List<Integer> lValueTypes = Arrays.asList(ID, ITEM, FIELD);	// La liste des tokens imaginaires d'ANTLR correspondant à un lValue
-//		Vérification que l'expression à gauche du ":=" est un lValue
-		int lTypeANTLR = tree.getChild(0).getType();
-		if (!(lValueTypes.contains(lTypeANTLR)) ){
-			notifier.semanticError(tree.getChild(0), "the expression on the left of the operator ':=' isn't a lValue");
+		Type lType = null;
+		Tree lValue = tree.getChild(0);
+		switch (lValue.getType()) { //Vérification que l'expression à gauche du ":=" est un lValue (cherche si le token de 'lValue' est bien parmis les tokens imaginaires ANTLR correspondant à un lValue)
+			case ID:
+			case ITEM:
+			case FIELD: {
+				lType = this.fillWith(lValue, notifier);
+				break;
+			}
+			default: {
+				notifier.semanticError(lValue, "the expression on the left of the operator %s isn't a lValue", tree.toString());
+			}
 		}
 
-		Type lType = null;
-		switch (lTypeANTLR){
-			case ID : lType = fillWithID(tree.getChild(0), notifier);
-				break;
-			case ITEM : lType = fillWithITEM(tree.getChild(0), notifier);
-				break;
-			case FIELD : lType = fillWithFIELD(tree.getChild(0), notifier);
-				break;
-		}
-//		Vérification de cohérence de type entre l'expression gauche et droite
-		if (lType != fillWith(tree.getChild(1), notifier)){
+		// Vérification de cohérence de type entre l'expression gauche et droite
+		if (checkType(tree.getChild(1),notifier,lType,true)==null){
 			notifier.semanticError(tree, "types doesn't match between the two sides of the operator ':='");
 		}
 
@@ -622,11 +620,15 @@ public class SymbolTable {
 					Type typeOfVar;
 					if (symbol.getChildCount() == 3){	// Cas où le type de la variable est renseigné dans la déclaration
 						Tree typeTree = symbol.getChild(2);
-						if ((typeOfVar = this.findType(typeTree.getText())) == null){
-							notifier.semanticError(symbol.getChild(2), "the type in declaration doesn't exist");
-						} else{
+//						if ((typeOfVar = this.findType(typeTree.getText())) == null){
+//							notifier.semanticError(symbol.getChild(2), "the type in declaration doesn't exist");
+//						}
+						if ((typeOfVar = checkType(typeTree,notifier, null,true)) == null){
+							notifier.semanticError(typeTree, "the type in declaration doesn't exist");
+						}
+						else{
 							if (typeOfVar != expType){
-								notifier.semanticError(symbol.getChild(2), "the type of the declaration doesn't match the one of the initizialisation");
+								notifier.semanticError(typeTree, "the type of the declaration doesn't match the one of the initizialisation");
 							}
 						}
 					}
