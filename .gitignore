@@ -5,6 +5,7 @@
 /.project
 /bin
 /lib/output
+/logs
 /out
 /res/output
 /res/Tiger.tokens

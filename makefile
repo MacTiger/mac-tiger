@@ -8,6 +8,7 @@ init:
 	mv res/TigerLexer.java src/lexical/TigerLexer.java
 	mv res/TigerParser.java src/syntactic/TigerParser.java
 	mkdir -p bin
+	mkdir -p logs
 
 build:
 	javac -d bin -cp src:lib/* src/Main.java
@@ -20,6 +21,7 @@ test:
 
 clean:
 	rm -r -f bin/*
+	rm -r -f logs/*
 	rm -f res/Tiger.tokens
 	rm -f src/lexical/TigerLexer.java
 	rm -f src/syntactic/TigerParser.java

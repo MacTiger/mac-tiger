@@ -14,19 +14,22 @@ import semantic.SymbolTable;
 public class Main {
 
 	public static void main(String[] arguments) throws Exception {
+		boolean noColor = false;
 		boolean syntaxOnly = false;
 		for (String argument: arguments) {
-			if (argument.equals("--syntax-only") && !syntaxOnly) {
+			if (argument.equals("--no-color") && !noColor) {
+				noColor = true;
+			} else if (argument.equals("--syntax-only") && !syntaxOnly) {
 				syntaxOnly = true;
 			} else {
 				throw new Exception("Illegal argument");
 			}
 		}
-		System.exit(Main.compile(System.in, syntaxOnly));
+		System.exit(Main.compile(System.in, noColor, syntaxOnly));
 	}
 
-	public static int compile(InputStream stream, boolean syntaxOnly) throws Exception {
-		Notifier notifier = new Notifier(TigerParser.tokenNames);
+	public static int compile(InputStream stream, boolean noColor, boolean syntaxOnly) throws Exception {
+		Notifier notifier = new Notifier(TigerParser.tokenNames, noColor);
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input) {
 			public void reportError(RecognitionException exception) {
@@ -55,7 +58,7 @@ public class Main {
 			root.fillWith(tree, notifier);
 		}
 		int[] errorCounts = notifier.reset();
-		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[1] > 0 ? 4 : 0;
+		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[2] > 0 ? 4 : 0;
 	}
 
 }

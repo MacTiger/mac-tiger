@@ -1,53 +1,90 @@
 #!/bin/bash
 time=$SECONDS
 regexp='\.tiger$'
-i="0"
-j="0"
-k="0"
-for dir in $(ls tests)
-do
-	if [[ $dir == "lexical" ]]
+a="0"
+b="0"
+c="0"
+d="0"
+test() {
+	local dir=$1
+	local refstatus=$2
+	mkdir -p "logs/$dir"
+	local sign=$(($refstatus < 0))
+	if [[ (($sign == 1)) ]]
 	then
-		refstatus="1"
-	elif [[ $dir == "syntactic" ]]
-	then
-		refstatus="2"
-	elif [[ $dir == "semantic" ]]
-	then
-		refstatus="3"
-	else
-		continue
+		refstatus=$((-$refstatus))
 	fi
-	for subdir in $(ls tests/$dir)
+	for file in $(ls -A tests/$dir)
 	do
-		for file in $(ls -A tests/$dir/$subdir)
-		do
-			if [[ $file =~ $regexp ]]
+		if [[ $file =~ $regexp ]]
+		then
+			local stdin="tests/$dir/$file"
+			local stderr="logs/$dir/$file.txt"
+			java -cp bin:lib/* Main --no-color 2> $stderr 1> /dev/null < $stdin
+			local status=$((($? + 4) % 5))
+			if [[ (($status == 0)) ]]
 			then
-				file="tests/$dir/$subdir/$file"
-				if [[ (($refstatus > 2)) ]]
+				echo -e "[\033[0;34mEXIT\033[0m] $stdin"
+				d=$(($d + 1))
+			elif [[ (($status < $refstatus)) ]]
+			then
+				echo -e "[\033[0;33mWARN\033[0m] $stdin"
+				c=$(($c + 1))
+			else
+				if [[ (($refstatus == 0)) ]]
 				then
-					output=$(java -cp bin:lib/* Main 2>&1 > /dev/null < $file)
+					status=$(($status < 4))
+				elif [[ (($sign == 1)) ]]
+				then
+					status=$(($status > $refstatus))
 				else
-					output=$(java -cp bin:lib/* Main --syntax-only 2>&1 > /dev/null < $file)
+					status=$(($status == $refstatus))
 				fi
-				status=$((($? + 4) % 5))
-				if [[ (($status == 0)) ]]
+				if [[ (($status == 1)) ]]
 				then
-					echo -e "[\033[0;33mWARN\033[0m] $file"
-					k=$(($k + 1))
-				elif [[ $subdir == "pass" && (($status > $refstatus)) || $subdir == "fail" && (($status == $refstatus)) ]]
-				then
-					echo -e "[\033[0;32mPASS\033[0m] $file"
-					i=$(($i + 1))
+					echo -e "[\033[0;31mFAIL\033[0m] $stdin"
+					b=$(($b + 1))
 				else
-					echo -e "[\033[0;31mFAIL\033[0m] $file"
-					j=$(($j + 1))
+					echo -e "[\033[0;32mPASS\033[0m] $stdin"
+					a=$(($a + 1))
 				fi
 			fi
-		done
+		fi
 	done
+}
+for dir in $(ls tests)
+do
+	if [[ $dir == "prgm" ]]
+	then
+		test $dir "0"
+	else
+		if [[ $dir == "lexical" ]]
+		then
+			status="1"
+		elif [[ $dir == "syntactic" ]]
+		then
+			status="2"
+		elif [[ $dir == "semantic" ]]
+		then
+			status="3"
+		else
+			continue
+		fi
+		for subdir in $(ls tests/$dir)
+		do
+			if [[ $subdir == "fail" ]]
+			then
+				refstatus=$((-$status))
+			elif [[ $subdir == "pass" ]]
+			then
+				refstatus=$status
+			else
+				continue
+			fi
+			test "$dir/$subdir" $refstatus
+		done
+	fi
 done
-l=$(($i + $j + $k))
+e=$(($a + $b + $c + $d))
 time=$(($SECONDS - $time))
-echo "$l tests: $i passed, $j failed, $k warned ($time seconds)"
+echo "$e tests: $a passed, $b failed, $c warned, $d exited ($time seconds)"
