@@ -215,7 +215,7 @@ public class SymbolTable {
 
 			case SEQ: return this.fillWithSEQ(tree, notifier);
 			case ARR: return this.fillWithARR(tree, notifier);
-			// case REC: return this.fillWithREC(tree, notifier);
+			case REC: return this.fillWithREC(tree, notifier);
 			case CALL: return this.fillWithCALL(tree, notifier);
 			// case ITEM: return this.fillWithITEM(tree, notifier);
 			// case FIELD: return this.fillWithFIELD(tree, notifier);
