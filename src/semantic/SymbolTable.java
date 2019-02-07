@@ -264,7 +264,7 @@ public class SymbolTable {
 
 				// Test sémantique (3)
 				for (int i = 0; i < expectedArgs.size(); i++) {
-					this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType(), false);
+					this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType());
 				}
 
 				return function.getType();
@@ -288,16 +288,15 @@ public class SymbolTable {
              case "<=": return this.fillWithComparator(tree, notifier);
 
 
-            // "+", "-", "*", "/", "&" et "|" ont tous le même comportement pour les types de leurs opérandes :
+            // "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
+            case "|":
+            case "&":
             case "+":
             case "-":
             case "*":
-            case "/":
-            case "|":
-            case "&": return this.fillWithIntOperator(tree, notifier);
-
-			// case "if":
-			// case "while":
+            case "/": return this.fillWithIntOperator(tree, notifier);
+			case "if": return this.fillWithIf(tree, notifier);
+			case "while": return this.fillWithWhile(tree, notifier);
 			case "for": return this.fillWithFor(tree, notifier);
 			case "let": return this.fillWithLet(tree, notifier);
 			// case "nil":
@@ -328,9 +327,7 @@ public class SymbolTable {
 		}
 
 		// Vérification de cohérence de type entre l'expression gauche et droite
-		if (checkType(tree.getChild(1),notifier,lType,true)==null){
-			notifier.semanticError(tree, "types doesn't match between the two sides of the operator ':='");
-		}
+		this.checkType(tree.getChild(1),notifier,lType);
 
 		return null;
 	}
@@ -342,7 +339,7 @@ public class SymbolTable {
 	private Type fillWithID(Tree tree, Notifier notifier) {
 		Variable variable = this.findVariable(tree.getText());
 		if (variable == null){
-			notifier.semanticError(tree, "the variable isn't defined");
+			notifier.semanticError(tree, "variable %s is not defined", tree.toString());
 		} else{
 			return variable.getType();
 		}
@@ -362,17 +359,17 @@ public class SymbolTable {
 	}
 
 	private Type fillWithEqualOrNot(Tree tree, Notifier notifier) {
-		Type expType = fillWith(tree.getChild(0), notifier);
-		checkType(tree.getChild(1), notifier, expType, false);
+		Type expType = this.fillWith(tree.getChild(0), notifier);
+		this.checkType(tree.getChild(1), notifier, expType);
 		return SymbolTable.intType;
 	}
 
 	private Type fillWithComparator(Tree tree, Notifier notifier) {
-		Type expType = fillWith(tree.getChild(0), notifier);
+		Type expType = this.fillWith(tree.getChild(0), notifier);
 		if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)){
 			notifier.semanticError(tree.getChild(0), "les types non primitifs (ie : autre que 'int' et 'string') ne sont pas acceptés pour cet opérateur : '" + tree.getText() + "'");
 		}
-		Type secondType = checkType(tree.getChild(1), notifier, expType, true);
+		Type secondType = this.checkType(tree.getChild(1), notifier, expType);
 		if ((secondType != SymbolTable.intType) && (secondType != SymbolTable.stringType)){
 			notifier.semanticError(tree.getChild(1), "les types non primitifs (ie : autre que 'int' et 'string') ne sont pas acceptés pour cet opérateur : '" + tree.getText() + "'");
 		}
@@ -381,7 +378,7 @@ public class SymbolTable {
 
 	private Type fillWithIntOperator(Tree tree, Notifier notifier) {
 		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-			this.checkType(tree.getChild(i), notifier, SymbolTable.intType, false);
+			this.checkType(tree.getChild(i), notifier, SymbolTable.intType);
 		}
 		return SymbolTable.intType;
 	}
@@ -414,7 +411,7 @@ public class SymbolTable {
 		return operandsType;
 	}
 
-    private Type checkType(Tree tree, Notifier notifier, Type type, boolean returnTreeType) {
+    private Type checkType(Tree tree, Notifier notifier, Type type) {
 		// Vérifie que le type de l'expression de 'tree' est bien 'type'
 	    // Si 'type' vaut null, alors le type de 'tree' est renvoyé
 	    // Si le type de 'tree' n'est pas 'type' :
@@ -422,27 +419,37 @@ public class SymbolTable {
 	    // - le type de l'expression de 'tree' est renvoyé sinon
 
         Type expType = this.fillWith(tree, notifier);
-        if (type == null) {
-            return expType;
-        } else if (type == expType) {
+        if (type == expType) {
             return type;
         } else {
             notifier.semanticError(tree, tree.getText() +" est de type différent de celui attendu.");
-            if (returnTreeType) {
-	            return expType;
-            }
 	        return null;
         }
     }
+
+	private Type fillWithIf(Tree tree, Notifier notifier) {
+		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
+		if (tree.getChildCount() > 2) {
+			return this.checkType(tree.getChild(2), notifier, this.fillWith(tree.getChild(1), notifier));
+		} else {
+			return this.checkType(tree.getChild(1), notifier, null);
+		}
+	}
+
+	private Type fillWithWhile(Tree tree, Notifier notifier) {
+		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
+		this.checkType(tree.getChild(1), notifier, null);
+		return null;
+	}
 
 	private Type fillWithFor(Tree tree, Notifier notifier) {
 		SymbolTable table = new SymbolTable(this);				this.children.add(table);
 		Variable iterator = new Variable();
 		iterator.setType(SymbolTable.intType);
 		table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
-		this.fillWith(tree.getChild(1), notifier);	// Rempli la table des symboles pour la borne inférieure du for
-		this.fillWith(tree.getChild(2), notifier);	// Rempli la table des symboles pour la borne supérieure du for
-		table.fillWith(tree.getChild(3), notifier);	// Remplissage de la table des symboles de la boucle for
+		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
+		this.checkType(tree.getChild(2), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
+		table.checkType(tree.getChild(3), notifier, null);	// Remplissage de la table des symboles de la boucle for
 		return null;
 	}
 
@@ -488,8 +495,8 @@ public class SymbolTable {
 								}
 							}
 						}
-						if (table.types.get(name) != null) {
-							notifier.semanticError(symbol.getChild(0), "redéclaration du type %s", name);
+						if (table.types.has(name)) {
+							notifier.semanticError(symbol.getChild(0), "redeclaration of type %s", name);
 						}
 						table.types.set(name, type);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
@@ -526,7 +533,7 @@ public class SymbolTable {
 								Array array = (Array) type;
 								Type itemType = table.findType(shape.getChild(0).toString());
 								if (itemType == null) {
-									notifier.semanticError(shape.getChild(0), "type %s non déclaré", shape.getChild(0).toString());
+									notifier.semanticError(shape.getChild(0), "type %s is not defined", shape.getChild(0).toString());
 								} else {
 									array.setType(itemType);
 								}
@@ -538,17 +545,17 @@ public class SymbolTable {
 									Variable field = new Variable();
 									Type fieldType = table.findType(shape.getChild(k + 1).toString());
 									if (fieldType == null) {
-										notifier.semanticError(shape.getChild(k + 1), "type %s non déclaré", shape.getChild(k + 1).toString());
+										notifier.semanticError(shape.getChild(k + 1), "type %s is not defined", shape.getChild(k + 1).toString());
 									} else {
 										field.setType(fieldType);
 									}
-									if (namespace.get(fieldName) != null) {
-										notifier.semanticError(shape.getChild(k), "redéclaration du champ %s", fieldName);
+									if (namespace.has(fieldName)) {
+										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
 									}
 									namespace.set(fieldName, field);
 								}
 							} else if (type == null) {
-								notifier.semanticError(symbol.getChild(0), "définition cyclique du type %s", name);
+								notifier.semanticError(symbol.getChild(0), "circular definition of type %s", name);
 							}
 						}
 					}
@@ -573,25 +580,25 @@ public class SymbolTable {
 							Variable argument = new Variable();
 							Type argumentType = table.findType(callType.getChild(k + 1).toString());
 							if (argumentType == null) {
-								notifier.semanticError(callType.getChild(k + 1), "type %s non déclaré", callType.getChild(k + 1).toString());
+								notifier.semanticError(callType.getChild(k + 1), "type %s is not defined", callType.getChild(k + 1).toString());
 							} else {
 								argument.setType(argumentType);
 							}
-							if (subTable.functionsAndVariables.get(argumentName) != null) {
-								notifier.semanticError(callType.getChild(k), "redéclaration du paramètre %s", argumentName);
+							if (subTable.functionsAndVariables.has(argumentName)) {
+								notifier.semanticError(callType.getChild(k), "redeclaration of formal parameter %s", argumentName);
 							}
 							subTable.functionsAndVariables.set(argumentName, argument);
 						}
 						if (type != null) {
 							Type returnType = table.findType(type.toString());
 							if (returnType == null) {
-								notifier.semanticError(type, "type %s non déclaré", type.toString());
+								notifier.semanticError(type, "type %s is not defined", type.toString());
 							} else {
 								function.setType(returnType);
 							}
 						}
-						if (table.functionsAndVariables.get(name) != null) {
-							notifier.semanticError(symbol.getChild(0), "redéclaration de la fonction %s", name);
+						if (table.functionsAndVariables.has(name)) {
+							notifier.semanticError(symbol.getChild(0), "redeclaration of function %s", name);
 						}
 						table.functionsAndVariables.set(name, function);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -609,37 +616,31 @@ public class SymbolTable {
 				case "var": {
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
-					Type expType = table.fillWith(exp, notifier);
+					Tree type = symbol.getChildCount() > 2 ? symbol.getChild(2) : null;
+					Type returnType;
+					// Détermination du type de la variable : il est soit renseigné dans la déclaration, soit par inférence
+					if (type != null) {	// Cas où le type de la variable est renseigné dans la déclaration
+						returnType = table.findType(type.toString());
+						if (returnType == null) {
+							notifier.semanticError(type, "type %s is not defined", type.toString());
+							returnType = table.fillWith(exp, notifier);
+						} else {
+							table.checkType(exp, notifier, returnType);
+						}
+					} else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
+						returnType = table.fillWith(exp, notifier);
+						if (returnType == null) {
+							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
+						}
+					}
 					if (table == this || table.functionsAndVariables.get(name) != null) {
 						table = new SymbolTable(supTable);
 						supTable.children.add(table);
 						supTable = table;
 					}
-
-					// Détermination du type de la variable : il est soit renseigné dans la déclaration, soit par inférence
-					Type typeOfVar;
-					if (symbol.getChildCount() == 3){	// Cas où le type de la variable est renseigné dans la déclaration
-						Tree typeTree = symbol.getChild(2);
-//						if ((typeOfVar = this.findType(typeTree.getText())) == null){
-//							notifier.semanticError(symbol.getChild(2), "the type in declaration doesn't exist");
-//						}
-						if ((typeOfVar = checkType(typeTree,notifier, null,true)) == null){
-							notifier.semanticError(typeTree, "the type in declaration doesn't exist");
-						}
-						else{
-							if (typeOfVar != expType){
-								notifier.semanticError(typeTree, "the type of the declaration doesn't match the one of the initizialisation");
-							}
-						}
-					}
-					else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
-						typeOfVar = expType;
-					}
-
 					// Création de la variable déclarée et spécification de son type :
 					Variable variable = new Variable();
-					variable.setType(typeOfVar);
-
+					variable.setType(returnType);
 					table.functionsAndVariables.set(name, variable);
 					break;
 				}
@@ -658,7 +659,8 @@ public class SymbolTable {
 				child = parent;
 			}
 		}
-		notifier.semanticError(tree, "utilisation de %s en dehors d'une boucle", tree.toString());
+		notifier.semanticError(tree, "%s must be inside loop", tree.toString());
 		return null;
 	}
+
 }

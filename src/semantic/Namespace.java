@@ -36,6 +36,10 @@ public class Namespace<Symbol> {
 		return this.symbols.get(name);
 	}
 
+	public boolean has(String name) {
+		return this.symbols.containsKey(name);
+	}
+
 	public Symbol getLastSymbol() {
 		return this.lastSymbol;
 	}
