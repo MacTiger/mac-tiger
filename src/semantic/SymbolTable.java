@@ -620,10 +620,7 @@ public class SymbolTable {
 					Type typeOfVar;
 					if (symbol.getChildCount() == 3){	// Cas où le type de la variable est renseigné dans la déclaration
 						Tree typeTree = symbol.getChild(2);
-//						if ((typeOfVar = this.findType(typeTree.getText())) == null){
-//							notifier.semanticError(symbol.getChild(2), "the type in declaration doesn't exist");
-//						}
-						if ((typeOfVar = checkType(typeTree,notifier, null,true)) == null){
+						if ((typeOfVar = table.checkType(typeTree,notifier, null,true)) == null){
 							notifier.semanticError(typeTree, "the type in declaration doesn't exist");
 						}
 						else{
@@ -633,6 +630,9 @@ public class SymbolTable {
 						}
 					}
 					else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
+						if (expType==null){
+							notifier.semanticError(tree, "the type of the declaration cannot be resolved");
+						}
 						typeOfVar = expType;
 					}
 
