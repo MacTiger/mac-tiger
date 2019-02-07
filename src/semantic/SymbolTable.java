@@ -1,9 +1,6 @@
 package semantic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.runtime.tree.Tree;
 
@@ -217,7 +214,7 @@ public class SymbolTable {
 		switch (tree.getType ()) {
 
 			case SEQ: return this.fillWithSEQ(tree, notifier);
-			// case ARR: return this.fillWithARR(tree, notifier);
+			case ARR: return this.fillWithARR(tree, notifier);
 			// case REC: return this.fillWithREC(tree, notifier);
 			case CALL: return this.fillWithCALL(tree, notifier);
 			// case ITEM: return this.fillWithITEM(tree, notifier);
@@ -297,6 +294,65 @@ public class SymbolTable {
 	}
 
 	private Type fillWithREC(Tree tree, Notifier notifier) {
+		/* Déclaration d'un record
+		 * (1) Vérification de l'existence du record
+		 * (2) On ne peut pas mettre deux fois le même champ
+		 * (3) Tous les champs doivent être renseignés
+		 * (4) Tous les champs doivent être de bon type
+		 * (5) On ne peut pas utiliser un champ qui n'existe pas
+		 */
+
+		String recordIdentifier = tree.getChild(0).toString();
+		Record record = (Record) this.findType(recordIdentifier);
+
+		// Test sémantique (1)
+		if (record == null) {
+			notifier.semanticError(tree, "undeclared record: %s", recordIdentifier);
+			return null;
+		}
+
+		Namespace<Variable> expectedFields = record.getNamespace();
+		HashMap<String, Type> givenFields = new HashMap<>();
+
+		// Test sémantique (2)
+		for (int i = 1; i < tree.getChildCount(); i = i + 2) {
+			String keyName = tree.getChild(i).toString();
+
+			if (givenFields.containsKey(keyName)) {
+				notifier.semanticError(tree.getChild(i), "key %s given twice", keyName);
+				return null;
+			}
+
+			givenFields.put(tree.getChild(i).toString(), fillWith(tree.getChild(i+1), notifier));
+		}
+
+		for (Map.Entry <String, Variable> entry : expectedFields) {
+			String identifier = entry.getKey();
+			Variable variable = entry.getValue();
+			Type type = variable.getType();
+
+			// Test sémantique (3)
+			if (!givenFields.containsKey(identifier)) {
+				notifier.semanticError(tree, "missing field %s", identifier);
+				return null;
+			}
+
+			// Test sémantique (4)
+			if (givenFields.get(identifier) != type) {
+				notifier.semanticError(tree, "incorrect type for field %s", identifier);
+				return null;
+			}
+		}
+
+		for (Map.Entry<String, Type> entry : givenFields.entrySet()) {
+			String identifier = entry.getKey();
+
+			if (!expectedFields.getSymbols().containsKey(identifier)) {
+				notifier.semanticError(tree, "unkown identifier: %s", identifier);
+				return null;
+			}
+		}
+
 		return null;
 	}
 
