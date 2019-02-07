@@ -5,14 +5,10 @@ import java.util.LinkedHashMap;
 import java.lang.Iterable;
 import java.util.Map;
 
-public class Namespace<Symbol> implements Iterable<Map.Entry <String, Symbol>> {
+public class Namespace<Symbol> implements Iterable<Map.Entry<String, Symbol>> {
 
 	private Map<String, Symbol> symbols;
 	private Symbol lastSymbol;
-
-	public Map<String, Symbol> getSymbols() {
-		return symbols;
-	}
 
 	public Namespace() {
 		this.symbols = new LinkedHashMap<String, Symbol>();
@@ -45,7 +41,7 @@ public class Namespace<Symbol> implements Iterable<Map.Entry <String, Symbol>> {
 		return this.lastSymbol;
 	}
 
-	public Iterator <Map.Entry <String, Symbol>> iterator () {
+	public Iterator<Map.Entry<String, Symbol>> iterator () {
 	   return this.symbols.entrySet().iterator();
 	}
 

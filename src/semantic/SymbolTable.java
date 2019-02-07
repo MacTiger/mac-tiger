@@ -212,36 +212,32 @@ public class SymbolTable {
 
 	public Type fillWith(Tree tree, Notifier notifier) {
 		switch (tree.getType ()) {
-
 			case SEQ: return this.fillWithSEQ(tree, notifier);
 			case ARR: return this.fillWithARR(tree, notifier);
 			case REC: return this.fillWithREC(tree, notifier);
 			case CALL: return this.fillWithCALL(tree, notifier);
-			// case ITEM: return this.fillWithITEM(tree, notifier);
-			// case FIELD: return this.fillWithFIELD(tree, notifier);
+			case ITEM: return this.fillWithITEM(tree, notifier);
+			case FIELD: return this.fillWithFIELD(tree, notifier);
 			case ID: return this.fillWithID(tree, notifier);
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
 		}
 
 		switch (tree.toString()) {
-
-			 case ":=":	return this.fillWithAssignment(tree, notifier);
-             case "=":
-             case "<>": return fillWithEqualOrNot(tree, notifier);
-             case ">":
-             case "<":
-             case ">=":
-             case "<=": return this.fillWithComparator(tree, notifier);
-
-
-            // "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
-            case "|":
-            case "&":
-            case "+":
-            case "-":
-            case "*":
-            case "/": return this.fillWithIntOperator(tree, notifier);
+			case ":=":	return this.fillWithAssignment(tree, notifier);
+			case "=":
+			case "<>": return fillWithEqualOrNot(tree, notifier);
+			case ">":
+			case "<":
+			case ">=":
+			case "<=": return this.fillWithComparator(tree, notifier);
+			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
+			case "|":
+			case "&":
+			case "+":
+			case "-":
+			case "*":
+			case "/": return this.fillWithIntOperator(tree, notifier);
 			case "if": return this.fillWithIf(tree, notifier);
 			case "while": return this.fillWithWhile(tree, notifier);
 			case "for": return this.fillWithFor(tree, notifier);
@@ -347,7 +343,7 @@ public class SymbolTable {
 		for (Map.Entry<String, Type> entry : givenFields.entrySet()) {
 			String identifier = entry.getKey();
 
-			if (!expectedFields.getSymbols().containsKey(identifier)) {
+			if (expectedFields.get(identifier) == null) {
 				notifier.semanticError(tree, "unkown identifier: %s", identifier);
 				return null;
 			}
@@ -428,10 +424,40 @@ public class SymbolTable {
 	}
 
 	private Type fillWithITEM(Tree tree, Notifier notifier){	//TODO !
+		//->^(ITEM $valueExp exp)
+		// Par exemple A[4][2]
+
+		this.checkType(tree.getChild(1),notifier,SymbolTable.intType);
+
+		//on regarde si un tableau
+		Type type=fillWith(tree.getChild(0),notifier);
+		if(!(type instanceof Array)){
+
+		}
+
 		return null;
 	}
 
 	private Type fillWithFIELD(Tree tree, Notifier notifier){	//TODO !
+		//^(FIELD $valueExp ID))
+		//On regarde si le membre de gauche est bien une structure
+		Type typeExpr;
+		typeExpr=fillWith(tree.getChild(0),notifier);
+		if(! (typeExpr instanceof Record)){
+			notifier.semanticError(tree,"The variable must be a record");
+		}
+		else {
+			//on sait que typeExpr est de type record
+			Namespace<Variable> nms=((Record) typeExpr).getNamespace();
+			//on regarde si dans l'espace de noms figure id
+			if(nms.get(tree.getChild(1).toString()) == null) {
+				notifier.semanticError(tree,"The field doesn't appear in the Record");
+			}
+			//Sinon c'est OK
+			else{
+				return nms.get(tree.getChild(1).toString()).getType();
+			}
+		}
 		return null;
 	}
 
