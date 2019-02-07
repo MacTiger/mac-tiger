@@ -269,8 +269,16 @@ public class SymbolTable {
 
 				return function.getType();
 
-			// case ITEM:
-			// case FIELD:
+			//case ITEM:
+
+
+
+			case FIELD:
+				// Rechercher l'idf dans la TDS et voir si a autant de champs
+				// Esp doit etre de type entier
+				expType=fillWithFIELD(tree,notifier);
+				return expType;
+
 			case ID: return this.fillWithID(tree, notifier);
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
@@ -350,10 +358,42 @@ public class SymbolTable {
 	}
 
 	private Type fillWithITEM(Tree tree, Notifier notifier){	//TODO !
+		//->^(ITEM $valueExp exp)
+		// Par exemple A[4][2]
+
+		Type type;
+		checkType(tree.getChild(1),notifier,SymbolTable.intType,false);
+
+		//on regarde si un tableau
+		type=fillWithITEM(tree.getChild(0),notifier);
+		if(!(type instanceof Array)){
+
+		}
+
 		return null;
 	}
 
 	private Type fillWithFIELD(Tree tree, Notifier notifier){	//TODO !
+		//^(FIELD $valueExp ID))
+		//On regarde si le membre de gauche est bien une structure
+		Type typeExpr;
+		typeExpr=fillWith(tree.getChild(0),notifier);
+		if(! (typeExpr instanceof Record)){
+			notifier.semanticError(tree,"The variable must be a record");
+		}
+		else {
+			//on sait que typeExpr est de type record
+			Namespace nms;
+			nms=((Record) typeExpr).getNamespace();
+			//on regarde si dans l'espace de noms figure id
+			if(!nms.getSymbols().containsKey(tree.getChild(1).toString())){
+				notifier.semanticError(tree,"The field doesn't appear in the Record");
+			}
+			//Sinon c'est OK
+			else{
+				return (Type)nms.getSymbols().get(tree.getChild(1).toString());
+			}
+		}
 		return null;
 	}
 
