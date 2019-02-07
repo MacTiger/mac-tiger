@@ -2,9 +2,10 @@ package semantic;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.lang.Iterable;
 import java.util.Map;
 
-public class Namespace<Symbol> {
+public class Namespace<Symbol> implements Iterable<Map.Entry <String, Symbol>> {
 
 	private Map<String, Symbol> symbols;
 	private Symbol lastSymbol;

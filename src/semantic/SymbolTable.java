@@ -1,9 +1,6 @@
 package semantic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.runtime.tree.Tree;
 
@@ -214,74 +211,24 @@ public class SymbolTable {
 	}
 
 	public Type fillWith(Tree tree, Notifier notifier) {
-		Type expType = null;
 		switch (tree.getType ()) {
 
-			/* # Séquence d'expressions
-			 *
-			 * Aucun contrôle sémantique à effectuer
-			 */
-			case SEQ:
-				for (int i = 0; i < tree.getChildCount(); i++) {
-					expType = this.fillWith(tree.getChild(i), notifier);
-				}
-				return expType;
-
-				// case ARR:
-				// case REC:
-
-
-			/* # Appel d'une fonction
-
-			 * Contrôles sémantiques à effectuer :
-			 * - (1) La fonction existe
-			 * - (2) Bon nombre d'arguments
-			 * - (3) Bon type des arguments
-			 */
-			case CALL:
-				String functionName = tree.getChild(0).toString();
-				Function function = this.findFunction(functionName);
-
-				// Test sémantique (1)
-				if (function == null) {
-					System.err.println("[!] Appel d'une fonction inexistante.");
-					return null;
-				}
-
-				SymbolTable functionSymbolTable = function.getSymbolTable();
-				Namespace argsNameSpace = functionSymbolTable.getFunctionsAndVariables();
-				ArrayList<Variable> expectedArgs = new ArrayList<>();
-
-				argsNameSpace.getSymbols().forEach((identifier, symbol) -> {
-					expectedArgs.add((Variable) symbol);
-				});
-
-				// Test sémantique (2)
-				if (expectedArgs.size() != tree.getChildCount() - 1) {
-					System.err.println("[!] Mauvais nombre d'arguments lors de l'appel d'une fonction");
-					return null;
-				}
-
-				// Test sémantique (3)
-				for (int i = 0; i < expectedArgs.size(); i++) {
-					this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType());
-				}
-
-				return function.getType();
-
-			// case ITEM:
-			// case FIELD:
+			case SEQ: return this.fillWithSEQ(tree, notifier);
+			case ARR: return this.fillWithARR(tree, notifier);
+			case REC: return this.fillWithREC(tree, notifier);
+			case CALL: return this.fillWithCALL(tree, notifier);
+			// case ITEM: return this.fillWithITEM(tree, notifier);
+			// case FIELD: return this.fillWithFIELD(tree, notifier);
 			case ID: return this.fillWithID(tree, notifier);
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
 		}
+
 		switch (tree.toString()) {
 
 			 case ":=":	return this.fillWithAssignment(tree, notifier);
-
              case "=":
              case "<>": return fillWithEqualOrNot(tree, notifier);
-
              case ">":
              case "<":
              case ">=":
@@ -310,6 +257,132 @@ public class SymbolTable {
 		}
 	}
 
+	private Type fillWithCALL(Tree tree, Notifier notifier) {
+		/* Appel d'une fonction.
+		 * (1) Vérification de l'existence de la fonction appelée
+		 * (2) Vérification du nombre et des types d'arguments
+		 */
+		String functionName = tree.getChild(0).toString();
+		Function function = this.findFunction(functionName);
+
+		// Test sémantique (1)
+		if (function == null) {
+			notifier.semanticError(tree, "undeclared function: %s", functionName);
+			return null;
+		}
+
+		SymbolTable functionSymbolTable = function.getSymbolTable();
+		Namespace<FunctionOrVariable> argsNamespace = functionSymbolTable.getFunctionsAndVariables();
+		ArrayList<Variable> expectedArgs = new ArrayList<Variable>();
+
+		for (Map.Entry <String, FunctionOrVariable> entry : argsNamespace) {
+			expectedArgs.add((Variable) entry.getValue());
+		}
+
+		// Test sémantique (2)
+		if (expectedArgs.size() != tree.getChildCount() - 1) {
+			notifier.semanticError(tree, "wrong arguments type or count");
+			return null;
+		}
+
+		// Test sémantique (3)
+		for (int i = 0; i < expectedArgs.size(); i++) {
+			this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType());
+		}
+
+		return function.getType();
+	}
+
+	private Type fillWithREC(Tree tree, Notifier notifier) {
+		/* Déclaration d'un record
+		 * (1) Vérification de l'existence du record
+		 * (2) On ne peut pas mettre deux fois le même champ
+		 * (3) Tous les champs doivent être renseignés
+		 * (4) Tous les champs doivent être de bon type
+		 * (5) On ne peut pas utiliser un champ qui n'existe pas
+		 */
+
+		String recordIdentifier = tree.getChild(0).toString();
+		Record record = (Record) this.findType(recordIdentifier);
+
+		// Test sémantique (1)
+		if (record == null) {
+			notifier.semanticError(tree, "undeclared record: %s", recordIdentifier);
+			return null;
+		}
+
+		Namespace<Variable> expectedFields = record.getNamespace();
+		HashMap<String, Type> givenFields = new HashMap<>();
+
+		// Test sémantique (2)
+		for (int i = 1; i < tree.getChildCount(); i = i + 2) {
+			String keyName = tree.getChild(i).toString();
+
+			if (givenFields.containsKey(keyName)) {
+				notifier.semanticError(tree.getChild(i), "key %s given twice", keyName);
+				return null;
+			}
+
+			givenFields.put(tree.getChild(i).toString(), fillWith(tree.getChild(i+1), notifier));
+		}
+
+		for (Map.Entry <String, Variable> entry : expectedFields) {
+			String identifier = entry.getKey();
+			Variable variable = entry.getValue();
+			Type type = variable.getType();
+
+			// Test sémantique (3)
+			if (!givenFields.containsKey(identifier)) {
+				notifier.semanticError(tree, "missing field %s", identifier);
+				return null;
+			}
+
+			// Test sémantique (4)
+			if (givenFields.get(identifier) != type) {
+				notifier.semanticError(tree, "incorrect type for field %s", identifier);
+				return null;
+			}
+		}
+
+		for (Map.Entry<String, Type> entry : givenFields.entrySet()) {
+			String identifier = entry.getKey();
+
+			if (!expectedFields.getSymbols().containsKey(identifier)) {
+				notifier.semanticError(tree, "unkown identifier: %s", identifier);
+				return null;
+			}
+		}
+
+		return null;
+	}
+
+	private Type fillWithARR(Tree tree, Notifier notifier) {
+		/* Déclaration d'un tableau (partie à droite du :=)
+		 * (1) Vérification de l'existence du type des éléments du tableau
+		 * (2) Vérification du type du nombre d'éléments dans le tableau (obligatoirement int)
+		 * (3) Vérification du type de l'élément pour remplir
+		 */
+
+		String expectedTypeIdentifier = tree.getChild(0).toString();
+		Type expectedType = this.findType(expectedTypeIdentifier);
+
+		// Test sémantique (1)
+		if (expectedType == null) {
+			notifier.semanticError(tree, "type %s doesn't exists");
+			return null;
+		}
+
+		// Test sémantique (2)
+		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);
+
+		// Test sémantique (3)
+		this.checkType(tree.getChild(2), notifier, expectedType);
+
+		Array arr = new Array();
+		arr.setType(expectedType);
+		return arr;
+	}
+
 	private Type fillWithAssignment(Tree tree, Notifier notifier){
 
 		Type lType = null;
@@ -330,6 +403,14 @@ public class SymbolTable {
 		this.checkType(tree.getChild(1),notifier,lType);
 
 		return null;
+	}
+
+	private Type fillWithSEQ(Tree tree, Notifier notifier) {
+		Type expType = null;
+		for (int i = 0; i < tree.getChildCount(); i++) {
+			expType = this.fillWith(tree.getChild(i), notifier);
+		}
+		return expType;
 	}
 
 	private Type fillWithSTR(Tree tree, Notifier notifier) {
@@ -422,7 +503,7 @@ public class SymbolTable {
         if (type == expType) {
             return type;
         } else {
-            notifier.semanticError(tree, tree.getText() +" est de type différent de celui attendu.");
+            notifier.semanticError(tree, tree.getText() +" is different from expected type");
 	        return null;
         }
     }
