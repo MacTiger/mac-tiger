@@ -1,2 +1,2 @@
 #!/bin/bash
-java -cp bin:lib/* Main
+java -cp bin:lib/* Main > /dev/null

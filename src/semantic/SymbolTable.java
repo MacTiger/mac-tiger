@@ -21,11 +21,13 @@ import static syntactic.TigerParser.INT;
 
 public class SymbolTable {
 
+	private static Type nilPseudoType;
 	private static Type intType;
 	private static Type stringType;
 	private static SymbolTable root;
 
 	static {
+		Type nilPseudoType = new Record();
 		Type intType = new Primitive(Constants.intSize);
 		Type stringType = new Primitive(Constants.pointerSize);
 		Variable intVariable = new Variable();
@@ -129,6 +131,7 @@ public class SymbolTable {
 			function.setSymbolTable(table);
 			root.functionsAndVariables.set("substring", function);
 		}
+		SymbolTable.nilPseudoType = nilPseudoType;
 		SymbolTable.intType = intType;
 		SymbolTable.stringType = stringType;
 		SymbolTable.root = root;
@@ -222,7 +225,6 @@ public class SymbolTable {
 			case STR: return this.fillWithSTR(tree, notifier);
 			case INT: return this.fillWithINT(tree, notifier);
 		}
-
 		switch (tree.toString()) {
 			case ":=":	return this.fillWithAssignment(tree, notifier);
 			case "=":
@@ -242,7 +244,7 @@ public class SymbolTable {
 			case "while": return this.fillWithWhile(tree, notifier);
 			case "for": return this.fillWithFor(tree, notifier);
 			case "let": return this.fillWithLet(tree, notifier);
-			// case "nil":
+			case "nil": return this.fillWithNil(tree, notifier);
 			case "break": return this.fillWithBreak(tree, notifier);
 			default: { /* TODO: à retirer lorsque tous les contrôles sémantiques seront faits */
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
@@ -349,7 +351,7 @@ public class SymbolTable {
 			}
 		}
 
-		return null;
+		return record;
 	}
 
 	private Type fillWithARR(Tree tree, Notifier notifier) {
@@ -466,8 +468,11 @@ public class SymbolTable {
 	}
 
 	private Type fillWithEqualOrNot(Tree tree, Notifier notifier) {
-		Type expType = this.fillWith(tree.getChild(0), notifier);
-		this.checkType(tree.getChild(1), notifier, expType);
+		Tree exp = tree.getChild(0);
+		Type expType = this.fillWith(exp, notifier);
+		if (this.checkType(tree.getChild(1), notifier, expType) == SymbolTable.nilPseudoType) {
+			notifier.semanticError(exp, "the type of %s cannot be inferred", exp.toString());
+		}
 		return SymbolTable.intType;
 	}
 
@@ -520,14 +525,14 @@ public class SymbolTable {
 
     private Type checkType(Tree tree, Notifier notifier, Type type) {
 		// Vérifie que le type de l'expression de 'tree' est bien 'type'
-	    // Si 'type' vaut null, alors le type de 'tree' est renvoyé
-	    // Si le type de 'tree' n'est pas 'type' :
-	    // - null est renvoyé si 'returnTreeType' est faux
-	    // - le type de l'expression de 'tree' est renvoyé sinon
+		// Si le type de 'tree' n'est pas 'type', alors `null` est renvoyé
+		// Sinon le type de 'tree' est renvoyé
 
         Type expType = this.fillWith(tree, notifier);
-        if (type == expType) {
+        if (expType == type || expType == SymbolTable.nilPseudoType && type instanceof Record) {
             return type;
+        } else if (type == SymbolTable.nilPseudoType && expType instanceof Record) {
+            return expType;
         } else {
             notifier.semanticError(tree, tree.getText() +" is different from expected type");
 	        return null;
@@ -736,7 +741,7 @@ public class SymbolTable {
 						}
 					} else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
 						returnType = table.fillWith(exp, notifier);
-						if (returnType == null) {
+						if (returnType == null || returnType == SymbolTable.nilPseudoType) {
 							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
 						}
 					}
@@ -754,6 +759,10 @@ public class SymbolTable {
 			}
 		}
 		return table.fillWith(seq, notifier);
+	}
+
+	private Type fillWithNil(Tree tree, Notifier notifier) {
+		return SymbolTable.nilPseudoType;
 	}
 
 	private Type fillWithBreak(Tree tree, Notifier notifier) {

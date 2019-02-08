@@ -2,7 +2,7 @@
 
 ## Présentation
 
-Ce dépôt contient les sources du compilateur du langage *Tiger* en code assembleur *microPIUP/ASM* réalisé par le groupe 6 dans le cadre du projet de compilation des langages.
+Ce dépôt contient les sources du compilateur *Java* du langage *Tiger* en code assembleur *microPIUP/ASM* réalisé par le groupe 6 dans le cadre du projet de compilation des langages.
 
 ## Membres du groupe
 
@@ -16,7 +16,7 @@ Ce dépôt contient les sources du compilateur du langage *Tiger* en code assemb
 Ce dépôt contient :
 
 - la [grammaire](res/Tiger.g) *ANTLR3* du langage *Tiger*
-- le début d'un [analyseur sémantique](src/Main.java) écrit en *Java*
+- le [compilateur](src/Main.java) écrit en *Java*
 - la [suite de tests](tests) de la grammaire et de la génération de l'arbre syntaxique abstrait
 - le [manuel d'utilisation](#manuel-dutilisation)
 - les [notes](notes/meeting) prises lors des réunions
@@ -34,10 +34,12 @@ $ git clone https://gitlab.telecomnancy.univ-lorraine.fr/Philippe.Graff/graff24u
 $ cd graff24u
 ```
 
+### Construction du compilateur *Java*
+
 Ajoutez *ANTLR3* à la variable d'environnement `CLASSPATH` en remplaçant `<path>` par le chemin absolu du projet :
 
 ```shell
-echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/lib/antlr-3.5.2-complete.jar' >> ~/.bashrc
+$ echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/lib/antlr-3.5.2-complete.jar' >> ~/.bashrc
 ```
 
 Fermez le terminal puis rouvrez-en un nouveau.
@@ -48,23 +50,34 @@ Retournez dans le projet, puis générez les analyseurs lexical (`/src/lexical/T
 $ make init
 ```
 
-### Test d'un programme *Tiger*
-
-Pour tester si un programme *Tiger* en particulier est valide syntaxiquement, exécutez les commandes suivantes à la racine du projet en remplaçant `<file>` par le chemin vers le fichier contenant le programme :
+Enfin, construisez le compilateur *Java* :
 
 ```shell
 $ make build
-$ java -cp bin:lib/* Main --syntax-only 2>&1 > /dev/null < <file>
 ```
 
-Si le programme est invalide, des messages d'erreurs seront affichés sur la sortie standard.
+### Test d'un programme *Tiger*
 
-### Lancement de la suite de tests syntaxiques avec *Bash*
+Pour tester si un programme *Tiger* en particulier est valide, exécutez les commandes suivantes à la racine du projet en remplaçant `<file>` par le chemin vers le fichier le contenant :
 
-Pour lancer l'intégralité des tests syntaxiques, exécutez la commande suivante (la durée peut varier selon la machine) :
+```shell
+$ java -cp bin:lib/* Main > /dev/null < <file>
+```
+
+Pour tester un programme *Tiger* directement rédigé au sein du terminal, utilisez le raccourci suivant :
+
+```shell
+$ make prompt
+```
+
+Dans les deux cas, si le programme est invalide, des messages d'erreurs seront affichés sur la sortie d'erreur.
+
+### Lancement de la suite de tests avec *Bash*
+
+Pour lancer l'intégralité des tests lexicaux, syntaxiques et sémantiques, exécutez la commande suivante (la durée peut varier selon la machine) :
 
 ```shell
 $ make test
 ```
 
-Un fichier marqué `[PASS]` est un test qui a réussi ou échoué comme prévu, tandis qu'un fichier marqué `[FAIL]` est un test qui a réussi ou échoué alors que le contraire était attendu.
+Un fichier marqué `[PASS]` est un test qui a réussi ou échoué comme prévu, tandis qu'un fichier marqué `[FAIL]` est un test qui a réussi ou échoué alors que le contraire était attendu. Plus rarement, il est possible de rencontrer un fichier marqué `[EXIT]` qui dénote un plantage du compilateur ou un fichier marqué `[WARN]` qui indique qu'une erreur a été trouvée à une étape de la compilation antérieure à celle testée.

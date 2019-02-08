@@ -1,0 +1,13 @@
+let
+	type a = {}
+	var b := if 0 then
+		if 0 then
+			a {}
+		else
+			nil
+	else if 0 then
+		nil
+	else
+		nil
+in
+end

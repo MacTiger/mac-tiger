@@ -1,0 +1,5 @@
+let
+	type a = {}
+in
+	a {} = nil
+end

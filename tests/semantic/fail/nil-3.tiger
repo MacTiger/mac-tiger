@@ -1,0 +1,5 @@
+let
+	type a = array of int
+	var b : a := nil
+in
+end
