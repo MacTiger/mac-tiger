@@ -59,7 +59,7 @@ public class Main {
 			Tree tree = (Tree) result.getTree();
 			SymbolTable root = new SymbolTable();
 			root.fillWith(tree, notifier);
-			System.out.println(root.toGraphViz(0,0));
+			System.out.println(root.toGraphVizFirst());
 		}
 		int[] errorCounts = notifier.reset();
 		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[2] > 0 ? 4 : 0;

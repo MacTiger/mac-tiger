@@ -1,6 +1,7 @@
 package semantic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -725,14 +726,46 @@ public class SymbolTable {
 		return null;
 	}
 
-	public String toGraphViz(int depth, int num_TDS){
-		String graph = "TDS" + depth + "." + num_TDS + "[shape=record, label=\""; // Résultat à afficher
+	public String toGraphVizFirst(){
+		// Fonction créant le String qui permettra de générer l'illustration de la TDS
+		// Elle appelle toGraphViz
+		String res = "digraph structs {\nrankdir=LR;\n";
+
+		ArrayList<String> resArray = this.toGraphViz(0,0);
+		res += resArray.get(0) + resArray.get(1) + resArray.get(2);
+
+		res += "\n}";
+		return res;
+	}
+
+	private String nameOfTDS(int depth, int num_TDS){
+		return "TDS_" + depth + "_" + num_TDS;
+	}
+
+	public ArrayList<String> toGraphViz(int depth, int num_TDS){
+		// Renvoit : [graph, graphChildren, graphLinks]
+
+		String graph =  nameOfTDS(depth,num_TDS)+ "[shape=record, label=\""; // Résultat à afficher
 		String graphChildren = "";  // String des graphiques des TDS filles de cette TDS
+		String graphLinks = ""; // String des liaisons entre TDS
 
 
 		int i = 0;
+		if (depth > 0){   // Prévoit le point d'ancrage du lient vers son père
+			graph += "{<parent>} | ";//TODO : vérifier les effets de bord
+		}
 		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
-			graphChildren += "\n" + symbolTable.toGraphViz(depth+1, i) + "\n";
+			if (i > 0){
+				graph+= " | ";
+			}
+			ArrayList symbolTableGraph = symbolTable.toGraphViz(depth+1, i);
+			// Récupère les graphes créés par la fille symbolTable :
+			graphLinks += "\n" + symbolTableGraph.get(2) + "\n";
+			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + "\n" + symbolTableGraph.get(1) + "\n";
+
+			// Ajout des liens entre cette TDS et sa fille symbolTable
+			graph += "<"+ nameOfTDS(depth+1,i) + ">";
+			graphLinks+= "\"" + nameOfTDS(depth+1,i) + "\":" + "parent" + " -> \"" + nameOfTDS(depth,num_TDS) + "\":"+nameOfTDS(depth+1,i) + ";";
 			i++;
 		}
 
@@ -761,7 +794,7 @@ public class SymbolTable {
 
 
 		graph += "\"]";
-		return graph + graphChildren;
+		return new ArrayList<>(Arrays.asList(graph, graphChildren, graphLinks));
 	}
 
 }
