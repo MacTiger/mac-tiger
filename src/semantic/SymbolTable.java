@@ -777,4 +777,43 @@ public class SymbolTable {
 		return null;
 	}
 
+	public String toGraphViz(int depth, int num_TDS){
+		String graph = "TDS" + depth + "." + num_TDS + "[shape=record, label=\""; // Résultat à afficher
+		String graphChildren = "";  // String des graphiques des TDS filles de cette TDS
+
+
+		int i = 0;
+		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
+			graphChildren += "\n" + symbolTable.toGraphViz(depth+1, i) + "\n";
+			i++;
+		}
+
+		Variable var = null;
+		String partOfGraph =""; // String auxiliaire pour la création des divers cellules de la TDS
+		i =0;
+
+		for (Map.Entry<String, FunctionOrVariable> stringSymbolEntry : this.functionsAndVariables){ // Parcours des fonctions et variables déclarées dans cette TDS
+			partOfGraph = "";
+			if (i > 0){
+				partOfGraph+="|";
+			}
+			partOfGraph += "{";
+			if (stringSymbolEntry.getValue() instanceof Variable){
+				var = (Variable) stringSymbolEntry.getValue();
+				partOfGraph += stringSymbolEntry.getKey() + "|" + var.getType().toString() + "|" + var.getShift(); //TODO : nom du type
+			}
+			partOfGraph+= "}";
+			graph += partOfGraph;
+			i++;
+		}
+
+		for (Map.Entry<String, Type> stringTypeEntry : this.types){ // Parcours des types déclarées dans cette TDS
+
+		}
+
+
+		graph += "\"]";
+		return graph + graphChildren;
+	}
+
 }

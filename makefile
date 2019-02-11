@@ -32,4 +32,8 @@ antlrworks:
 microPIUP:
 	java -jar lib/microPIUPK.jar -sim
 
+graphviz:
+	tar -xvf lib/graphviz.tar.gz -C lib/
+
+
 .PHONY: init build prompt test clean antlrworks microPIUP

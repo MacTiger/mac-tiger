@@ -1,0 +1,5 @@
+digraph structs {
+    rankdir=LR;
+    TDS0_0[shape=record, label=""]
+TDS_1_0[shape=record, label="{x|semantic.Primitive@6d311334|0}|{y|semantic.Primitive@6d311334|0}"]
+}
