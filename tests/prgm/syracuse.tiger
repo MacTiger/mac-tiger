@@ -12,8 +12,8 @@ let
 		u
 	)
 in
-	resultat := syracuse (1);
+	resultat := syracuse (1, 11);
 	printi (resultat);
-	resultat := syracuse (10);
+	resultat := syracuse (10, 13);
 	printi (resultat)
 end

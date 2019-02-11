@@ -23,6 +23,6 @@ let
 			computation (n , 1)
 		end
 in
-	print (fibonacci (12));
-	print (factorielle_recursive (5))
+	printi (fibonacci (12));
+	printi (factorielle_recursive (5))
 end

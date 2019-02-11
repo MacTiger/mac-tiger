@@ -11,4 +11,5 @@ public class Primitive extends Type {
 	public int getSize() {
 		return this.size;
 	}
+
 }

@@ -20,6 +20,6 @@ in
 	l [2] := d3;
 	l [3] := d4;
 	add_vectors (l, 4, result);
-	print (result.x);
-	print (result.y)
+	printi (result.x);
+	printi (result.y)
 end

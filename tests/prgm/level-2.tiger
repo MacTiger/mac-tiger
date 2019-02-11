@@ -32,7 +32,7 @@ let
 			)
 		end
 in
-	print (puissance (3, 3));
+	printi (puissance (3, 3));
 	factorielle (5);
-	print (resultat)
+	printi (resultat)
 end
