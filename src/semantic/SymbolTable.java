@@ -1,14 +1,26 @@
 package semantic;
 
-import misc.Constants;
-import misc.Notifier;
-import org.antlr.runtime.tree.Tree;
-
 import java.util.ArrayList;
-import java.util.HashMap;
+// import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static syntactic.TigerParser.*;
+import org.antlr.runtime.tree.Tree;
+
+import misc.Constants;
+import misc.Notifier;
+
+import static syntactic.TigerParser.ARRTYPE;
+import static syntactic.TigerParser.RECTYPE;
+import static syntactic.TigerParser.SEQ;
+import static syntactic.TigerParser.ARR;
+import static syntactic.TigerParser.REC;
+import static syntactic.TigerParser.CALL;
+import static syntactic.TigerParser.ITEM;
+import static syntactic.TigerParser.FIELD;
+import static syntactic.TigerParser.ID;
+import static syntactic.TigerParser.STR;
+import static syntactic.TigerParser.INT;
 
 public class SymbolTable {
 
@@ -94,14 +106,14 @@ public class SymbolTable {
 			function.setSymbolTable(table);
 			root.functionsAndVariables.set("print", function);
 		}
-		// {
-		// 	Function function = new Function();
-		// SymbolTable table = new SymbolTable(root);
-		// Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-		// 	functionsAndVariables.set("i", intVariable);
-		// function.setSymbolTable(table);
-		// 	root.functionsAndVariables.set("printi", function);
-		// }
+		{
+			Function function = new Function();
+			SymbolTable table = new SymbolTable(root);
+			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
+			functionsAndVariables.set("i", intVariable);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("printi", function);
+		}
 		{
 			Function function = new Function();
 			function.setType(intType);
@@ -129,7 +141,7 @@ public class SymbolTable {
 	}
 
 	private SymbolTable parent;
-	private ArrayList<SymbolTable> children;
+	private List<SymbolTable> children;
 	private Namespace<Type> types;
 	private Namespace<FunctionOrVariable> functionsAndVariables;
 
@@ -137,7 +149,7 @@ public class SymbolTable {
 		return parent;
 	}
 
-	public ArrayList<SymbolTable> getChildren() {
+	public List<SymbolTable> getChildren() {
 		return children;
 	}
 
@@ -217,7 +229,7 @@ public class SymbolTable {
 			case INT: return this.fillWithINT(tree, notifier);
 		}
 		switch (tree.toString()) {
-			case ":=":	return this.fillWithAssignment(tree, notifier);
+			case ":=": return this.fillWithAssignment(tree, notifier);
 			case "=":
 			case "<>": return fillWithEqualOrNot(tree, notifier);
 			case ">":
@@ -237,7 +249,7 @@ public class SymbolTable {
 			case "let": return this.fillWithLet(tree, notifier);
 			case "nil": return this.fillWithNil(tree, notifier);
 			case "break": return this.fillWithBreak(tree, notifier);
-			default: { /* TODO: à retirer lorsque tous les contrôles sémantiques seront faits */
+			default: {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.fillWith(tree.getChild(i), notifier);
 				}
@@ -247,159 +259,124 @@ public class SymbolTable {
 	}
 
 	private Type fillWithCALL(Tree tree, Notifier notifier) {
-		/* Appel d'une fonction.
-		 * (1) Vérification de l'existence de la fonction appelée
-		 * (2) Vérification du nombre et des types d'arguments
+		/* Appel d'une fonction
+		 * (1) Vérification de l'existence de la fonction
+		 * (2) Vérification du nombre d'arguments
+		 * (3) Vérification des types d'arguments
 		 */
-		String functionName = tree.getChild(0).toString();
-		Function function = this.findFunction(functionName);
-
-		// Test sémantique (1)
-		if (function == null) {
-			notifier.semanticError(tree, "undeclared function: %s", functionName);
-			return null;
+ 		String name = tree.getChild(0).toString();
+		Function function = this.findFunction(name);
+		Type returnType = null;
+		int i = 1;
+		int l = tree.getChildCount();
+		if (function == null) { // Test sémantique (1)
+			notifier.semanticError(tree, "function %s is not defined", name);
+		} else {
+			Namespace<FunctionOrVariable> namespace = function.getSymbolTable().functionsAndVariables;
+			for (Map.Entry<String, FunctionOrVariable> entry: namespace) {
+				if (i >= l) { // Test sémantique (2)
+					notifier.semanticError(tree, "%s requires more arguments", name);
+					break;
+				}
+				this.checkType(tree.getChild(i), notifier, ((Variable) entry.getValue()).getType()); // Test sémantique (3)
+				++i;
+			}
+			if (i < l) { // Test sémantique (2)
+				notifier.semanticError(tree, "%s requires fewer arguments", name);
+			}
+			returnType = function.getType();
 		}
-
-		SymbolTable functionSymbolTable = function.getSymbolTable();
-		Namespace<FunctionOrVariable> argsNamespace = functionSymbolTable.getFunctionsAndVariables();
-		ArrayList<Variable> expectedArgs = new ArrayList<Variable>();
-
-		for (Map.Entry <String, FunctionOrVariable> entry : argsNamespace) {
-			expectedArgs.add((Variable) entry.getValue());
+		for (; i < l; ++i) {
+			this.fillWith(tree.getChild(i), notifier);
 		}
-
-		// Test sémantique (2)
-		if (expectedArgs.size() != tree.getChildCount() - 1) {
-			notifier.semanticError(tree, "wrong arguments type or count");
-			return null;
-		}
-
-		// Test sémantique (3)
-		for (int i = 0; i < expectedArgs.size(); i++) {
-			this.checkType(tree.getChild(i + 1), notifier, expectedArgs.get(i).getType());
-		}
-
-		return function.getType();
+		return returnType;
 	}
 
 	private Type fillWithREC(Tree tree, Notifier notifier) {
-		/* Déclaration d'un record
-		 * (1) Vérification de l'existence du record
-		 * (2) On ne peut pas mettre deux fois le même champ
-		 * (3) Tous les champs doivent être renseignés
-		 * (4) Tous les champs doivent être de bon type
-		 * (5) On ne peut pas utiliser un champ qui n'existe pas
+		/* Déclaration d'une structure
+		 * (1) Vérification de l'existence du type de structure
+		 * (2) Vérification du nombre de champs
+		 * (3) Vérification des noms des champs
+		 * (4) Vérification des types des champs
 		 */
-
-		String recordIdentifier = tree.getChild(0).toString();
-		Record record = (Record) this.findType(recordIdentifier);
-
-		// Test sémantique (1)
-		if (record == null) {
-			notifier.semanticError(tree, "undeclared record: %s", recordIdentifier);
-			return null;
-		}
-
-		Namespace<Variable> expectedFields = record.getNamespace();
-		HashMap<String, Type> givenFields = new HashMap<>();
-
-		// Test sémantique (2)
-		for (int i = 1; i < tree.getChildCount(); i = i + 2) {
-			String keyName = tree.getChild(i).toString();
-
-			if (givenFields.containsKey(keyName)) {
-				notifier.semanticError(tree.getChild(i), "key %s given twice", keyName);
-				return null;
+		String name = tree.getChild(0).toString();
+		Type returnType = this.findType(name);
+		int i = 1;
+		int l = tree.getChildCount();
+		if (returnType == null) { // Test sémantique (1)
+			notifier.semanticError(tree, "type %s is not defined", name);
+		} else if (!(returnType instanceof Record)) { // Test sémantique (1)
+			notifier.semanticError(tree, "type %s is not a record type", name);
+			returnType = null;
+		} else {
+			Record record = (Record) returnType;
+			Namespace<Variable> namespace = record.getNamespace();
+			for (Map.Entry<String, Variable> entry: namespace) {
+				if (i >= l) { // Test sémantique (2)
+					notifier.semanticError(tree, "%s requires more fields", name);
+					break;
+				}
+				if (!tree.getChild(i).toString().equals(entry.getKey())) { // Test sémantique (3)
+					notifier.semanticError(tree, "field name %s was expected but field name %s was found", entry.getKey(), tree.getChild(i).toString());
+				}
+				this.checkType(tree.getChild(i + 1), notifier, entry.getValue().getType()); // Test sémantique (4)
+				i += 2;
 			}
-
-			givenFields.put(tree.getChild(i).toString(), fillWith(tree.getChild(i+1), notifier));
-		}
-
-		for (Map.Entry <String, Variable> entry : expectedFields) {
-			String identifier = entry.getKey();
-			Variable variable = entry.getValue();
-			Type type = variable.getType();
-
-			// Test sémantique (3)
-			if (!givenFields.containsKey(identifier)) {
-				notifier.semanticError(tree, "missing field %s", identifier);
-				return null;
-			}
-
-			// Test sémantique (4)
-			if (givenFields.get(identifier) != type) {
-				notifier.semanticError(tree, "incorrect type for field %s", identifier);
-				return null;
+			if (i < l) { // Test sémantique (2)
+				notifier.semanticError(tree, "%s requires fewer fields", name);
 			}
 		}
-
-		for (Map.Entry<String, Type> entry : givenFields.entrySet()) {
-			String identifier = entry.getKey();
-
-			if (expectedFields.get(identifier) == null) {
-				notifier.semanticError(tree, "unkown identifier: %s", identifier);
-				return null;
-			}
+		for (; i < l; i += 2) {
+			this.fillWith(tree.getChild(i + 1), notifier);
 		}
-
-		return record;
+		return returnType;
 	}
 
 	private Type fillWithARR(Tree tree, Notifier notifier) {
-		/* Déclaration d'un tableau (partie à droite du :=)
-		 * (1) Vérification de l'existence du type des éléments du tableau
-		 * (2) Vérification du type du nombre d'éléments dans le tableau (obligatoirement int)
-		 * (3) Vérification du type de l'élément pour remplir
+		/* Déclaration d'un tableau
+		 * (1) Vérification de l'existence du type de tableau
+		 * (2) Vérification du type de la taille du tableau
+		 * (3) Vérification du type des éléments du tableau
 		 */
-
-		String expectedTypeIdentifier = tree.getChild(0).toString();
-		Type expectedType = this.findType(expectedTypeIdentifier);
-
-		// Test sémantique (1)
-		if (expectedType == null) {
-			notifier.semanticError(tree, "type %s doesn't exists");
-			return null;
+		String name = tree.getChild(0).toString();
+		Type returnType = this.findType(name);
+		if (returnType == null) { // Test sémantique (1)
+			notifier.semanticError(tree, "type %s is not defined", name);
+		} else if (!(returnType instanceof Array)) { // Test sémantique (1)
+			notifier.semanticError(tree, "type %s is not an array type", name);
+			returnType = null;
 		}
-
-		// Test sémantique (2)
-		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);
-
-		// Test sémantique (3)
-		this.checkType(tree.getChild(2), notifier, expectedType);
-
-		Array arr = new Array();
-		arr.setType(expectedType);
-		return arr;
+		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // Test sémantique (2)
+		if (returnType != null) {
+			Array array = (Array) returnType;
+			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
+		}
+		return returnType;
 	}
 
-	private Type fillWithAssignment(Tree tree, Notifier notifier){
-
-		Type lType = null;
-		Tree lValue = tree.getChild(0);
-		switch (lValue.getType()) { //Vérification que l'expression à gauche du ":=" est un lValue (cherche si le token de 'lValue' est bien parmis les tokens imaginaires ANTLR correspondant à un lValue)
+	private Type fillWithAssignment(Tree tree, Notifier notifier) {
+		Tree exp = tree.getChild(0);
+		switch (exp.getType()) { // vérification que l'expression à gauche du ":=" est un lValue (cherche si le token de 'exp' est bien parmis les tokens imaginaires ANTLR correspondant à un lValue)
 			case ID:
 			case ITEM:
 			case FIELD: {
-				lType = this.fillWith(lValue, notifier);
+				this.checkType(tree.getChild(1), notifier, this.fillWith(exp, notifier)); // vérification de cohérence de type entre l'expression gauche et droite
 				break;
 			}
 			default: {
-				notifier.semanticError(lValue, "the expression on the left of the operator %s isn't a lValue", tree.toString());
+				notifier.semanticError(exp, "%s is not a valid target for an assignment", exp.toString());
+				this.fillWith(tree.getChild(1), notifier);
 			}
 		}
-
-		// Vérification de cohérence de type entre l'expression gauche et droite
-		this.checkType(tree.getChild(1),notifier,lType);
-
 		return null;
 	}
 
 	private Type fillWithSEQ(Tree tree, Notifier notifier) {
-		Type expType = null;
-		for (int i = 0; i < tree.getChildCount(); i++) {
-			expType = this.fillWith(tree.getChild(i), notifier);
+		Type returnType = null;
+		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
+			returnType = this.fillWith(tree.getChild(i), notifier);
 		}
-		return expType;
+		return returnType;
 	}
 
 	private Type fillWithSTR(Tree tree, Notifier notifier) {
@@ -407,8 +384,8 @@ public class SymbolTable {
 	}
 
 	private Type fillWithID(Tree tree, Notifier notifier) {
-		Variable variable = this.findVariable(tree.getText());
-		if (variable == null){
+		Variable variable = this.findVariable(tree.toString());
+		if (variable == null) {
 			notifier.semanticError(tree, "variable %s is not defined", tree.toString());
 		} else{
 			return variable.getType();
@@ -416,46 +393,32 @@ public class SymbolTable {
 		return null;
 	}
 
-	private Type fillWithITEM(Tree tree, Notifier notifier){	//TODO !
-		//->^(ITEM $valueExp exp)
-		
-
-        //on regarde si le fils gauche est bien un entier
-		this.checkType(tree.getChild(1),notifier,SymbolTable.intType);
-
-		//on regarde si un tableau
-		Type type=fillWith(tree.getChild(0),notifier);
-		if(!(type instanceof Array)){
-            notifier.semanticError(tree,"The variable must be an array");
+	private Type fillWithITEM(Tree tree, Notifier notifier) {
+		Tree exp = tree.getChild(0);
+		Type expType = this.fillWith(exp, notifier);
+		Type returnType = null;
+		if (!(expType instanceof Array)) { // on regarde si le fils gauche est bien un tableau
+			notifier.semanticError(exp, "%s is not an array", exp.toString());
+		} else { // on sait qu'on a bien un tableau
+			Array array = (Array) expType;
+			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
-        else{//on sait que on a bien un tableau
-			Array arr=(Array)type;
-            return arr.getType();//On retourne le type des éléments stockés dans le tableau
-        }
-
-
-        //on retourne le type de elt stocké dans le tableau
-		return null;
+		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // on regarde si le fils droit est bien un entier
+		return returnType;
 	}
 
-	private Type fillWithFIELD(Tree tree, Notifier notifier){	//TODO !
-		//^(FIELD $valueExp ID))
-		//On regarde si le membre de gauche est bien une structure
-		Type typeExpr;
-		typeExpr=fillWith(tree.getChild(0),notifier);
-		if(! (typeExpr instanceof Record)){
-			notifier.semanticError(tree,"The variable must be a record");
-		}
-		else {
-			//on sait que typeExpr est de type record
-			Namespace<Variable> nms=((Record) typeExpr).getNamespace();
-			//on regarde si dans l'espace de noms figure id
-			if(nms.get(tree.getChild(1).toString()) == null) {
-				notifier.semanticError(tree,"The field doesn't appear in the Record");
-			}
-			//Sinon c'est OK
-			else{
-				return nms.get(tree.getChild(1).toString()).getType();
+	private Type fillWithFIELD(Tree tree, Notifier notifier) {
+		Tree exp = tree.getChild(0);
+		Type expType = this.fillWith(exp, notifier);
+		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
+			notifier.semanticError(exp, "%s is not a record", exp.toString());
+		} else { // on sait qu'on a bien une structure
+			Record record = (Record) expType;
+			Namespace<Variable> fields = record.getNamespace();
+			if (fields.get(tree.getChild(1).toString()) == null) { // on regarde si le champ existe
+				notifier.semanticError(tree, "field %s is not defined", tree.getChild(1).toString());
+			} else { // sinon c'est bon
+				return fields.get(tree.getChild(1).toString()).getType();
 			}
 		}
 		return null;
@@ -475,13 +438,18 @@ public class SymbolTable {
 	}
 
 	private Type fillWithComparator(Tree tree, Notifier notifier) {
-		Type expType = this.fillWith(tree.getChild(0), notifier);
-		if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)){
-			notifier.semanticError(tree.getChild(0), "les types non primitifs (ie : autre que 'int' et 'string') ne sont pas acceptés pour cet opérateur : '" + tree.getText() + "'");
-		}
-		Type secondType = this.checkType(tree.getChild(1), notifier, expType);
-		if ((secondType != SymbolTable.intType) && (secondType != SymbolTable.stringType)){
-			notifier.semanticError(tree.getChild(1), "les types non primitifs (ie : autre que 'int' et 'string') ne sont pas acceptés pour cet opérateur : '" + tree.getText() + "'");
+		Tree exp = tree.getChild(0);
+		Type expType = this.fillWith(exp, notifier);
+		if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)) {
+			notifier.semanticError(exp, "the type of %s is not a primitive type (%s or %s)");
+			exp = tree.getChild(1);
+			expType = this.fillWith(exp, notifier);
+			if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)) {
+				notifier.semanticError(exp, "%s is not a primitive value (either an integer or a string)");
+			}
+		} else {
+			exp = tree.getChild(1);
+			expType = this.checkType(exp, notifier, expType);
 		}
 		return SymbolTable.intType;
 	}
@@ -493,46 +461,17 @@ public class SymbolTable {
 		return SymbolTable.intType;
 	}
 
-	private Type fillWithNAire(Tree tree, Type operandsType, Notifier notifier) {
-		/* Complète la TDS pour un opérateur n-aire ayant par défaut les propriétés suivantes :
-		* - les types des opérandes doivent être identiques
-		* - le type du résultat est toujours du même type que celui des opérandes, sauf en cas d'erreur sémantique : il vaudra null
-		* Le paramètre operandsType indique le type accepté pour les opérandes : s'il vaut null, alors on détermine le type des opérandes par inférence.
-		* 	C'est à dire que le type du premier opérande déterminera le type que les autres opérandes doivent suivre.
-		*
-		* Si l'un des opérandes n'est pas du type operandsType, on renvoit le type null
-		* */
-
-		int i = 0;
-		if (operandsType == null){	// Gère cas où le type est déterminé par inférence
-			operandsType = fillWith(tree.getChild(0), notifier);
-			i++;
-		}
-
-		Tree operand = null;
-
-		for (int li = tree.getChildCount(); i < li; ++i){
-			operand = tree.getChild(i);
-			if (! (this.fillWith(operand, notifier) == operandsType)){	// Si le type du ieme opérande n'est pas operandsType
-				notifier.semanticError(operand,"types de "+ operand.getText() +" non consistant dans l'opération : " + tree.toString());	// TODO : afficher l'expression de tree ?
-				return null;
-			}
-		}
-		return operandsType;
-	}
-
     private Type checkType(Tree tree, Notifier notifier, Type type) {
 		// Vérifie que le type de l'expression de 'tree' est bien 'type'
 		// Si le type de 'tree' n'est pas 'type', alors `null` est renvoyé
 		// Sinon le type de 'tree' est renvoyé
-
         Type expType = this.fillWith(tree, notifier);
         if (expType == type || expType == SymbolTable.nilPseudoType && type instanceof Record) {
             return type;
         } else if (type == SymbolTable.nilPseudoType && expType instanceof Record) {
             return expType;
         } else {
-            notifier.semanticError(tree, tree.getText() +" is different from expected type");
+            notifier.semanticError(tree, "type of %s does not match", tree.toString());
 	        return null;
         }
     }
@@ -695,7 +634,7 @@ public class SymbolTable {
 								argument.setType(argumentType);
 							}
 							if (subTable.functionsAndVariables.has(argumentName)) {
-								notifier.semanticError(callType.getChild(k), "redeclaration of formal parameter %s", argumentName);
+								notifier.semanticError(callType.getChild(k), "redeclaration of parameter %s", argumentName);
 							}
 							subTable.functionsAndVariables.set(argumentName, argument);
 						}

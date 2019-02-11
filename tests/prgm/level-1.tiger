@@ -8,9 +8,9 @@ in
 	while testvar do (
 		total := total + i * i;
 		if i = 5 then
-			print (5);
+			printi (5);
 		i := i + 1;
 		testvar := i <= n
 	);
-	print (total)
+	printi (total)
 end

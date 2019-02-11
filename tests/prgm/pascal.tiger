@@ -4,7 +4,7 @@ let
 	var arr := intArray [MAX] of 0
 	function indice (n : int, k : int) : int =
 		n * (n + 1) / 2 + k
-	function pascal3 (n : int, k : int, arr : intArray) : int =
+	function pascal3 (n : int, k : int) : int =
 		let
 			var ind : int := 0
 		in
@@ -21,7 +21,7 @@ let
 		);
 		for n := 0 to rang do (
 			for k := 0 to n do (
-				print (pascal3 (n, k));
+				printi (pascal3 (n, k));
 				print (" ")
 			);
 			print ("\n")

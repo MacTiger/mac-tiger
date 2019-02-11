@@ -8,22 +8,16 @@ import java.util.Map;
 public class Namespace<Symbol> implements Iterable<Map.Entry<String, Symbol>> {
 
 	private Map<String, Symbol> symbols;
-	private Symbol lastSymbol;
 
 	public Namespace() {
 		this.symbols = new LinkedHashMap<String, Symbol>();
-		this.lastSymbol = null;
 	}
 
 	public void set(String name, Symbol symbol) {
 		if (name == null) {
 			return;
 		}
-		boolean added = this.symbols.containsKey(name);
 		this.symbols.put(name, symbol);
-		if (added) {
-			this.lastSymbol = symbol;
-		}
 	}
 
 	public Symbol get(String name) {
@@ -37,12 +31,8 @@ public class Namespace<Symbol> implements Iterable<Map.Entry<String, Symbol>> {
 		return this.symbols.containsKey(name);
 	}
 
-	public Symbol getLastSymbol() {
-		return this.lastSymbol;
-	}
-
 	public Iterator<Map.Entry<String, Symbol>> iterator () {
-	   return this.symbols.entrySet().iterator();
+		return this.symbols.entrySet().iterator();
 	}
 
 }
