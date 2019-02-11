@@ -7,11 +7,11 @@ import org.antlr.runtime.tree.Tree;
 
 public final class Notifier {
 
-	String[] tokenNames;
-	int lexicalErrorCount;
-	boolean noColor;
-	int syntacticErrorCount;
-	int semanticErrorCount;
+	private String[] tokenNames;
+	private int lexicalErrorCount;
+	private boolean noColor;
+	private int syntacticErrorCount;
+	private int semanticErrorCount;
 
 	public Notifier(String[] tokenNames, boolean noColor) {
 		this.tokenNames = tokenNames;

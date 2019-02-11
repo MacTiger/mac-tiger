@@ -3,10 +3,12 @@ package semantic;
 public class Variable extends FunctionOrVariable {
 
 	private Type type;
+	private boolean writable;
 	private int shift;
 
 	public Variable() {
 		this.type = null;
+		this.writable = true;
 		this.shift = 0;
 	}
 
@@ -24,6 +26,14 @@ public class Variable extends FunctionOrVariable {
 
 	public int getShift() {
 		return this.shift;
+	}
+
+	public void configure(boolean writable) {
+		this.writable = writable;
+	}
+
+	public boolean isWritable() {
+		return this.writable;
 	}
 
 }

@@ -1,7 +1,6 @@
 package semantic;
 
 import java.util.ArrayList;
-// import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -153,11 +152,11 @@ public class SymbolTable {
 		return children;
 	}
 
-	private Namespace<Type> getTypes() {
+	public Namespace<Type> getTypes() {
 		return types;
 	}
 
-	private Namespace<FunctionOrVariable> getFunctionsAndVariables() {
+	public Namespace<FunctionOrVariable> getFunctionsAndVariables() {
 		return functionsAndVariables;
 	}
 
@@ -231,7 +230,7 @@ public class SymbolTable {
 		switch (tree.toString()) {
 			case ":=": return this.fillWithAssignment(tree, notifier);
 			case "=":
-			case "<>": return fillWithEqualOrNot(tree, notifier);
+			case "<>": return this.fillWithEqualOrNot(tree, notifier);
 			case ">":
 			case "<":
 			case ">=":
@@ -360,6 +359,14 @@ public class SymbolTable {
 			case ID:
 			case ITEM:
 			case FIELD: {
+				if (exp.getType() == ID) {
+					Variable variable = this.findVariable(exp.toString());
+					if (variable != null && !variable.isWritable()) {
+						notifier.semanticError(exp, "loop index %s cannot be assigned", exp.toString());
+						this.fillWith(tree.getChild(1), notifier);
+						break;
+					}
+				}
 				this.checkType(tree.getChild(1), notifier, this.fillWith(exp, notifier)); // vérification de cohérence de type entre l'expression gauche et droite
 				break;
 			}
@@ -492,10 +499,12 @@ public class SymbolTable {
 	}
 
 	private Type fillWithFor(Tree tree, Notifier notifier) {
-		SymbolTable table = new SymbolTable(this);				this.children.add(table);
-		Variable iterator = new Variable();
-		iterator.setType(SymbolTable.intType);
-		table.functionsAndVariables.set(tree.getChild(0).toString(), iterator); // Ajout de la variable de boucle for dans sa table de symbole
+		SymbolTable table = new SymbolTable(this);
+		this.children.add(table);
+		Variable index = new Variable();
+		index.configure(false);
+		index.setType(SymbolTable.intType);
+		table.functionsAndVariables.set(tree.getChild(0).toString(), index); // Ajout de la variable de boucle for dans sa table de symbole
 		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
 		this.checkType(tree.getChild(2), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
 		table.checkType(tree.getChild(3), notifier, null);	// Remplissage de la table des symboles de la boucle for

@@ -36,10 +36,12 @@ public class Main {
 				notifier.lexicalError(this, exception);
 			}
 			public String getCharErrorDisplay(int character) {
-				return "\033[0;33m" + super.getCharErrorDisplay(character) + "\033[0m";
+				String name = super.getCharErrorDisplay(character);
+				return noColor ? name : "\033[0;33m" + name + "\033[0m";
 			}
 			// public String getTokenErrorDisplay(Token token) {
-			// 	return "\033[1;33m" + super.getTokenErrorDisplay(token) + "\033[0m";
+			// 	String name = super.getTokenErrorDisplay(token);
+			// 	return noColor ? name : "\033[0;33m" + name + "\033[0m";
 			// }
 		};
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -48,7 +50,8 @@ public class Main {
 				notifier.syntacticError(this, exception);
 			}
 			public String getTokenErrorDisplay(Token token) {
-				return "\033[0;33m" + super.getTokenErrorDisplay(token) + "\033[0m";
+				String name = super.getTokenErrorDisplay(token);
+				return noColor ? name : "\033[0;33m" + name + "\033[0m";
 			}
 		};
 		TigerParser.program_return result = parser.program();
