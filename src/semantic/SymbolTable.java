@@ -1,23 +1,14 @@
 package semantic;
 
-import java.util.*;
-
-import org.antlr.runtime.tree.Tree;
-
 import misc.Constants;
 import misc.Notifier;
+import org.antlr.runtime.tree.Tree;
 
-import static syntactic.TigerParser.ARRTYPE;
-import static syntactic.TigerParser.RECTYPE;
-import static syntactic.TigerParser.SEQ;
-import static syntactic.TigerParser.ARR;
-import static syntactic.TigerParser.REC;
-import static syntactic.TigerParser.CALL;
-import static syntactic.TigerParser.ITEM;
-import static syntactic.TigerParser.FIELD;
-import static syntactic.TigerParser.ID;
-import static syntactic.TigerParser.STR;
-import static syntactic.TigerParser.INT;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static syntactic.TigerParser.*;
 
 public class SymbolTable {
 
@@ -427,16 +418,23 @@ public class SymbolTable {
 
 	private Type fillWithITEM(Tree tree, Notifier notifier){	//TODO !
 		//->^(ITEM $valueExp exp)
-		// Par exemple A[4][2]
+		
 
+        //on regarde si le fils gauche est bien un entier
 		this.checkType(tree.getChild(1),notifier,SymbolTable.intType);
 
 		//on regarde si un tableau
 		Type type=fillWith(tree.getChild(0),notifier);
 		if(!(type instanceof Array)){
-
+            notifier.semanticError(tree,"The variable must be an array");
 		}
+        else{//on sait que on a bien un tableau
+			Array arr=(Array)type;
+            return arr.getType();//On retourne le type des éléments stockés dans le tableau
+        }
 
+
+        //on retourne le type de elt stocké dans le tableau
 		return null;
 	}
 
