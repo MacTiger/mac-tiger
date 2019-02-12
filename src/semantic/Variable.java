@@ -4,12 +4,12 @@ public class Variable extends FunctionOrVariable {
 
 	private Type type;
 	private boolean writable;
-	private int shift;
+	private int offset;
 
 	public Variable() {
 		this.type = null;
 		this.writable = true;
-		this.shift = 0;
+		this.offset = 0;
 	}
 
 	public void setType(Type type) {
@@ -20,12 +20,12 @@ public class Variable extends FunctionOrVariable {
 		return this.type;
 	}
 
-	public void setShift(int shift) {
-		this.shift = shift;
+	public void setOffset(int offset) {
+		this.offset = offset;
 	}
 
-	public int getShift() {
-		return this.shift;
+	public int getOffset() {
+		return this.offset;
 	}
 
 	public void configure(boolean writable) {

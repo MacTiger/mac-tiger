@@ -517,6 +517,7 @@ public class SymbolTable {
 		SymbolTable table = this;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
+		int variableOffset = 0;
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
@@ -524,14 +525,18 @@ public class SymbolTable {
 					table = new SymbolTable(supTable);
 					supTable.children.add(table);
 					supTable = table;
+					variableOffset = 0;
 					int lj = i;
 					int remainingAliases = 0;
 					boolean remainsAliases = false;
 					boolean remainsArraysAndRecords = false;
 					do {
-						String name = symbol.getChild(0).toString();
-						Tree shape = symbol.getChild(1);
 						Type type = null;
+						String name = symbol.getChild(0).toString();
+						if (table.types.has(name)) {
+							notifier.semanticError(symbol.getChild(0), "redeclaration of type %s", name);
+						}
+						Tree shape = symbol.getChild(1);
 						switch (shape.getType()) {
 							case ARRTYPE: {
 								type = new Array();
@@ -553,9 +558,6 @@ public class SymbolTable {
 									remainsAliases = true;
 								}
 							}
-						}
-						if (table.types.has(name)) {
-							notifier.semanticError(symbol.getChild(0), "redeclaration of type %s", name);
 						}
 						table.types.set(name, type);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
@@ -599,17 +601,22 @@ public class SymbolTable {
 							} else if (type instanceof Record) {
 								Record record = (Record) type;
 								Namespace<Variable> namespace = record.getNamespace();
+								int fieldOffset = 0;
 								for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
-									String fieldName = shape.getChild(k).toString();
 									Variable field = new Variable();
+									String fieldName = shape.getChild(k).toString();
+									if (namespace.has(fieldName)) {
+										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
+									}
 									Type fieldType = table.findType(shape.getChild(k + 1).toString());
 									if (fieldType == null) {
 										notifier.semanticError(shape.getChild(k + 1), "type %s is not defined", shape.getChild(k + 1).toString());
 									} else {
 										field.setType(fieldType);
 									}
-									if (namespace.has(fieldName)) {
-										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
+									field.setOffset(fieldOffset);
+									if (fieldType != null) {
+										fieldOffset += fieldType.getSize();
 									}
 									namespace.set(fieldName, field);
 								}
@@ -625,29 +632,42 @@ public class SymbolTable {
 					table = new SymbolTable(supTable);
 					supTable.children.add(table);
 					supTable = table;
+					variableOffset = 0;
 					int lj = i;
 					do {
 						SymbolTable subTable = new SymbolTable(table);
 						table.children.add(subTable);
-						String name = symbol.getChild(0).toString();
-						Tree callType = symbol.getChild(1);
-						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
 						Function function = new Function();
 						function.setSymbolTable(subTable);
+						String name = symbol.getChild(0).toString();
+						if (table.functionsAndVariables.has(name)) {
+							notifier.semanticError(symbol.getChild(0), "redeclaration of function %s", name);
+						}
+						Tree callType = symbol.getChild(1);
+						int argumentOffset = 0;
 						for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
-							String argumentName = callType.getChild(k).toString();
 							Variable argument = new Variable();
+							String argumentName = callType.getChild(k).toString();
+							if (subTable.functionsAndVariables.has(argumentName)) {
+								notifier.semanticError(callType.getChild(k), "redeclaration of parameter %s", argumentName);
+							}
 							Type argumentType = table.findType(callType.getChild(k + 1).toString());
 							if (argumentType == null) {
 								notifier.semanticError(callType.getChild(k + 1), "type %s is not defined", callType.getChild(k + 1).toString());
 							} else {
 								argument.setType(argumentType);
 							}
-							if (subTable.functionsAndVariables.has(argumentName)) {
-								notifier.semanticError(callType.getChild(k), "redeclaration of parameter %s", argumentName);
+							argument.setOffset(argumentOffset);
+							if (argumentType != null) {
+								argumentOffset += argumentType.getSize();
 							}
 							subTable.functionsAndVariables.set(argumentName, argument);
 						}
+						for (Map.Entry<String, FunctionOrVariable> entry: subTable.functionsAndVariables) {
+							Variable argument = (Variable) entry.getValue();
+							argument.setOffset(argument.getOffset() - argumentOffset);
+						}
+						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
 						if (type != null) {
 							Type returnType = table.findType(type.toString());
 							if (returnType == null) {
@@ -655,9 +675,6 @@ public class SymbolTable {
 							} else {
 								function.setType(returnType);
 							}
-						}
-						if (table.functionsAndVariables.has(name)) {
-							notifier.semanticError(symbol.getChild(0), "redeclaration of function %s", name);
 						}
 						table.functionsAndVariables.set(name, function);
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -673,6 +690,7 @@ public class SymbolTable {
 					break;
 				}
 				case "var": {
+					Variable variable = new Variable(); // Création de la variable déclarée
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
 					Tree type = symbol.getChildCount() > 2 ? symbol.getChild(2) : null;
@@ -692,14 +710,17 @@ public class SymbolTable {
 							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
 						}
 					}
+					variable.setType(returnType); // Spécification du type de la variable
 					if (table == this || table.functionsAndVariables.get(name) != null) {
 						table = new SymbolTable(supTable);
 						supTable.children.add(table);
 						supTable = table;
+						variableOffset = 0;
 					}
-					// Création de la variable déclarée et spécification de son type :
-					Variable variable = new Variable();
-					variable.setType(returnType);
+					variable.setOffset(variableOffset);
+					if (returnType != null) {
+						variableOffset += returnType.getSize();
+					}
 					table.functionsAndVariables.set(name, variable);
 					break;
 				}
@@ -781,7 +802,7 @@ public class SymbolTable {
 			partOfGraph += "{";
 			if (stringSymbolEntry.getValue() instanceof Variable){
 				var = (Variable) stringSymbolEntry.getValue();
-				partOfGraph += stringSymbolEntry.getKey() + "|" + var.getType().toString() + "|" + var.getShift(); //TODO : nom du type
+				partOfGraph += stringSymbolEntry.getKey() + "|" + var.getType().toString() + "|" + var.getOffset(); //TODO : nom du type
 			}
 			partOfGraph+= "}";
 			graph += partOfGraph;
