@@ -1,5 +1,22 @@
 digraph structs {
-    rankdir=LR;
-    TDS0_0[shape=record, label=""]
-TDS_1_0[shape=record, label="{x|semantic.Primitive@6d311334|0}|{y|semantic.Primitive@6d311334|0}"]
+rankdir=LR;
+TDS_0_0[shape=record, label="{<parent>} | {<TDS_1_0>} "]
+TDS_1_0[shape=record, label="{<parent>} | {<TDS_2_0>}  | {resultat|semantic.Primitive@6d311334|0}"]
+
+TDS_2_0[shape=record, label="{<parent>} | {<TDS_3_0>}  | {<TDS_3_1>}  | {} | {}"]
+
+TDS_3_0[shape=record, label="{<parent>} | {<TDS_4_0>}  | {a|semantic.Primitive@6d311334|0} | {b|semantic.Primitive@6d311334|0}"]
+
+TDS_4_0[shape=record, label="{<parent>} | {i|semantic.Primitive@6d311334|0} | {resultat|semantic.Primitive@6d311334|0}"]
+
+TDS_3_1[shape=record, label="{<parent>} | {<TDS_4_0>}  | {n|semantic.Primitive@6d311334|0}"]
+
+TDS_4_0[shape=record, label="{<parent>} | {i|semantic.Primitive@6d311334|0}"]
+
+
+
+
+"TDS_4_0":parent -> "TDS_3_0":TDS_4_0;"TDS_3_0":parent -> "TDS_2_0":TDS_3_0;
+
+"TDS_4_0":parent -> "TDS_3_1":TDS_4_0;"TDS_3_1":parent -> "TDS_2_0":TDS_3_1;"TDS_2_0":parent -> "TDS_1_0":TDS_2_0;"TDS_1_0":parent -> "TDS_0_0":TDS_1_0;
 }
