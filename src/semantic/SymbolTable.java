@@ -738,7 +738,7 @@ public class SymbolTable {
 		return res;
 	}
 
-	private String nameOfTDS(int depth, int num_TDS){
+	private String nameOfTDS(int depth, int num_TDS){   //TODO : la profondeur et le numéro ne suffisent pas à identifier de manière unique des TDS !
 		return "TDS_" + depth + "_" + num_TDS;
 	}
 
@@ -746,25 +746,26 @@ public class SymbolTable {
 		// Renvoit : [graph, graphChildren, graphLinks]
 
 		String graph =  nameOfTDS(depth,num_TDS)+ "[shape=record, label=\""; // Résultat à afficher
+		String linksOfGraph = "";   // Partie de graph qui servira à la liaison avec les autres TDS
+		String typesGraph = "";          // Partie de graph qui contiendra les types
+		String varFuncGraph = "";        // Partie de graph qui contiendra les fonctions et variables
+
 		String graphChildren = "";  // String des graphiques des TDS filles de cette TDS
 		String graphLinks = ""; // String des liaisons entre TDS
 
 
 		int i = 0;
-		if (depth > 0){   // Prévoit le point d'ancrage du lient vers son père
-			graph += "{<parent>} | ";//TODO : vérifier les effets de bord
-		}
-		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
-			if (i > 0){
-				graph+= " | ";
-			}
+
+		linksOfGraph += "{<parent>}";   // Prévoit le point d'ancrage du lient vers son père
+
+		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS  //TODO : Relier les TDS des fonctions aux fonctions de cette TDS
 			ArrayList symbolTableGraph = symbolTable.toGraphViz(depth+1, i);
 			// Récupère les graphes créés par la fille symbolTable :
-			graphLinks += "\n" + symbolTableGraph.get(2) + "\n";
-			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + "\n" + symbolTableGraph.get(1) + "\n";
+			graphLinks += "\n" + symbolTableGraph.get(2) ;  // Ajout des liaisons créées par symbolTable
+			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + symbolTableGraph.get(1);   // Ajout du graph de symbolTable et de ces enfants
 
 			// Ajout des liens entre cette TDS et sa fille symbolTable
-			graph += "<"+ nameOfTDS(depth+1,i) + ">";
+			linksOfGraph += " | {<"+ nameOfTDS(depth+1,i) + ">} ";
 			graphLinks+= "\"" + nameOfTDS(depth+1,i) + "\":" + "parent" + " -> \"" + nameOfTDS(depth,num_TDS) + "\":"+nameOfTDS(depth+1,i) + ";";
 			i++;
 		}
@@ -776,23 +777,29 @@ public class SymbolTable {
 		for (Map.Entry<String, FunctionOrVariable> stringSymbolEntry : this.functionsAndVariables){ // Parcours des fonctions et variables déclarées dans cette TDS
 			partOfGraph = "";
 			if (i > 0){
-				partOfGraph+="|";
+				varFuncGraph+=" | ";
 			}
-			partOfGraph += "{";
 			if (stringSymbolEntry.getValue() instanceof Variable){
 				var = (Variable) stringSymbolEntry.getValue();
-				partOfGraph += stringSymbolEntry.getKey() + "|" + var.getType().toString() + "|" + var.getShift(); //TODO : nom du type
+				partOfGraph += stringSymbolEntry.getKey() + "|" + var.getType().toString() + "|" + var.getShift(); //TODO : liaison avec les Types
 			}
-			partOfGraph+= "}";
-			graph += partOfGraph;
+			//TODO : Traiter le cas des Function
+			varFuncGraph += "{" + partOfGraph + "}";
 			i++;
 		}
 
-		for (Map.Entry<String, Type> stringTypeEntry : this.types){ // Parcours des types déclarées dans cette TDS
+		for (Map.Entry<String, Type> stringTypeEntry : this.types){ // Parcours des types déclarées dans cette TDS  //TODO : cellule des Types
 
 		}
 
-
+		// Gestion des séparation entres les différentes parties de graph
+		if( !(typesGraph.equals("")) ){
+			linksOfGraph += " | ";
+		}
+		if ( !(varFuncGraph.equals("")) ){
+			typesGraph += " | ";
+		}
+		graph += linksOfGraph + typesGraph + varFuncGraph;  // Assemblage des parties de graph
 		graph += "\"]";
 		return new ArrayList<>(Arrays.asList(graph, graphChildren, graphLinks));
 	}
