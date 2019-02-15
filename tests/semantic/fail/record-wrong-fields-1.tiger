@@ -1,0 +1,5 @@
+let
+      type vector = {x : int, y : int}
+      var x := vector {x = 1, y = 1, z = 1}
+in
+end

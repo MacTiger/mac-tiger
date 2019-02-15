@@ -1,0 +1,5 @@
+let
+      var x := int[4] of "a"
+in
+
+end

@@ -1,9 +1,0 @@
-let
-      var x : int
-
-      function f() : int = (
-            1
-      )
-in
-      x = f(2)
-end

@@ -1,0 +1,5 @@
+let
+      function f() : int = 0
+in
+      f(0) 
+end
