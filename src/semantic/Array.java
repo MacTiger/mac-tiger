@@ -14,6 +14,11 @@ public class Array extends Type {
 		return Constants.pointerSize;
 	}
 
+	@Override
+	public String whichInstance() {
+		return "Array";
+	}
+
 	public void setType(Type type) {
 		this.type = type;
 	}

@@ -35,4 +35,8 @@ public class Namespace<Symbol> implements Iterable<Map.Entry<String, Symbol>> {
 		return this.symbols.entrySet().iterator();
 	}
 
+	public int getSize(){
+		return symbols.size();
+	}
+
 }

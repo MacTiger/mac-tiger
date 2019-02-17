@@ -14,6 +14,11 @@ public class Record extends Type {
 		return Constants.pointerSize;
 	}
 
+	@Override
+	public String whichInstance() {
+		return "Record";
+	}
+
 	public Namespace<Variable> getNamespace() {
 		return this.namespace;
 	}

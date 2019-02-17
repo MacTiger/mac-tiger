@@ -12,4 +12,9 @@ public class Primitive extends Type {
 		return this.size;
 	}
 
+	@Override
+	public String whichInstance() {
+		return "Primitive";
+	}
+
 }

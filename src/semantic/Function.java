@@ -26,4 +26,14 @@ public class Function extends FunctionOrVariable {
 		return this.table;
 	}
 
+	public String getTypeToGraphviz(){
+		String typeString ="";
+		if (type == null){
+			typeString += "VOID";
+		} else{
+			typeString += type.toString();
+		}
+		return typeString;
+	}
+
 }
