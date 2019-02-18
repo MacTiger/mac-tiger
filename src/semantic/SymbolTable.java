@@ -1,9 +1,6 @@
 package semantic;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.runtime.tree.Tree;
 
@@ -761,7 +758,7 @@ public class SymbolTable {
 
 		resArray = this.toGraphViz("TDS",0);
 		allTypes += resArray.get(3) + "\"]\n";
-		res += resArray.get(0) + resArray.get(1) + resArray.get(2) + allTypes + makeLink(nameOfTDS("TDS",0),"parent","TDS","parent");
+		res += resArray.get(0) + resArray.get(1) + resArray.get(2) + allTypes + makeLink(nameOfTDS("TDS",0),"parent","TDS","parent",false);
 
 		res += "\n}";
 		return res;
@@ -774,11 +771,15 @@ public class SymbolTable {
 		return parent + "_" + num_TDS;
 	}
 
-	private String makeLink(String source, String portSource, String dest, String portDest){
-		return "\"" + source + "\":" + portSource + " -> \"" + dest + "\":"+  portDest + ";";
+	public static String makeLink(String source, String portSource, String dest, String portDest, boolean bidirectionnal){
+		String res = "\"" + source + "\":" + portSource + " -> \"" + dest + "\":"+  portDest;
+		if (bidirectionnal){
+			res += "[dir=\"both\"]";
+		}
+		return  res + ";";
 	}
 
-	private String makeAdresse(String stringToEscape){
+	public static String makeAdresse(String stringToEscape){
 		return stringToEscape.toString().replace('.','_').replace('@','_');
 	}
 
@@ -796,21 +797,12 @@ public class SymbolTable {
 		String graphLinks = ""; // String des liaisons entre TDS
 		String allTypes = "";
 
+		List<SymbolTable> symbolTablesOfFunctions = new ArrayList<>(); // Array des SymbolTable de fonction déjà liés
+
 
 		int i = 0;
 
 //		linksOfGraph += "{<parent>}";   // Prévoit le point d'ancrage du lient vers son père
-
-		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS  //TODO : Relier les TDS des fonctions aux fonctions de cette TDS
-			ArrayList symbolTableGraph = symbolTable.toGraphViz(nameOfThisTDS, i);
-			// Récupère les graphes créés par la fille symbolTable :
-			graphLinks += "\n" + symbolTableGraph.get(2) ;  // Ajout des liaisons créées par symbolTable
-			allTypes += symbolTableGraph.get(3);
-			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + symbolTableGraph.get(1);   // Ajout du graph de symbolTable et de ces enfants
-			// Ajout des liens entre cette TDS et sa fille symbolTable
-			graphLinks += makeLink(nameOfTDS(nameOfThisTDS,i), "parent",nameOfThisTDS, "parent");
-			i++;
-		}
 
 		Variable var = null;
 		Function function = null;
@@ -822,16 +814,21 @@ public class SymbolTable {
 			if (i > 0){
 				varFuncGraph+=" | ";    // Séparation entre la variable/fonction qu'on est en train d'ajouter, et celle d'avant
 			}
-			if (stringSymbolEntry.getValue() instanceof Variable){  // Cellule d'une variable   //TODO : différencier entre type Primitive, Array et Record
+			if (stringSymbolEntry.getValue() instanceof Variable){  // Cellule d'une variable
 				var = (Variable) stringSymbolEntry.getValue();
-				partOfGraph += "var|"+ stringSymbolEntry.getKey() + "|" + var.getOffset() + "| <" + "typeVar_" + i + ">";
-				graphLinks += makeLink(nameOfThisTDS, "typeVar_" + i, "Types", makeAdresse(var.getType().toString()));   // Lien du type de la variable
+//				partOfGraph += "var|"+ stringSymbolEntry.getKey() + "|" + var.getOffset() + "| <" + "typeVar_" + i + ">";
+//				graphLinks += makeLink(nameOfThisTDS, "typeVar_" + i, "Types", makeAdresse(var.getType().toString()),false);   // Lien du type de la variable
+				ArrayList<String> res = var.makeCellGraphviz(stringSymbolEntry.getKey(),nameOfThisTDS,String.valueOf(i) );
+				partOfGraph+= res.get(0);
+				graphLinks += res.get(1);
 			}
 
 			else if (stringSymbolEntry.getValue() instanceof Function){ // Cellule d'une fonction
 				function = (Function) stringSymbolEntry.getValue();
+				partOfGraph += "<function_" + i + "> "; // Ajout du port pour brancher la TDS de la fonction à sa cellule
+				symbolTablesOfFunctions.add(i,function.getSymbolTable()); // Ajout de la SymbolTable en position i (numéro de la fonction) dans l'ensemble des SymbolTable de fonction
 				partOfGraph += "function|" + stringSymbolEntry.getKey() + "| <" + "returnType_" + i + "> ";
-				graphLinks += makeLink(nameOfThisTDS, "returnType_" + i, "Types", makeAdresse(function.getTypeToGraphviz()));   // Lien du type de retour de la fonction
+				graphLinks += makeLink(nameOfThisTDS, "returnType_" + i, "Types", makeAdresse(function.getTypeToGraphviz()),false);   // Lien du type de retour de la fonction
 			}
 			varFuncGraph += "{" + partOfGraph + "}";
 			i++;
@@ -844,11 +841,30 @@ public class SymbolTable {
 				typesGraph += " | ";    // Séparation entre le type qu'on est en train d'ajouter, et celui d'avant
 			}
 			partOfGraph += "type|" + stringTypeEntry.getKey() + "| <" + "type_" + i + ">";
-			graphLinks += makeLink(nameOfThisTDS, "type_" + i, "Types", makeAdresse(stringTypeEntry.getValue().toString())); // Ajout du lien de la cellule du type vers son type dans le tableau allTypes
+			graphLinks += makeLink(nameOfThisTDS, "type_" + i, "Types", makeAdresse(stringTypeEntry.getValue().toString()),false); // Ajout du lien de la cellule du type vers son type dans le tableau allTypes
 
 			allTypes += "|";    // Séparation avec les types précedents, faite d'office par construction de allTypes
 			allTypes += "{" + stringTypeEntry.getValue().whichInstance() + "| <" + makeAdresse(stringTypeEntry.getValue().toString()) + "> }";   // Ajout du type au tableau regroupant tous les types déclarés
 			typesGraph += "{" + partOfGraph + "}";
+
+			if (stringTypeEntry.getValue() instanceof Array){   //Pour les types Array, il faut aussi relier la case Array de allTypes au type contenu dans l'Array
+				Array array = (Array) stringTypeEntry.getValue();
+				graphLinks += makeLink("Types",makeAdresse(stringTypeEntry.getValue().toString()), "Types", makeAdresse(array.getType().toString()), false);
+			}
+			i++;
+		}
+
+		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
+			ArrayList symbolTableGraph = symbolTable.toGraphViz(nameOfThisTDS, i);
+			// Récupère les graphes créés par la fille symbolTable :
+			graphLinks += "\n" + symbolTableGraph.get(2) ;  // Ajout des liaisons créées par symbolTable
+			allTypes += symbolTableGraph.get(3);
+			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + symbolTableGraph.get(1);   // Ajout du graph de symbolTable et de ces enfants
+			if (symbolTablesOfFunctions.contains(symbolTable)){ // N'ajoute de lien que si cela n'a pas déjà été fait (cas d'une SymbolTable d'une venant d'une fonction
+				graphLinks += makeLink(nameOfTDS(nameOfThisTDS,i), "parent",nameOfThisTDS, "function_" + symbolTablesOfFunctions.indexOf(symbolTable),true); // Ajout des liens entre cette TDS et sa TDS fille venant de cette fonction
+			} else{
+				graphLinks += makeLink(nameOfTDS(nameOfThisTDS,i), "parent",nameOfThisTDS, "parent",false); // Ajout des liens entre cette TDS et sa fille symbolTable
+			}
 			i++;
 		}
 
