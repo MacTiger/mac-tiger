@@ -10,7 +10,7 @@
 - Où nous en sommes en terme de planning
 - Répartition rédaction du rapport
 
-# 1. Point sur ce qui était à faire pour aujourd'hui
+## 1. Point sur ce qui était à faire pour aujourd'hui
 
 Alexis a corrigé certain tests sémantiques qui étaient faux sémantiquement. Après un `pull` de nombreux `EXIT` apparaissent. Tristan propose que dans nos fichiers `main.java`, on comment la ligne numéro 62. David remarque alors que tout ce passe beaucoup mieux malgré quelques fails. David finira la TDS ce soir. 
 
