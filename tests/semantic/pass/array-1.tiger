@@ -1,0 +1,6 @@
+let
+	type intArray = array of int
+	var row := intArray [5] of 0
+in
+	row[2] := 1
+end
