@@ -64,6 +64,7 @@ Pour tester si un programme *Tiger* en particulier est valide, exécutez les com
 $ java -cp bin:lib/* Main > /dev/null < <file>
 ```
 
+
 Pour tester un programme *Tiger* directement rédigé au sein du terminal, utilisez le raccourci suivant :
 
 ```shell
@@ -71,6 +72,9 @@ $ make prompt
 ```
 
 Dans les deux cas, si le programme est invalide, des messages d'erreurs seront affichés sur la sortie d'erreur.
+
+#### Les options du `Main` :
+- `--graphic` : pour obtenir le code _.gv_ de la visualisation de la TDS en sortie standard.
 
 ### Lancement de la suite de tests avec *Bash*
 
