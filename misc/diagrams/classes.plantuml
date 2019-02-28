@@ -1,10 +1,9 @@
 @startuml
 Class Namespace{
 -Map<String,Symbol> symbols
--Symbol lastSymbol
 }
-Namespace *-- Symbol 
-Record *-- Namespace
+Namespace -- Symbol 
+Record -- Namespace
 Abstract class Type{
 
 }
@@ -39,7 +38,7 @@ Class Variable{
 }
 Symbol <|-- FunctionOrVariable
 FunctionOrVariable <|-- Function
-SymbolTable --* Function
+SymbolTable -- Function
 FunctionOrVariable <|--Variable
 Symbol <|-- Type
 
@@ -51,6 +50,6 @@ Class SymbolTable{
 -Namespace<Type> types
 -Namespace<FunctionOrVariable> functsAndVard
 }
-SymbolTable*--"*"SymbolTable
-SymbolTable *--Namespace
+SymbolTable--"*"SymbolTable
+SymbolTable --Namespace
 @enduml
