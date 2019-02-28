@@ -1,0 +1,58 @@
+# Réunion 15
+
+**Date et heure.** 28 février 2018 à 17 heures
+
+**Prochaine réunion.** 13 mars 2018 à 16 heures
+
+**Ordre du jour.**
+
+- Travail effectué
+- Gantt
+- Assembleur
+
+## 1. Travail effectué
+
+Philippe a effectué des notes concernant la documentation MicroPIUPK. Philippe a demandé sur le Discord où écrire le code assembleur. Réponse : il faut faire un deuxième parcours de la TDS.
+
+Tristan évoque la présentation des contrôles sémantiques dans le rapport. Il compte cinq catégories d'erreurs sémantiques.
+
+1. Élément non déclaré, redéclaration, définition cyclique d'un type
+2. Nombre et ordre des éléments dans l'appel d'une fonction ou d'une structure
+3. Cohérence des types (y compris tout ce qui se rapport à `nil`, aux tableaux et au structures), et inférence des types possible
+4. Un indice de boucle ne peut pas être affecté, `break` ne peut pas être en dehors d'une boucle
+5. Le membre gauche d'une affectation doit être un `lValue`
+
+Maintenant, pour demander la visualisation de la TDS, il faut mettre l'option. Tout est marqué dans le README.
+
+David remarque que `graphic` ne lance plus de EXIT. Le GANTT a été ajouté. Il est encore en évolution.
+
+Il faut commencer par générer l'en tête du code assembleur. Ensuite, il faudra qu'on implémente le `print` ; pour cela il faudra pouvoir gérer les string dans le code. Dans notre code Java, on va gérer nos lignes d'assembleur une par une. Chaque fois qu'on va lire une chaîne de caractère dans l'AST, on devra la mettre dans l'en tête du code assembleur. Il faudra identifier les parties du code assembleur dans lesquels il est pertinent d'insérer du code. Déjà, on est sûr qu'il y aura une séparation en-tête / corps.
+
+D'après Tristan, on pourrait d'abord lever la contrainte du nombre de registre.
+
+**Alexis.**
+
+- Finir de lire la documentation MicroPIUPK
+- Écrire le code assembleur des opérations de bases (arithmétiques et comparaisons) 
+
+**Philippe**.
+
+- Finir de lire la documentation MicroPIUPK
+- Ajouter les cardinalités dans le diagramme de classes
+- Écrire le code assembleur des opérations de bases (arithmétiques et comparaisons) 
+
+**David.**
+
+- Pseudo remplissage
+
+**Tristan.**
+
+- Mettre à jour le fichier des contrôles sémantiques 
+- Commenter son code
+- Ajouter la documentation de MicroPIUPK sur le dépôt
+- Mettre à jour le système de tests pour prendre en compte les tests à l'exécution
+- Programmer le `print_i` en assembleur
+- Remplir sa partie sur les contrôles sémantiques
+- Remplir la partie sur les tests
+- Ranger les tests
+
