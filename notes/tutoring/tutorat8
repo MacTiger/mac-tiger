@@ -1,0 +1,56 @@
+TUTORAT :
+#########
+
+
+Commencer par les fonctions pré-implémentées. 
+Créer deux prints différents : un pour les entiers et un pour les strings. 
+
+
+Header : chaque fichier généré a deux parties : fixe (header) + partie code généré.
+	Le header correspond à l'assignement/ le nommage des registres 11 à 15 (ex : 15=SP, etc.)
+	Après définir les fonctions statiques, print, etc.
+	Puis lancement vers la fonction main()	
+
+
+SP stack adress contient l'adresse de la pile
+Quand on empile quelque chose, il faut décrémenter SP
+Par exemple 2 octets pour un entier. 
+
+
+Sauvegarder tous les registres avant appel fonction
+Risque que la fonction écrase les registres.
+On empilerait la valeur des registers, puis les arguments de la fonction, puis etc.
+Rappel : R0 permet de communiquer entre les environnements.
+
+
+On associe une partie assembleur à chaque noeud. 
+p.exple : assignation, etc.
+
+
+A la fin, vérifier que tout ce qui a été réservé a bien été libéré. 
+(Tout sauf R0 doivent être libres)
+
+
+	#####################
+	#a+a+a+a+a+a+a+a+a+a#
+	#####################
+Parcous récursif :  (une valeur a)
+	>Cas de base : feuille 
+		Réserver registre n, y stocker la valeur, renvoyer n le n° du registre
+	>Cas noeud (p.exple +)
+		Appel récursif calcul sur fils gauche et droit
+		Résultat gauche dans m1 et droit dans m2
+		Faire registre m1 + registre m2 dans registre m1.
+		Free de m2 et retourner m1
+
+
+On édite le fichier srce depuis le code java
+file.append("ADD R"+µ+"R"+£+"R"+x)
+
+
+Pour les tableaux : 
+int[]a=[10,11,12] 
+a[0]=BP+p+0 avec p déplacement avant le début du tableau
+a[1]=BP+p+
+
+
