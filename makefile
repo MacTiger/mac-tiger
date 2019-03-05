@@ -19,6 +19,9 @@ prompt:
 test:
 	bash test.sh
 
+torture:
+	bash torture.sh
+
 clean:
 	rm -r -f bin/*
 	rm -r -f logs/*
@@ -35,5 +38,4 @@ microPIUP:
 graphviz:
 	tar -xvf lib/graphviz.tar.gz -C lib/
 
-
-.PHONY: init build prompt test clean antlrworks microPIUP
+.PHONY: init build prompt test torture clean antlrworks microPIUP graphviz
