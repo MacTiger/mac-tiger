@@ -1,5 +1,0 @@
-let
-      var x : int := y
-      var y : int := 0
-in
-end

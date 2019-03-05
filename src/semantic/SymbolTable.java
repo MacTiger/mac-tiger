@@ -681,7 +681,12 @@ public class SymbolTable {
 						Tree body = symbol.getChild(2);
 						Function function = (Function) table.functionsAndVariables.get(name);
 						SymbolTable subTable = function.getSymbolTable();
-						subTable.fillWith(body, notifier);
+						Type returnType = function.getType();
+						if (returnType == null) {
+							subTable.fillWith(body, notifier);
+						} else {
+							subTable.checkType(body, notifier, returnType);
+						}
 					}
 					i = lj - 1;
 					break;

@@ -1,0 +1,4 @@
+let
+	function a () : int = ""
+in
+end

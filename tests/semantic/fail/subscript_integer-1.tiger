@@ -1,5 +1,0 @@
-let
-      var x : String := "Hello"
-      var y := int [x] of 0
-in
-end

@@ -13,7 +13,8 @@ let
 			);
 			if arr [ind] = 0 then (
 				arr [ind] := pascal3 (n - 1, k) + pascal3 (n - 1, k - 1)
-			)
+			);
+			arr [ind]
 		end
 	function afficherTriangle3 (rang : int, arr : intArray) = (
 		for i := 0 to MAX - 1 do(

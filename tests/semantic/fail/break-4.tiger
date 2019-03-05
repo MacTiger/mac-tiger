@@ -1,5 +1,5 @@
-for i := 0 to 0 do
+for a := 0 to 0 do
 	let
-		function f() = break
+		function a () = break
 	in
 	end

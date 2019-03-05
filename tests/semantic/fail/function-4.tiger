@@ -1,0 +1,4 @@
+let
+	function a (a : int, a : int) = ()
+in
+end

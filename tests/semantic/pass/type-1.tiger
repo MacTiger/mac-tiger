@@ -1,0 +1,8 @@
+let
+	type a = int
+	var a : a := 0
+	function b () : a = 0
+	type a = string
+in
+	a := b ()
+end

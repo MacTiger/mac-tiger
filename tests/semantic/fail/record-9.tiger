@@ -1,0 +1,6 @@
+let
+	type a = {}
+	var a := a {}
+in
+	a.a
+end

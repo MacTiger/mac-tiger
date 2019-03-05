@@ -1,6 +1,0 @@
-let
-      function f() : int = (
-            "A"
-      )
-in
-end

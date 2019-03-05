@@ -1,5 +1,0 @@
-let
-	var x := "test"
-in
-	x := "test2"
-end

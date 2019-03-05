@@ -1,0 +1,6 @@
+let
+	function a () : string = ""
+	var b : int := 0
+in
+	b := a ()
+end

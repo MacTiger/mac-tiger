@@ -1,0 +1,9 @@
+let
+	var a := let
+		type a = array of int
+		var a := a [0] of 0
+	in
+		a
+	end
+in
+end

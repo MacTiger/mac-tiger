@@ -1,6 +1,0 @@
-let
-	var x : int := 1
-  var y : string := "test"
-in
-  x := y
-end

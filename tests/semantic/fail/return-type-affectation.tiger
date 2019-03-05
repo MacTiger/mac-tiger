@@ -1,8 +1,0 @@
-let
-      var x : string = ""
-      function f() : int = (
-            0
-      )
-in
-      x := f()
-end

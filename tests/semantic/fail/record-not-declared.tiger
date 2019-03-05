@@ -1,3 +1,0 @@
-let
-      var x := data {a = 0}
-in end

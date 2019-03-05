@@ -1,0 +1,5 @@
+let
+	function a () = ()
+in
+	a
+end

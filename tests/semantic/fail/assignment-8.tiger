@@ -1,0 +1,6 @@
+let
+	var x := 0
+	var y := ""
+in
+	x := y
+end

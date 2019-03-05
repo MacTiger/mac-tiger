@@ -1,4 +1,0 @@
-let
-	function f(x : int, x : int) = 1
-in
-end

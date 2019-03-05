@@ -1,5 +1,0 @@
-let
-	type int = string
-in
-	for i := 0 to 0 do ()
-end

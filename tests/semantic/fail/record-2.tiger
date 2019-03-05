@@ -1,0 +1,5 @@
+let
+	type a = {a : int}
+	var a := a {}
+in
+end
