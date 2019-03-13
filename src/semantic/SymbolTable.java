@@ -169,7 +169,7 @@ public class SymbolTable {
 		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
 	}
 
-	private Type findType(String name) {
+	public Type findType(String name) {
 		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou 'null' sinon
 		Type type = types.get(name);
 		if (type != null) {	// Si le type est trouvé dans cette table des symboles
@@ -181,7 +181,7 @@ public class SymbolTable {
 		}
 	}
 
-	private Function findFunction(String name) {
+	public Function findFunction(String name) {
 		// recherche la fonction indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
 		if (functionOrVariable != null) {	// Si la fonction est trouvé dans cette table des symboles
@@ -197,7 +197,7 @@ public class SymbolTable {
 		}
 	}
 
-	private Variable findVariable(String name) {
+	public Variable findVariable(String name) {
 		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
 		if (functionOrVariable != null) {	// Si la variable est trouvé dans cette table des symboles
@@ -283,7 +283,7 @@ public class SymbolTable {
 			}
 			returnType = function.getType();
 		}
-		for (; i < l; ++i) {
+		for (; i < l; ++i) {    //On parcourt les arguments supplémentaires
 			this.fillWith(tree.getChild(i), notifier);
 		}
 		return returnType;
