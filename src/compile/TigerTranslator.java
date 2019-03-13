@@ -1,4 +1,15 @@
-package semantic;
+package compile;
+
+import misc.Constants;
+import misc.Notifier;
+import org.antlr.runtime.tree.Tree;
+import semantic.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 
 import java.util.*;
 
@@ -18,199 +29,29 @@ import static syntactic.TigerParser.FIELD;
 import static syntactic.TigerParser.ID;
 import static syntactic.TigerParser.STR;
 import static syntactic.TigerParser.INT;
+import static syntactic.TigerParser.*;
 
-public class SymbolTable {
+public class TigerTranslator {
 
-	private static Type nilPseudoType;
+/*	private static Type nilPseudoType;
 	private static Type intType;
-	private static Type stringType;
-	private static SymbolTable root;
+	private static Type stringType;*/
 
-	static {
-		Type nilPseudoType = new Record();
-		Type intType = new Primitive(Constants.intSize);
-		Type stringType = new Primitive(Constants.pointerSize);
-		Variable intVariable = new Variable();
-		intVariable.setType(intType);
-		Variable stringVariable = new Variable();
-		stringVariable.setType(stringType);
-		SymbolTable root = new SymbolTable();
-		root.types.set("int", intType);
-		root.types.set("string", stringType);
-		{
-			Function function = new Function();
-			function.setType(stringType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("i", intVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("chr", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(stringType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("s1", stringVariable);
-			functionsAndVariables.set("s2", stringVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("concat", function);
-		}
-		{
-			Function function = new Function();
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("i", intVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("exit", function);
-		}
-		{
-			Function function = new Function();
-			SymbolTable table = new SymbolTable(root);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("flush", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(stringType);
-			SymbolTable table = new SymbolTable(root);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("getchar", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(intType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("i", intVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("not", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(intType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("s", stringVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("ord", function);
-		}
-		{
-			Function function = new Function();
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("s", stringVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("print", function);
-		}
-		{
-			Function function = new Function();
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("i", intVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("printi", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(intType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("s", stringVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("size", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(stringType);
-			SymbolTable table = new SymbolTable(root);
-			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
-			functionsAndVariables.set("s", stringVariable);
-			functionsAndVariables.set("first", intVariable);
-			functionsAndVariables.set("n", intVariable);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("substring", function);
-		}
-		SymbolTable.nilPseudoType = nilPseudoType;
-		SymbolTable.intType = intType;
-		SymbolTable.stringType = stringType;
-		SymbolTable.root = root;
-	}
+	//TODO : faire un static pour les fonctions du langage (print ...)
 
-	private SymbolTable parent;
-	private List<SymbolTable> children;
+/*
+	private semantic.SymbolTable parent;
+	private List<semantic.SymbolTable> children;
 	private Namespace<Type> types;
 	private Namespace<FunctionOrVariable> functionsAndVariables;
+*/
 
-	public SymbolTable getParent() {
-		return parent;
-	}
+	private Tree currentASTNode;    // Noeud de l'AST actuel
+	private SymbolTable currentTDS; // TDS actuelle
 
-	public List<SymbolTable> getChildren() {
-		return children;
-	}
-
-	public Namespace<Type> getTypes() {
-		return types;
-	}
-
-	public Namespace<FunctionOrVariable> getFunctionsAndVariables() {
-		return functionsAndVariables;
-	}
-
-	public SymbolTable() {
-		this(SymbolTable.root);
-	}
-
-	private SymbolTable(SymbolTable parent) {
-		this.parent = parent;
-		this.children = new ArrayList<SymbolTable>();
-		this.types = new Namespace<Type>();
-		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
-	}
-
-	public Type findType(String name) {
-		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou 'null' sinon
-		Type type = types.get(name);
-		if (type != null) {	// Si le type est trouvé dans cette table des symboles
-			return type;
-		} else if (parent != null) {	// Si le type n'est pas trouvé ici, on cherche dans la table parent, si elle existe
-			return parent.findType(name);
-		} else {
-			return null;
-		}
-	}
-
-	public Function findFunction(String name) {
-		// recherche la fonction indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
-		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
-		if (functionOrVariable != null) {	// Si la fonction est trouvé dans cette table des symboles
-			if (functionOrVariable instanceof Function) {
-				return (Function) functionOrVariable;
-			} else {
-				return null;
-			}
-		} else if (this.parent != null) {	// Si la fonction n'est pas trouvé ici, on cherche dans la table parent, si elle existe
-			return this.parent.findFunction(name);
-		} else {
-			return null;
-		}
-	}
-
-	public Variable findVariable(String name) {
-		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
-		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
-		if (functionOrVariable != null) {	// Si la variable est trouvé dans cette table des symboles
-			if (functionOrVariable instanceof Variable) {
-				return (Variable) functionOrVariable;
-			} else {
-				return null;
-			}
-		} else if (this.parent != null) {	// Si la variable n'est pas trouvé ici, on cherche dans la table parent, si elle existe
-			return this.parent.findVariable(name);
-		} else {
-			return null;
-		}
+	private TigerTranslator(SymbolTable currentTDS) {
+		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
+		this.currentTDS=currentTDS;     // TDS actuelle
 	}
 
 	public Type fillWith(Tree tree, Notifier notifier) {
@@ -257,35 +98,19 @@ public class SymbolTable {
 
 	private Type fillWithCALL(Tree tree, Notifier notifier) {
 		/* Appel d'une fonction
-		 * (1) Vérification de l'existence de la fonction
-		 * (2) Vérification du nombre d'arguments
-		 * (3) Vérification des types d'arguments
+		 *
 		 */
- 		String name = tree.getChild(0).toString();
-		Function function = this.findFunction(name);
+		String name = tree.getChild(0).toString();
+		Function function = currentTDS.findFunction(name);
 		Type returnType = null;
-		int i = 1;
-		int l = tree.getChildCount();
-		if (function == null) { // Test sémantique (1)
-			notifier.semanticError(tree, "function %s is not defined", name);
-		} else {
-			Namespace<FunctionOrVariable> namespace = function.getSymbolTable().functionsAndVariables;
-			for (Map.Entry<String, FunctionOrVariable> entry: namespace) {
-				if (i >= l) { // Test sémantique (2)
-					notifier.semanticError(tree, "%s requires more arguments", name);
-					break;
-				}
-				this.checkType(tree.getChild(i), notifier, ((Variable) entry.getValue()).getType()); // Test sémantique (3)
-				++i;
-			}
-			if (i < l) { // Test sémantique (2)
-				notifier.semanticError(tree, "%s requires fewer arguments", name);
-			}
-			returnType = function.getType();
+		//TODO : gérer code d'appel à fonction
+
+		for (int i = 0 ; i < tree.getChildCount(); i++) {   //Parcours des arguments de la fonction
+			fillWith(tree.getChild(i), notifier);
+			//TODO : code pour empiler l'argument
 		}
-		for (; i < l; ++i) {    //On parcourt les arguments supplémentaires
-			this.fillWith(tree.getChild(i), notifier);
-		}
+		returnType = function.getType();
+
 		return returnType;
 	}
 
@@ -343,7 +168,7 @@ public class SymbolTable {
 			notifier.semanticError(tree, "type %s is not an array type", name);
 			returnType = null;
 		}
-		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // Test sémantique (2)
+		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // Test sémantique (2)
 		if (returnType != null) {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
@@ -385,7 +210,7 @@ public class SymbolTable {
 	}
 
 	private Type fillWithSTR(Tree tree, Notifier notifier) {
-		return SymbolTable.stringType;
+		return semantic.SymbolTable.stringType;
 	}
 
 	private Type fillWithID(Tree tree, Notifier notifier) {
@@ -408,7 +233,7 @@ public class SymbolTable {
 			Array array = (Array) expType;
 			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
-		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // on regarde si le fils droit est bien un entier
+		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier
 		return returnType;
 	}
 
@@ -430,88 +255,74 @@ public class SymbolTable {
 	}
 
 	private Type fillWithINT(Tree tree, Notifier notifier) {
-		return SymbolTable.intType;
+		return semantic.SymbolTable.intType;
 	}
 
 	private Type fillWithEqualOrNot(Tree tree, Notifier notifier) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.fillWith(exp, notifier);
-		if (this.checkType(tree.getChild(1), notifier, expType) == SymbolTable.nilPseudoType) {
+		if (this.checkType(tree.getChild(1), notifier, expType) == semantic.SymbolTable.nilPseudoType) {
 			notifier.semanticError(exp, "the type of %s cannot be inferred", exp.toString());
 		}
-		return SymbolTable.intType;
+		return semantic.SymbolTable.intType;
 	}
 
 	private Type fillWithComparator(Tree tree, Notifier notifier) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.fillWith(exp, notifier);
-		if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)) {
+		if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
 			notifier.semanticError(exp, "the type of %s is not a primitive type (%s or %s)");
 			exp = tree.getChild(1);
 			expType = this.fillWith(exp, notifier);
-			if ((expType != SymbolTable.intType) && (expType != SymbolTable.stringType)) {
+			if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
 				notifier.semanticError(exp, "%s is not a primitive value (either an integer or a string)");
 			}
 		} else {
 			exp = tree.getChild(1);
 			expType = this.checkType(exp, notifier, expType);
 		}
-		return SymbolTable.intType;
+		return semantic.SymbolTable.intType;
 	}
 
 	private Type fillWithIntOperator(Tree tree, Notifier notifier) {
 		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-			this.checkType(tree.getChild(i), notifier, SymbolTable.intType);
+			this.checkType(tree.getChild(i), notifier, semantic.SymbolTable.intType);
 		}
-		return SymbolTable.intType;
+		return semantic.SymbolTable.intType;
 	}
 
-    private Type checkType(Tree tree, Notifier notifier, Type type) {
-		// Vérifie que le type de l'expression de 'tree' est bien 'type'
-		// Si le type de 'tree' n'est pas 'type', alors `null` est renvoyé
-		// Sinon le type de 'tree' est renvoyé
-        Type expType = this.fillWith(tree, notifier);
-        if (expType == type || expType == SymbolTable.nilPseudoType && type instanceof Record) {
-            return type;
-        } else if (type == SymbolTable.nilPseudoType && expType instanceof Record) {
-            return expType;
-        } else {
-            notifier.semanticError(tree, "type of %s does not match", tree.toString());
-	        return null;
-        }
-    }
-
 	private Type fillWithIf(Tree tree, Notifier notifier) {
-		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
-		if (tree.getChildCount() > 2) {
-			return this.checkType(tree.getChild(2), notifier, this.fillWith(tree.getChild(1), notifier));
-		} else {
-			return this.checkType(tree.getChild(1), notifier, null);
+		this.fillWith(tree.getChild(0),notifier);   //Pour le if
+		this.fillWith(tree.getChild(1), notifier);  // Pour le then
+
+		if (tree.getChildCount() == 2){    // Pour le else
+			this.fillWith(tree.getChild(2), notifier);
 		}
 	}
 
 	private Type fillWithWhile(Tree tree, Notifier notifier) {
-		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
-		this.checkType(tree.getChild(1), notifier, null);
+		//TODO : Génerer code de while
+		this.fillWith(tree.getChild(0),notifier);
+		this.fillWith(tree.getChild(1),notifier);
 		return null;
 	}
 
 	private Type fillWithFor(Tree tree, Notifier notifier) {
-		SymbolTable table = new SymbolTable(this);
+		semantic.SymbolTable table = new semantic.SymbolTable(this);
 		this.children.add(table);
 		Variable index = new Variable();
 		index.configure(false);
-		index.setType(SymbolTable.intType);
+		index.setType(semantic.SymbolTable.intType);
 		table.functionsAndVariables.set(tree.getChild(0).toString(), index); // Ajout de la variable de boucle for dans sa table de symbole
-		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
-		this.checkType(tree.getChild(2), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
+		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
+		this.checkType(tree.getChild(2), notifier, semantic.SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
 		table.checkType(tree.getChild(3), notifier, null);	// Remplissage de la table des symboles de la boucle for
 		return null;
 	}
 
 	private Type fillWithLet(Tree tree, Notifier notifier) {
-		SymbolTable supTable = this;
-		SymbolTable table = this;
+		semantic.SymbolTable supTable = this;
+		semantic.SymbolTable table = this;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
 		int variableOffset = 0;
@@ -519,7 +330,7 @@ public class SymbolTable {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
 				case "type": {
-					table = new SymbolTable(supTable);
+					table = new semantic.SymbolTable(supTable);
 					supTable.children.add(table);
 					supTable = table;
 					variableOffset = 0;
@@ -626,13 +437,13 @@ public class SymbolTable {
 					break;
 				}
 				case "function": {
-					table = new SymbolTable(supTable);
+					table = new semantic.SymbolTable(supTable);
 					supTable.children.add(table);
 					supTable = table;
 					variableOffset = 0;
 					int lj = i;
 					do {
-						SymbolTable subTable = new SymbolTable(table);
+						semantic.SymbolTable subTable = new semantic.SymbolTable(table);
 						table.children.add(subTable);
 						Function function = new Function();
 						function.setSymbolTable(subTable);
@@ -680,7 +491,7 @@ public class SymbolTable {
 						String name = symbol.getChild(0).toString();
 						Tree body = symbol.getChild(2);
 						Function function = (Function) table.functionsAndVariables.get(name);
-						SymbolTable subTable = function.getSymbolTable();
+						semantic.SymbolTable subTable = function.getSymbolTable();
 						Type returnType = function.getType();
 						if (returnType == null) {
 							subTable.fillWith(body, notifier);
@@ -708,13 +519,13 @@ public class SymbolTable {
 						}
 					} else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
 						returnType = table.fillWith(exp, notifier);
-						if (returnType == null || returnType == SymbolTable.nilPseudoType) {
+						if (returnType == null || returnType == semantic.SymbolTable.nilPseudoType) {
 							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
 						}
 					}
 					variable.setType(returnType); // Spécification du type de la variable
 					if (table == this || table.functionsAndVariables.get(name) != null) {
-						table = new SymbolTable(supTable);
+						table = new semantic.SymbolTable(supTable);
 						supTable.children.add(table);
 						supTable = table;
 						variableOffset = 0;
@@ -732,7 +543,7 @@ public class SymbolTable {
 	}
 
 	private Type fillWithNil(Tree tree, Notifier notifier) {
-		return SymbolTable.nilPseudoType;
+		return semantic.SymbolTable.nilPseudoType;
 	}
 
 	private Type fillWithBreak(Tree tree, Notifier notifier) {
@@ -748,142 +559,4 @@ public class SymbolTable {
 		notifier.semanticError(tree, "%s must be inside loop", tree.toString());
 		return null;
 	}
-
-	public String toGraphVizFirst(){
-		// Fonction créant le String qui permettra de générer l'illustration de la TDS
-		// Elle appelle toGraphViz
-		String res = "digraph structs {\nrankdir=LR;\n";
-		String allTypes = "\nTypes[shape=record, label=\"{Types déclarés}";
-
-		allTypes += "|{ VOID | <VOID> }";
-
-		ArrayList<String> resArray = root.toGraphViz("TDS",-1);
-		res += resArray.get(0) + "\n"+ resArray.get(1) + resArray.get(2);
-		allTypes += resArray.get(3);
-
-		resArray = this.toGraphViz("TDS",0);
-		allTypes += resArray.get(3) + "\"]\n";
-		res += resArray.get(0) + resArray.get(1) + resArray.get(2) + allTypes + makeLink(nameOfTDS("TDS",0),"parent","TDS","parent",false);
-
-		res += "\n}";
-		return res;
-	}
-
-	private String nameOfTDS(String parent, int num_TDS){
-		if (num_TDS < 0){
-			return parent;
-		}
-		return parent + "_" + num_TDS;
-	}
-
-	public static String makeLink(String source, String portSource, String dest, String portDest, boolean bidirectionnal){
-		String res = "\"" + source + "\":" + portSource + " -> \"" + dest + "\":"+  portDest;
-		if (bidirectionnal){
-			res += "[dir=\"both\"]";
-		}
-		return  res + ";";
-	}
-
-	public static String makeAdresse(String stringToEscape){
-		return stringToEscape.toString().replace('.','_').replace('@','_');
-	}
-
-	public ArrayList<String> toGraphViz(String parent, int num_TDS){
-		// Renvoit : [graph, graphChildren, graphLinks]
-
-		String nameOfThisTDS = nameOfTDS(parent,num_TDS);
-		String graph =  nameOfThisTDS+ "[shape=record, label=\""; // Résultat à afficher
-//		graph += " " + nameOfThisTDS + " }";    //Nom de la TDS, et port parent
-		String linksOfGraph = "{<parent> ";   // Partie de graph qui servira à la liaison avec les autres TDS
-		String typesGraph = "";          // Partie de graph qui contiendra les types
-		String varFuncGraph = "";        // Partie de graph qui contiendra les fonctions et variables
-
-		String graphChildren = "";  // String des graphiques des TDS filles de cette TDS
-		String graphLinks = ""; // String des liaisons entre TDS
-		String allTypes = "";
-
-		List<SymbolTable> symbolTablesOfFunctions = new ArrayList<>(); // Array des SymbolTable de fonction déjà liés
-
-
-		int i = 0;
-
-//		linksOfGraph += "{<parent>}";   // Prévoit le point d'ancrage du lient vers son père
-
-		Variable var = null;
-		Function function = null;
-		String partOfGraph =""; // String auxiliaire pour la création des divers cellules de la TDS
-		i =0;
-
-		for (Map.Entry<String, FunctionOrVariable> stringSymbolEntry : this.functionsAndVariables){ // Parcours des fonctions et variables déclarées dans cette TDS
-			partOfGraph = "";
-			if (i > 0){
-				varFuncGraph+=" | ";    // Séparation entre la variable/fonction qu'on est en train d'ajouter, et celle d'avant
-			}
-			if (stringSymbolEntry.getValue() instanceof Variable){  // Cellule d'une variable
-				var = (Variable) stringSymbolEntry.getValue();
-//				partOfGraph += "var|"+ stringSymbolEntry.getKey() + "|" + var.getOffset() + "| <" + "typeVar_" + i + ">";
-//				graphLinks += makeLink(nameOfThisTDS, "typeVar_" + i, "Types", makeAdresse(var.getType().toString()),false);   // Lien du type de la variable
-				ArrayList<String> res = var.makeCellGraphviz(stringSymbolEntry.getKey(),nameOfThisTDS,String.valueOf(i) );
-				partOfGraph+= res.get(0);
-				graphLinks += res.get(1);
-			}
-
-			else if (stringSymbolEntry.getValue() instanceof Function){ // Cellule d'une fonction
-				function = (Function) stringSymbolEntry.getValue();
-				partOfGraph += "<function_" + i + "> "; // Ajout du port pour brancher la TDS de la fonction à sa cellule
-				symbolTablesOfFunctions.add(i,function.getSymbolTable()); // Ajout de la SymbolTable en position i (numéro de la fonction) dans l'ensemble des SymbolTable de fonction
-				partOfGraph += "function|" + stringSymbolEntry.getKey() + "| <" + "returnType_" + i + "> ";
-				graphLinks += makeLink(nameOfThisTDS, "returnType_" + i, "Types", makeAdresse(function.getTypeToGraphviz()),false);   // Lien du type de retour de la fonction
-			}
-			varFuncGraph += "{" + partOfGraph + "}";
-			i++;
-		}
-
-		i = 0;
-		for (Map.Entry<String, Type> stringTypeEntry : this.types){ // Parcours des types déclarées dans cette TDS
-			partOfGraph = "";
-			if (i > 0){
-				typesGraph += " | ";    // Séparation entre le type qu'on est en train d'ajouter, et celui d'avant
-			}
-			partOfGraph += "type|" + stringTypeEntry.getKey() + "| <" + "type_" + i + ">";
-			graphLinks += makeLink(nameOfThisTDS, "type_" + i, "Types", makeAdresse(stringTypeEntry.getValue().toString()),false); // Ajout du lien de la cellule du type vers son type dans le tableau allTypes
-
-			allTypes += "|";    // Séparation avec les types précedents, faite d'office par construction de allTypes
-			allTypes += "{" + stringTypeEntry.getValue().whichInstance() + "| <" + makeAdresse(stringTypeEntry.getValue().toString()) + "> }";   // Ajout du type au tableau regroupant tous les types déclarés
-			typesGraph += "{" + partOfGraph + "}";
-
-			if (stringTypeEntry.getValue() instanceof Array){   //Pour les types Array, il faut aussi relier la case Array de allTypes au type contenu dans l'Array
-				Array array = (Array) stringTypeEntry.getValue();
-				graphLinks += makeLink("Types",makeAdresse(stringTypeEntry.getValue().toString()), "Types", makeAdresse(array.getType().toString()), false);
-			}
-			i++;
-		}
-
-		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
-			ArrayList symbolTableGraph = symbolTable.toGraphViz(nameOfThisTDS, i);
-			// Récupère les graphes créés par la fille symbolTable :
-			graphLinks += "\n" + symbolTableGraph.get(2) ;  // Ajout des liaisons créées par symbolTable
-			allTypes += symbolTableGraph.get(3);
-			graphChildren += "\n" + symbolTableGraph.get(0) + "\n" + symbolTableGraph.get(1);   // Ajout du graph de symbolTable et de ces enfants
-			if (symbolTablesOfFunctions.contains(symbolTable)){ // N'ajoute de lien que si cela n'a pas déjà été fait (cas d'une SymbolTable d'une venant d'une fonction
-				graphLinks += makeLink(nameOfTDS(nameOfThisTDS,i), "parent",nameOfThisTDS, "function_" + symbolTablesOfFunctions.indexOf(symbolTable),true); // Ajout des liens entre cette TDS et sa TDS fille venant de cette fonction
-			} else{
-				graphLinks += makeLink(nameOfTDS(nameOfThisTDS,i), "parent",nameOfThisTDS, "parent",false); // Ajout des liens entre cette TDS et sa fille symbolTable
-			}
-			i++;
-		}
-
-		linksOfGraph += nameOfThisTDS + " }";   // Ajout du nom de la TDS en entête de tableau
-		// Gestion des séparation entres les différentes parties de graph
-		if( !(typesGraph.equals("")) ){
-			linksOfGraph += " | ";
-		}
-		if ( !(varFuncGraph.equals("")) ){
-			typesGraph += " | ";
-		}
-		graph += linksOfGraph + typesGraph + varFuncGraph;  // Assemblage des parties de graph
-		graph += "\"]";
-		return new ArrayList<>(Arrays.asList(graph, graphChildren, graphLinks, allTypes));
-	}
-
 }
