@@ -14,9 +14,6 @@ START main_
 
 LDW SP, #STACK_ADRS
 
-
-
-
 //add_ prend deux elts en param, les additionne et met le res dans R0.//
 add_
 ADQ -2,SP //SP sur chaînage BP nouvel environnement
@@ -29,10 +26,11 @@ LDW BP, (SP) //BP vaut le Base Pointer de la fct° appelante
 ADQ 2,SP //SP est sur @ de retour de la fonction appelée
 
 
-
 mult_
-
-
+	LDW R1, (SP)2
+	LDW R2, (SP)4
+	MUL R1, R2, R0
+	RTS
 
 
 main_
