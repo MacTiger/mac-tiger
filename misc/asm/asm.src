@@ -26,20 +26,31 @@ LDW BP, (SP) //BP vaut le Base Pointer de la fct° appelante
 ADQ 2,SP //SP est sur @ de retour de la fonction appelée
 
 
-mult_
+multiply_
 	LDW R1, (SP)2
 	LDW R2, (SP)4
 	MUL R1, R2, R0
 	RTS
 
+divide_
+	LDW R1, (SP)2
+	LDW R2, (SP)4
+	DIV R1, R2, R0
+	RTS
+
+substract_
+	LDW R1, (SP)2
+	LDW R2, (SP)4
+	SUB R1, R2, R0
+	RTS
 
 main_
-LDW R1,#10
-LDW R2,#20
+	LDW R1,#10
+	LDW R2,#20
 
-STW R1,-(SP)
-STW R2,-(SP) //dans fction appelante : SP sur dernier arg à passer 
-JSR @add_
-ADQ 2*2,SP //nettoyage de la pile : hôte params
+	STW R1,-(SP)
+	STW R2,-(SP) //dans fction appelante : SP sur dernier arg à passer 
+	JSR @add_
+	ADQ 2*2,SP //nettoyage de la pile : hôte params
 
-TRP #EXIT_EXC
+	TRP #EXIT_EXC
