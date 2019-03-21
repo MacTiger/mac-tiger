@@ -1,0 +1,2 @@
+Semantic error 1:11 type of '-' does not match
+1 errors: 0 lexical errors, 0 syntactic errors, 1 semantic errors

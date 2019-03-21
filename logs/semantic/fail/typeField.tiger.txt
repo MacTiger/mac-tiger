@@ -1,0 +1,5 @@
+Semantic error 5:12 'test' requires more fields
+Semantic error 6:12 field name 'ent' was expected but field name 'nom' was found
+Semantic error 6:47 type of '"nombre"' does not match
+Semantic error 6:12 'test' requires fewer fields
+4 errors: 0 lexical errors, 0 syntactic errors, 4 semantic errors

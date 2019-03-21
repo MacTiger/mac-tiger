@@ -1,0 +1,2 @@
+Syntactic error 1:1 no viable alternative at input '<EOF>'
+1 errors: 0 lexical errors, 1 syntactic errors, 0 semantic errors

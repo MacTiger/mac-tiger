@@ -1,0 +1,5 @@
+Semantic error 2:5 variable 'x' is not defined
+Semantic error 2:9 type of '5' does not match
+Semantic error 3:6 variable 'a' is not defined
+Semantic error 3:10 type of '42' does not match
+4 errors: 0 lexical errors, 0 syntactic errors, 4 semantic errors

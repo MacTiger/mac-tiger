@@ -1,0 +1,5 @@
+Syntactic error 2:22 mismatched input '=' expecting ':='
+Syntactic error 2:22 mismatched input '=' expecting 'in'
+Syntactic error 6:1 missing EOF at 'in'
+Semantic error 4:13 type of 'SEQ' does not match
+4 errors: 0 lexical errors, 3 syntactic errors, 1 semantic errors

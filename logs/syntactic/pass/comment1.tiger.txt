@@ -1,0 +1,2 @@
+Semantic error 4:2 type of 'if' does not match
+1 errors: 0 lexical errors, 0 syntactic errors, 1 semantic errors

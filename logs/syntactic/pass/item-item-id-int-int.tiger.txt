@@ -1,0 +1,4 @@
+Semantic error 1:1 variable 'a' is not defined
+Semantic error 1:1 'a' is not an array
+Semantic error 1:1 'ITEM' is not an array
+3 errors: 0 lexical errors, 0 syntactic errors, 3 semantic errors
