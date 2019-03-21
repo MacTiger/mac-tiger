@@ -1,0 +1,3 @@
+let var a := for a := 0
+/* start */ to if while nil do break then let var /* end */
+a := 0 in end do () in end

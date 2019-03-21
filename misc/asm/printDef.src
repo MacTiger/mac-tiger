@@ -1,0 +1,12 @@
+print_	LDQ 0, R1
+		ADQ -2, SP
+		STW BP, (SP)
+		LDW BP, SP
+		SUB SP, R1, SP
+		LDW R0, (BP)4
+    LDW WR, #WRITE_EXC
+		TRP WR
+		LDW SP, BP
+		LDW BP, (SP)
+		ADQ 2, SP
+		RTS

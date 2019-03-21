@@ -1,0 +1,60 @@
+EXIT_EXC  EQU 64
+READ_EXC  EQU 65
+WRITE_EXC EQU 66
+STACK_ADRS EQU 0x1000
+LOAD_ADRS EQU 0xF000
+NIL EQU 0
+
+SP  EQU R15
+WR  EQU R14
+BP  EQU R13
+
+ORG LOAD_ADRS
+START main_
+
+STRING0 string "Hello world !"
+
+print_	LDQ 0, R1
+		ADQ -2, SP
+		STW BP, (SP)
+		LDW BP, SP
+		SUB SP, R1, SP
+		LDW R0, (BP)4
+    LDW WR, #WRITE_EXC
+		TRP WR
+		LDW SP, BP
+		LDW BP, (SP)
+		ADQ 2, SP
+		RTS
+
+main_ LDW SP, #STACK_ADRS
+    LDQ NIL, BP
+
+    LDQ 0, R1
+
+    ADQ -2, SP
+    STW BP, (SP)
+    LDW BP, SP
+    SUB SP, R1, SP
+
+    LDW R1, #STRING0
+
+    // Remplacer par STW R1, -(SP)
+    ADQ -2, SP
+    STW R1, (SP)
+
+    // Appel fonction print :
+    JSR @print_
+
+    // Fin de main :
+    LDW SP, BP
+    LDW BP, (SP)
+    ADQ 2, SP
+
+    // Arrete le programme :
+    TRP #EXIT_EXC
+    LDW WR, #EXIT_EXC
+    TRP WR
+
+    // Gere redemarrage du programme :
+    JEA @main_
