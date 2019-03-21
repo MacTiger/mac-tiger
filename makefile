@@ -33,7 +33,7 @@ antlrworks:
 	java -jar lib/antlrworks-1.5.1.jar
 
 microPIUP:
-	java -jar asm/microPIUPK.jar -ass asm.src
+	java -jar asm/microPIUPK.jar -ass asm/asm.src
 	java -jar lib/microPIUPK.jar -sim
 
 graphviz:

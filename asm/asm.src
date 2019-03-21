@@ -15,11 +15,18 @@ START main_
 LDW SP, #STACK_ADRS
 
 
+
+
+//add_ prend deux elts en param, les additionne et met le res dans R0.//
 add_
-LDW R1, #2
-LDW R2, #3
-ADD R1, R2, R1
-JSR
+ADQ -2,SP //SP sur chaînage BP nouvel environnement
+STW BP, (SP) //contenu du registre BP sur chaînage BP nouvel environnement
+LDW BP, SP //BP pointe sur le Base Pointer de la fct appelante
+LDW R1, (BP)4 //paramètre 2 dans registre 1
+LDW R2, (BP)6 //paramètre 1 dans registre 2
+ADD R1,R2,R0 //Résultat p1+p2 dans R0
+LDW BP, (SP) //BP vaut le Base Pointer de la fct° appelante
+ADQ 2,SP //SP est sur @ de retour de la fonction appelée
 
 
 
@@ -27,5 +34,14 @@ mult_
 
 
 
+
 main_
-add_
+LDW R1,#10
+LDW R2,#20
+
+STW R1,-(SP)
+STW R2,-(SP) //dans fction appelante : SP sur dernier arg à passer 
+JSR @add_
+ADQ 2*2,SP //nettoyage de la pile : hôte params
+
+TRP #EXIT_EXC
