@@ -1,29 +1,3 @@
-// Liste des fonctions contenues par ce fichier
-// add
-// substract
-// multiply
-// divide
-// equal_str
-// equal_int
-// equal_arr
-// equal_rec
-// nequal_str
-// nequal_int
-// nequal_arr
-// nequal_rec
-// diff_str
-// diff_int
-// geq_str
-// geq_int
-// gneq_str
-// gneq_int
-// leq_str
-// leq_int
-// lneq_str
-// lneq_int
-// and
-// or
-
 // Addition
 // > int add(int x, int y) {
 // >    return x + y;
