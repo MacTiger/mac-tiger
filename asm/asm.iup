@@ -1,0 +1,9 @@
+f000  origine
+f004  debut d'execution
+6f80   emplacement : 61440  (0xf000)  ligne n° 15	LDW SP, #STACK_ADRS
+1000   emplacement : 61442  (0xf002) 
+6180   emplacement : 61444  (0xf004)  ligne n° 18	LDW R1, #2
+0002   emplacement : 61446  (0xf006) 
+6280   emplacement : 61448  (0xf008)  ligne n° 19	LDW R2, #3
+0003   emplacement : 61450  (0xf00a) 
+e121   emplacement : 61452  (0xf00c)  ligne n° 20	ADD R1, R2, R1
