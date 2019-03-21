@@ -25,7 +25,7 @@ int and(int, int);
 int or(int, int);
 
 int add(int x, int y) {
-
+	return x + y;
 }
 
 int substract(int x, int y) {
@@ -60,7 +60,7 @@ int equal_str(char* x, char* y) {
 }
 
 int equal_int(int x, int y) {
-
+	return (x == y);
 }
 
 int nequal_str(char x*, char y*) {
