@@ -14,18 +14,16 @@ START main_
 
 LDW SP, #STACK_ADRS
 
-
-add_
-LDW R1, #2
-LDW R2, #3
-ADD R1, R2, R1
-JSR
-
-
-
 mult_
-
-
+	LDW R1, (SP)2
+	LDW R2, (SP)4
+	MUL R1, R2, R0
+	RTS
 
 main_
-add_
+	LDW SP, #STACK_ADRS
+	LDW R3, #3
+	LDW R4, #4
+	STW R3, -(SP)
+	STW R4, -(SP)
+	JSR @mult_

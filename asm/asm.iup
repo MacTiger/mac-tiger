@@ -1,9 +1,20 @@
 f000  origine
-f004  debut d'execution
+f010  debut d'execution
 6f80   emplacement : 61440  (0xf000)  ligne n° 15	LDW SP, #STACK_ADRS
 1000   emplacement : 61442  (0xf002) 
-6180   emplacement : 61444  (0xf004)  ligne n° 18	LDW R1, #2
+61ef   emplacement : 61444  (0xf004)  ligne n° 18		LDW R1, (SP)2
 0002   emplacement : 61446  (0xf006) 
-6280   emplacement : 61448  (0xf008)  ligne n° 19	LDW R2, #3
-0003   emplacement : 61450  (0xf00a) 
-e121   emplacement : 61452  (0xf00c)  ligne n° 20	ADD R1, R2, R1
+62ef   emplacement : 61448  (0xf008)  ligne n° 19		LDW R2, (SP)4
+0004   emplacement : 61450  (0xf00a) 
+b120   emplacement : 61452  (0xf00c)  ligne n° 20		MUL R1, R2, R0
+0200   emplacement : 61454  (0xf00e)  ligne n° 21		RTS
+6f80   emplacement : 61456  (0xf010)  ligne n° 24		LDW SP, #STACK_ADRS
+1000   emplacement : 61458  (0xf012) 
+6380   emplacement : 61460  (0xf014)  ligne n° 25		LDW R3, #3
+0003   emplacement : 61462  (0xf016) 
+6480   emplacement : 61464  (0xf018)  ligne n° 26		LDW R4, #4
+0004   emplacement : 61466  (0xf01a) 
+634f   emplacement : 61468  (0xf01c)  ligne n° 27		STW R3, -(SP)
+644f   emplacement : 61470  (0xf01e)  ligne n° 28		STW R4, -(SP)
+0a50   emplacement : 61472  (0xf020)  ligne n° 29		JSR @mult_
+f004   emplacement : 61474  (0xf022) 
