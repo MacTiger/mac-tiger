@@ -5,9 +5,10 @@
 /.idea
 /.project
 /torture.tiger
+/asm
 /bin
 /lib/output
-/logs
+/log
 /out
 /res/output
 /res/Tiger.tokens

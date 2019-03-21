@@ -1,0 +1,33 @@
+let
+	var MAX := 20
+	type intArray = array of int
+	var arr := intArray [MAX] of 0
+	function indice (n : int, k : int) : int =
+		n * (n + 1) / 2 + k
+	function pascal3 (n : int, k : int) : int =
+		let
+			var ind : int := 0
+		in
+			if k = 0 | k = n then (
+				ind := indice (n, k)
+			);
+			if arr [ind] = 0 then (
+				arr [ind] := pascal3 (n - 1, k) + pascal3 (n - 1, k - 1)
+			);
+			arr [ind]
+		end
+	function afficherTriangle3 (rang : int, arr : intArray) = (
+		for i := 0 to MAX - 1 do(
+			arr [i] := 0
+		);
+		for n := 0 to rang do (
+			for k := 0 to n do (
+				printi (pascal3 (n, k));
+				print (" ")
+			);
+			print ("\n")
+		)
+	)
+in
+	afficherTriangle3 (4, arr)
+end

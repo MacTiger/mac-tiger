@@ -1,0 +1,16 @@
+let
+	var total := 0
+	var i := 0
+	var n := 10
+	var testvar : int := 0
+in
+	testvar := i <= n;
+	while testvar do (
+		total := total + i * i;
+		if i = 5 then
+			printi (5);
+		i := i + 1;
+		testvar := i <= n
+	);
+	printi (total)
+end

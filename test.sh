@@ -8,20 +8,50 @@ d="0"
 test() {
 	local dir=$1
 	local refstatus=$2
-	mkdir -p "logs/$dir"
 	local sign=$(($refstatus < 0))
 	if [[ (($sign == 1)) ]]
 	then
 		refstatus=$((-$refstatus))
 	fi
+	if [[ (($refstatus == 4)) ]]
+	then
+		mkdir -p "asm/$dir"
+	fi
+	mkdir -p "log/$dir"
 	for file in $(ls -A tests/$dir)
 	do
 		if [[ $file =~ $regexp ]]
 		then
 			local stdin="tests/$dir/$file"
-			local stderr="logs/$dir/$file.txt"
-			java -cp bin:lib/* Main --no-color 2> $stderr 1> /dev/null < $stdin
+			local stdout
+			if [[ (($refstatus == 4)) ]]
+			then
+				stdout="asm/$dir/$file.src"
+			else
+				stdout="/dev/null"
+			fi
+			local stderr="log/$dir/$file.log"
+			java -cp bin:lib/* Main --no-color 2> $stderr 1> $stdout < $stdin
 			local status=$((($? + 4) % 5))
+			if [[ (($refstatus == 4)) ]]
+			then
+				local prgm="asm/$dir/$file.iup"
+				local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1> $stderr)
+				if [[ $err == "" ]]
+				then
+					err=$(java -jar lib/microPIUPK.jar -batch $prgm 2>&1)
+					if [[ $err == "" ]]
+					then
+						# TODO: tester la sortie standard
+						status="5"
+					fi
+				fi
+				if [[ $err != "" ]]
+				then
+					echo $err >> $stderr
+					status="0"
+				fi
+			fi
 			if [[ (($status == 0)) ]]
 			then
 				echo -e "[\033[0;34mEXIT\033[0m] $stdin"
@@ -31,10 +61,7 @@ test() {
 				echo -e "[\033[0;33mWARN\033[0m] $stdin"
 				c=$(($c + 1))
 			else
-				if [[ (($refstatus == 0)) ]]
-				then
-					status=$(($status < 4))
-				elif [[ (($sign == 1)) ]]
+				if [[ (($sign == 1)) ]]
 				then
 					status=$(($status > $refstatus))
 				else
@@ -54,36 +81,34 @@ test() {
 }
 for dir in $(ls tests)
 do
-	if [[ $dir == "prgm" ]]
+	if [[ $dir == "lexical" ]]
 	then
-		test $dir "0"
+		status="1"
+	elif [[ $dir == "syntactic" ]]
+	then
+		status="2"
+	elif [[ $dir == "semantic" ]]
+	then
+		status="3"
+	elif [[ $dir == "runtime" ]]
+	then
+		status="4"
 	else
-		if [[ $dir == "lexical" ]]
+		continue
+	fi
+	for subdir in $(ls tests/$dir)
+	do
+		if [[ $subdir == "fail" ]]
 		then
-			status="1"
-		elif [[ $dir == "syntactic" ]]
+			refstatus=$((-$status))
+		elif [[ $subdir == "pass" ]]
 		then
-			status="2"
-		elif [[ $dir == "semantic" ]]
-		then
-			status="3"
+			refstatus=$status
 		else
 			continue
 		fi
-		for subdir in $(ls tests/$dir)
-		do
-			if [[ $subdir == "fail" ]]
-			then
-				refstatus=$((-$status))
-			elif [[ $subdir == "pass" ]]
-			then
-				refstatus=$status
-			else
-				continue
-			fi
-			test "$dir/$subdir" $refstatus
-		done
-	fi
+		test "$dir/$subdir" $refstatus
+	done
 done
 e=$(($a + $b + $c + $d))
 time=$(($SECONDS - $time))
