@@ -1,3 +1,0 @@
-Lexical error 1:1 no viable alternative at character '_'
-Syntactic error 2:1 no viable alternative at input '<EOF>'
-2 errors: 1 lexical errors, 1 syntactic errors, 0 semantic errors

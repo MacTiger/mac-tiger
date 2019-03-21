@@ -1,2 +1,0 @@
-Semantic error 1:1 '0' is not a valid target for an assignment
-1 errors: 0 lexical errors, 0 syntactic errors, 1 semantic errors

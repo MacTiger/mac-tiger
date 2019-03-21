@@ -1,2 +1,0 @@
-Semantic error 3:7 redeclaration of type 'a'
-1 errors: 0 lexical errors, 0 syntactic errors, 1 semantic errors

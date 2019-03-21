@@ -1,2 +1,0 @@
-Syntactic error 2:1 mismatched input '<EOF>' expecting ID
-1 errors: 0 lexical errors, 1 syntactic errors, 0 semantic errors

@@ -1,2 +1,0 @@
-Lexical error 2:1 mismatched character [0;33m'<EOF>'[0m expecting [0;33m'*'[0m
-1 errors: 1 lexical errors, 0 syntactic errors, 0 semantic errors
