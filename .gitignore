@@ -1,5 +1,6 @@
 .DS_Store
 *.iml
+*.iup
 /.classpath
 /.idea
 /.project
