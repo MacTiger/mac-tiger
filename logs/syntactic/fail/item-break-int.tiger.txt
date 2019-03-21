@@ -1,0 +1,3 @@
+Syntactic error 1:7 missing EOF at '['
+Semantic error 1:1 'break' must be inside loop
+2 errors: 0 lexical errors, 1 syntactic errors, 1 semantic errors

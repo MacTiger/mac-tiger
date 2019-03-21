@@ -1,0 +1,2 @@
+Lexical error 2:1 mismatched character '<EOF>' expecting '*'
+1 errors: 1 lexical errors, 0 syntactic errors, 0 semantic errors

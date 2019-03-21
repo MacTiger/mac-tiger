@@ -1,0 +1,11 @@
+Syntactic error 17:1 no viable alternative at input 'end'
+Semantic error 4:13 type 'int' is not an array type
+Semantic error 4:13 the type of 'tab' cannot be inferred
+Semantic error 12:9 type of 'tab' does not match
+Semantic error 14:9 type of 'str' does not match
+Exception in thread "main" java.lang.NullPointerException
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:828)
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
+	at semantic.SymbolTable.toGraphVizFirst(SymbolTable.java:762)
+	at Main.compile(Main.java:62)
+	at Main.main(Main.java:28)

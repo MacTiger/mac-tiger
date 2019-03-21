@@ -1,0 +1,11 @@
+Semantic error 2:7 circular definition of type 'a'
+Semantic error 3:7 circular definition of type 'b'
+Semantic error 4:7 circular definition of type 'c'
+Semantic error 7:8 circular definition of type 'd'
+Exception in thread "main" java.lang.NullPointerException
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:847)
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
+	at semantic.SymbolTable.toGraphVizFirst(SymbolTable.java:762)
+	at Main.compile(Main.java:62)
+	at Main.main(Main.java:28)

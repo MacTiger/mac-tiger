@@ -1,0 +1,4 @@
+Syntactic error 4:7 mismatched input [0;33m'function'[0m expecting ':='
+Semantic error 8:7 the variable isn't defined
+Semantic error 8:11 wrong arguments type or count
+3 errors: 0 lexical errors, 1 syntactic errors, 2 semantic errors

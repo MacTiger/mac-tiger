@@ -1,0 +1,3 @@
+Semantic error 10:15 type of '42' does not match
+Semantic error 10:8 type of 'CALL' does not match
+2 errors: 0 lexical errors, 0 syntactic errors, 2 semantic errors

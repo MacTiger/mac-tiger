@@ -1,0 +1,3 @@
+Semantic error 2:22 variable 'y' is not defined
+Semantic error 2:22 type of 'y' does not match
+2 errors: 0 lexical errors, 0 syntactic errors, 2 semantic errors

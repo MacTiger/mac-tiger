@@ -1,0 +1,11 @@
+Syntactic error 5:40 mismatched input '"Quarante-deux"' expecting ID
+Syntactic error 13:1 no viable alternative at input 'end'
+Semantic error 0:0 the type of 'xy' cannot be inferred
+Semantic error 11:8 'xy' is not a record
+Semantic error 11:8 type of 'FIELD' does not match
+Exception in thread "main" java.lang.NullPointerException
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:828)
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
+	at semantic.SymbolTable.toGraphVizFirst(SymbolTable.java:762)
+	at Main.compile(Main.java:62)
+	at Main.main(Main.java:28)

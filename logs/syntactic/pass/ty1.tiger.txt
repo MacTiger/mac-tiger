@@ -1,0 +1,7 @@
+Semantic error 2:7 circular definition of type 'montype'
+Exception in thread "main" java.lang.NullPointerException
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:847)
+	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
+	at semantic.SymbolTable.toGraphVizFirst(SymbolTable.java:762)
+	at Main.compile(Main.java:62)
+	at Main.main(Main.java:28)

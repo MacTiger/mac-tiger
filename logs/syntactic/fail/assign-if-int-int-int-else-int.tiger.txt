@@ -1,0 +1,3 @@
+Syntactic error 1:18 missing EOF at 'else'
+Semantic error 1:1 'if' is not a valid target for an assignment
+2 errors: 0 lexical errors, 1 syntactic errors, 1 semantic errors

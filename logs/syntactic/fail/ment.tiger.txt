@@ -1,0 +1,7 @@
+Syntactic error 1:1 no viable alternative at input '*'
+Syntactic error 1:2 no viable alternative at input '/'
+Syntactic error 2:1 no viable alternative at input '<EOF>'
+Semantic error 0:0 type of '<unexpected: [@0,0:0='*',<22>,1:0], resync=*>' does not match
+Semantic error 0:0 type of '<unexpected: [@1,1:1='/',<27>,1:1], resync=/>' does not match
+Semantic error 0:0 type of '<unexpected: [@3,3:3='<EOF>',<-1>,2:0], resync=>' does not match
+6 errors: 0 lexical errors, 3 syntactic errors, 3 semantic errors
