@@ -27,7 +27,7 @@ La principale différence entre ces deux règles de réécriture se trouve dans 
 
 Ainsi, tandis que le programme `abc := 012 | 345` est valide syntaxiquement dans la grammaire de référence, il ne l'est pas dans la nôtre (ici la partie droite de l'affectation est effectivement une opération infixe).
 
-Remplacer l'occurence du non-terminal `unaryExp` par `exp` ne suffit pas car cela rend la grammaire ambiguë (comment interpréter `abc := 012 | 345` ? (`abc := 012`)` | 345` ou `abc := `(`012 | 345`) ?).
+Remplacer l'occurrence du non-terminal `unaryExp` par `exp` ne suffit pas car cela rend la grammaire ambiguë (comment interpréter `abc := 012 | 345` ? (`abc := 012`)` | 345` ou `abc := `(`012 | 345`) ?).
 
 ### Tentative de résolution
 

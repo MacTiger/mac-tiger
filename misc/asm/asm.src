@@ -13,6 +13,7 @@ ORG LOAD_ADRS
 START main_
 
 LDW SP, #STACK_ADRS
+STRING0 string "Hello World !"
 
 //add_ prend deux elts en param, les additionne et met le res dans R0.//
 add_
@@ -24,6 +25,7 @@ add_
 	ADD R1,R2,R0 //Résultat p1+p2 dans R0
 	LDW BP, (SP) //BP vaut le Base Pointer de la fct° appelante
 	ADQ 2,SP //SP est sur @ de retour de la fonction appelée
+//REVOIR LE RETOUR DE CETTE FONCTION
 
 multiply_
 	LDW R1, (SP)2
@@ -52,6 +54,17 @@ equal_int_
 	RTS
 	LDW R1, #0
 	RTS
+
+print_
+	ADQ -2,SP //SP sur chaînage BP nouvel environnement
+	STW BP, (SP) //contenu du registre BP sur chaînage BP nouvel environnement
+	LDW BP, SP //BP pointe sur le Base Pointer de la fct appelante
+	LDW R0,(BP)4 //parametre mis dans R0
+	TRP WR, #WRITE_EXC //affiche texte d'@ R0
+	ADQ 2,SP //SP sur @ retour
+//PAS FINIT
+
+
 main_
 	LDW R1,#10
 	LDW R2,#20
@@ -60,5 +73,12 @@ main_
 	STW R2,-(SP) //dans fction appelante : SP sur dernier arg à passer 
 	JSR @add_
 	ADQ 2*2,SP //nettoyage de la pile : hôte params
+
+
+	//Test String
+	LDW R1,#STRING0
+	STW R1,(-SP) //met le string en param de fonction appelée
+	JSR @print_
+	ADQ 2,SP
 
 	TRP #EXIT_EXC

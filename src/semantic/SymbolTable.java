@@ -214,7 +214,7 @@ public class SymbolTable {
 	}
 
 	public Type fillWith(Tree tree, Notifier notifier) {
-		switch (tree.getType ()) {
+		switch (tree.getType()) {
 			case SEQ: return this.fillWithSEQ(tree, notifier);
 			case ARR: return this.fillWithARR(tree, notifier);
 			case REC: return this.fillWithREC(tree, notifier);
@@ -415,7 +415,7 @@ public class SymbolTable {
 	private Type fillWithFIELD(Tree tree, Notifier notifier) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.fillWith(exp, notifier);
-		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
+		if (!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
 			notifier.semanticError(exp, "%s is not a record", exp.toString());
 		} else { // on sait qu'on a bien une structure
 			Record record = (Record) expType;
@@ -510,6 +510,21 @@ public class SymbolTable {
 	}
 
 	private Type fillWithLet(Tree tree, Notifier notifier) {
+		/* Bloc d'instructions
+		 * (1) Vérification de l'unicité de la déclaration d'un type au sein d'une suite de déclarations de types
+		 * (2) Vérification de l'existence du type des éléments du tableau
+		 * (3) Vérification de l'unicité de la déclaration d'un champ d'une structure
+		 * (4) Vérification de l'existence du type d'un champ d'une structure
+		 * (5) Vérification de la définition non cyclique d'un type
+		 * (6) Vérification de l'unicité de la déclaration d'une fonction au sein d'une suite de déclarations de fonctions
+		 * (7) Vérification de l'unicité de la déclaration d'un paramètre d'une fonction
+		 * (8) Vérification de l'existence du type d'un paramètre d'une fonction
+		 * (9) Vérification de l'existence du type de retour d'une fonction
+		 * (10) Vérification du type de retour d'une fonction
+		 * (11) Vérification du l'existence du type d'une variable
+		 * (12) Vérification du type d'une variable
+		 * (13) Vérification de la possibilité d'inférer le type d'une variable
+		 */
 		SymbolTable supTable = this;
 		SymbolTable table = this;
 		Tree dec = tree.getChild(0);
@@ -518,8 +533,8 @@ public class SymbolTable {
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
-				case "type": {
-					table = new SymbolTable(supTable);
+				case "type": { // dans le cas d'une suite de déclarations de types
+					table = new SymbolTable(supTable); // on crée systématiquement une nouvelle table avant la première déclaration
 					supTable.children.add(table);
 					supTable = table;
 					variableOffset = 0;
@@ -530,35 +545,35 @@ public class SymbolTable {
 					do {
 						Type type = null;
 						String name = symbol.getChild(0).toString();
-						if (table.types.has(name)) {
+						if (table.types.has(name)) { // Test sémantique (1)
 							notifier.semanticError(symbol.getChild(0), "redeclaration of type %s", name);
 						}
 						Tree shape = symbol.getChild(1);
-						switch (shape.getType()) {
-							case ARRTYPE: {
+						switch (shape.getType()) { // on détecte la sorte de déclaration de type
+							case ARRTYPE: { // il s'agit d'un tableau ; on crée un nouveau type de tableau
 								type = new Array();
 								if (!remainsArraysAndRecords) {
 									remainsArraysAndRecords = true;
 								}
 								break;
 							}
-							case RECTYPE: {
+							case RECTYPE: { // il s'agit d'un structure ; on crée un nouveau type de structure
 								type = new Record();
 								if (!remainsArraysAndRecords) {
 									remainsArraysAndRecords = true;
 								}
 								break;
 							}
-							default: {
+							default: { // il s'agit d'un alias ; on ne crée rien pour l'instant
 								remainingAliases++;
 								if (!remainsAliases) {
 									remainsAliases = true;
 								}
 							}
 						}
-						table.types.set(name, type);
+						table.types.set(name, type); // on ajoute le type déclaré
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
-					aliases: while (remainsAliases) {
+					aliases: while (remainsAliases) { // on résout les dépendances entre types jusqu'à stabilité
 						remainsAliases = false;
 						for (int j = i; j < lj; ++j) {
 							symbol = dec.getChild(j);
@@ -581,32 +596,34 @@ public class SymbolTable {
 							}
 						}
 					}
-					if (!remainsAliases || remainsArraysAndRecords) {
+					if (!remainsAliases || remainsArraysAndRecords) { // si un alias ne peut être résolu ou qu'un type composite a été déclaré, on effectue un dernier passage sur les déclarations de types concernées
 						for (int j = i; j < lj; ++j) {
 							symbol = dec.getChild(j);
 							String name = symbol.getChild(0).toString();
 							Tree shape = symbol.getChild(1);
 							Type type = table.types.get(name);
 							if (type instanceof Array) {
+								// on effectue des vérifications spécifiques aux tableaux
 								Array array = (Array) type;
 								Type itemType = table.findType(shape.getChild(0).toString());
-								if (itemType == null) {
+								if (itemType == null) { // Test sémantique (2)
 									notifier.semanticError(shape.getChild(0), "type %s is not defined", shape.getChild(0).toString());
 								} else {
 									array.setType(itemType);
 								}
 							} else if (type instanceof Record) {
+								// on effectue des vérifications spécifiques aux structures
 								Record record = (Record) type;
 								Namespace<Variable> namespace = record.getNamespace();
 								int fieldOffset = 0;
 								for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
 									Variable field = new Variable();
 									String fieldName = shape.getChild(k).toString();
-									if (namespace.has(fieldName)) {
+									if (namespace.has(fieldName)) { // Test sémantique (3)
 										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
 									}
 									Type fieldType = table.findType(shape.getChild(k + 1).toString());
-									if (fieldType == null) {
+									if (fieldType == null) { // Test sémantique (4)
 										notifier.semanticError(shape.getChild(k + 1), "type %s is not defined", shape.getChild(k + 1).toString());
 									} else {
 										field.setType(fieldType);
@@ -617,7 +634,8 @@ public class SymbolTable {
 									}
 									namespace.set(fieldName, field);
 								}
-							} else if (type == null) {
+							} else if (type == null) { // Test sémantique (5)
+								 // on se trouve dans le cas d'un alias non résolu
 								notifier.semanticError(symbol.getChild(0), "circular definition of type %s", name);
 							}
 						}
@@ -625,19 +643,19 @@ public class SymbolTable {
 					i = lj - 1;
 					break;
 				}
-				case "function": {
-					table = new SymbolTable(supTable);
+				case "function": { // dans le cas d'une suite de déclarations de fonctions
+					table = new SymbolTable(supTable); // on crée systématiquement une nouvelle table avant la première déclaration
 					supTable.children.add(table);
 					supTable = table;
 					variableOffset = 0;
 					int lj = i;
 					do {
-						SymbolTable subTable = new SymbolTable(table);
+						SymbolTable subTable = new SymbolTable(table); // chaque fonction dispose de sa problème table interne
 						table.children.add(subTable);
 						Function function = new Function();
 						function.setSymbolTable(subTable);
 						String name = symbol.getChild(0).toString();
-						if (table.functionsAndVariables.has(name)) {
+						if (table.functionsAndVariables.has(name)) { // Test sémantique (6)
 							notifier.semanticError(symbol.getChild(0), "redeclaration of function %s", name);
 						}
 						Tree callType = symbol.getChild(1);
@@ -645,11 +663,11 @@ public class SymbolTable {
 						for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
 							Variable argument = new Variable();
 							String argumentName = callType.getChild(k).toString();
-							if (subTable.functionsAndVariables.has(argumentName)) {
+							if (subTable.functionsAndVariables.has(argumentName)) { // Test sémantique (7)
 								notifier.semanticError(callType.getChild(k), "redeclaration of parameter %s", argumentName);
 							}
 							Type argumentType = table.findType(callType.getChild(k + 1).toString());
-							if (argumentType == null) {
+							if (argumentType == null) { // Test sémantique (8)
 								notifier.semanticError(callType.getChild(k + 1), "type %s is not defined", callType.getChild(k + 1).toString());
 							} else {
 								argument.setType(argumentType);
@@ -665,15 +683,15 @@ public class SymbolTable {
 							argument.setOffset(argument.getOffset() - argumentOffset);
 						}
 						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
-						if (type != null) {
+						if (type != null) { // on distigue les procédures des fonctions
 							Type returnType = table.findType(type.toString());
-							if (returnType == null) {
+							if (returnType == null) { // Test sémantique (9)
 								notifier.semanticError(type, "type %s is not defined", type.toString());
 							} else {
 								function.setType(returnType);
 							}
 						}
-						table.functionsAndVariables.set(name, function);
+						table.functionsAndVariables.set(name, function); // on ajoute la fonction déclarée
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 					for (int j = i; j < lj; ++j) {
 						symbol = dec.getChild(j);
@@ -685,13 +703,13 @@ public class SymbolTable {
 						if (returnType == null) {
 							subTable.fillWith(body, notifier);
 						} else {
-							subTable.checkType(body, notifier, returnType);
+							subTable.checkType(body, notifier, returnType); // Test sémantique (10)
 						}
 					}
 					i = lj - 1;
 					break;
 				}
-				case "var": {
+				case "var": { // dans le cas de la déclaration d'une variable
 					Variable variable = new Variable(); // Création de la variable déclarée
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
@@ -700,21 +718,21 @@ public class SymbolTable {
 					// Détermination du type de la variable : il est soit renseigné dans la déclaration, soit par inférence
 					if (type != null) {	// Cas où le type de la variable est renseigné dans la déclaration
 						returnType = table.findType(type.toString());
-						if (returnType == null) {
+						if (returnType == null) { // Test sémantique (11)
 							notifier.semanticError(type, "type %s is not defined", type.toString());
 							returnType = table.fillWith(exp, notifier);
 						} else {
-							table.checkType(exp, notifier, returnType);
+							table.checkType(exp, notifier, returnType); // Test sémantique (12)
 						}
 					} else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
 						returnType = table.fillWith(exp, notifier);
-						if (returnType == null || returnType == SymbolTable.nilPseudoType) {
+						if (returnType == null || returnType == SymbolTable.nilPseudoType) { // Test sémantique (13)
 							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
 						}
 					}
 					variable.setType(returnType); // Spécification du type de la variable
 					if (table == this || table.functionsAndVariables.get(name) != null) {
-						table = new SymbolTable(supTable);
+						table = new SymbolTable(supTable); // on crée parfois (dans les cas d'une première déclaration de variable ou d'une redéclaration d'une variable) une nouvelle table
 						supTable.children.add(table);
 						supTable = table;
 						variableOffset = 0;

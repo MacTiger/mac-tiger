@@ -1,8 +1,0 @@
-Semantic error 2:16 type 'data' is not defined
-Semantic error 2:16 the type of 'x' cannot be inferred
-Exception in thread "main" java.lang.NullPointerException
-	at semantic.SymbolTable.toGraphViz(SymbolTable.java:828)
-	at semantic.SymbolTable.toGraphViz(SymbolTable.java:805)
-	at semantic.SymbolTable.toGraphVizFirst(SymbolTable.java:762)
-	at Main.compile(Main.java:62)
-	at Main.main(Main.java:28)

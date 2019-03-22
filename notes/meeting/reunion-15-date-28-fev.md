@@ -1,6 +1,6 @@
 # Réunion 15
 
-**Date et heure.** 28 février 2018 à 17 heures
+**Date et heure.** 28 février 2019 à 17 heures
 
 **Prochaine réunion.** 13 mars 2018 à 16 heures
 

@@ -1,3 +1,0 @@
-Semantic error 4:8 type of '"a"' does not match
-Semantic error 4:14 type of '"b"' does not match
-2 errors: 0 lexical errors, 0 syntactic errors, 2 semantic errors

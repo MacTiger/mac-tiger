@@ -1,18 +1,8 @@
 init:
-	java -cp res:lib/* -jar lib/antlr-3.5.2-complete.jar res/Tiger.g
-	mv Tiger.tokens res/Tiger.tokens
-	mkdir -p src/lexical
-	mkdir -p src/syntactic
-	sed -i '1s/^/package lexical;\n/' res/TigerLexer.java
-	sed -i '1s/^/package syntactic;\n/' res/TigerParser.java
-	mv res/TigerLexer.java src/lexical/TigerLexer.java
-	mv res/TigerParser.java src/syntactic/TigerParser.java
-	mkdir -p asm
-	mkdir -p bin
-	mkdir -p log
+	bash init.sh
 
 build:
-	javac -d bin -cp src:lib/* src/Main.java
+	bash build.sh
 
 prompt:
 	bash prompt.sh
@@ -24,12 +14,7 @@ torture:
 	bash torture.sh
 
 clean:
-	rm -r -f asm/*
-	rm -r -f bin/*
-	rm -r -f log/*
-	rm -f res/Tiger.tokens
-	rm -f src/lexical/TigerLexer.java
-	rm -f src/syntactic/TigerParser.java
+	bash clean.sh
 
 antlrworks:
 	java -jar lib/antlrworks-1.5.1.jar

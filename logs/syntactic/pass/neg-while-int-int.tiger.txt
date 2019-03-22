@@ -1,3 +1,0 @@
-Semantic error 1:13 type of '0' does not match
-Semantic error 1:2 type of 'while' does not match
-2 errors: 0 lexical errors, 0 syntactic errors, 2 semantic errors

@@ -1,5 +1,0 @@
-Syntactic error 1:1 no viable alternative at input '*'
-Syntactic error 1:2 no viable alternative at input '/'
-Semantic error 0:0 type of '<unexpected: [@0,0:0='*',<22>,1:0], resync=*>' does not match
-Semantic error 0:0 type of '<unexpected: [@1,1:1='/',<27>,1:1], resync=/>' does not match
-4 errors: 0 lexical errors, 2 syntactic errors, 2 semantic errors

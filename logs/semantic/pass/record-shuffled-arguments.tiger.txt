@@ -1,3 +1,0 @@
-Semantic error 3:16 field name 'x' was expected but field name 'y' was found
-Semantic error 3:16 field name 'y' was expected but field name 'x' was found
-2 errors: 0 lexical errors, 0 syntactic errors, 2 semantic errors

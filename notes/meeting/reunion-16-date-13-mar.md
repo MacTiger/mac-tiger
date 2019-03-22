@@ -1,6 +1,6 @@
 # Réunion 15
 
-**Date et heure.** 13 mars 2018 à 16 heures
+**Date et heure.** 13 mars 2019 à 16 heures
 
 **Prochaine réunion.** 22 mars 2018 à 16 heures
 
@@ -10,7 +10,7 @@
 - Problèmes à régler
 - Travail à faire
 
-## Travail effectué
+## 1. Travail effectué
 
 David a travaillé sur le pseudo remplissage. Lorsque le `fillWithLet` sera remplacé, le reste sera facile à réalisé. Une classe `TigerTranslator` a été codée. Celle-ci a exactement la même structure que la TDS, mais sert à générer le code à partir de la TDS.
 
@@ -22,13 +22,13 @@ Le nouveau système de test est en cours mais est compliqué car micropiupk ne d
 
 David propose que l'on se concentre sur la génération de code pour le moment. On verra le rapport un peu plus tard.
 
-## Problèmes à régler
+## 2. Problèmes à régler
 
 Comment on gère les registres ? Ceux-ci peuvent être libres ou non. On peut utiliser un système de tableau comme évoqué en tutorat. On a aussi la possibilité d'utiliser une pile des registres libres.
 
 Proposition de Tristan : les fonctions `fillWithXXX` doivent renvoyer le nombre de registres à utiliser.
 
-## Travail à faire
+## 3. Travail à faire
 
 **Alexis.**
 

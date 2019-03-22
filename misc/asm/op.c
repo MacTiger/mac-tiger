@@ -1,9 +1,9 @@
 /* Les fonctions commentées n'ont pas vraiment
  * de sens en C. Il faut les laisser commentées.
  */
-int add(int, int);
+int add(int, int);//ok
 int substract(int, int);
-int multiply(int, int);
+int multiply(int, int);//ok
 int divide(int, int);
 int equal_str(char*, char*);
 int equal_int(int, int);
