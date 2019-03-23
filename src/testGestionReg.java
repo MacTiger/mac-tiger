@@ -10,6 +10,10 @@ public class testGestionReg {
         for(int i=0 ; i<30 ; i++){
             System.out.println(gr.GetRegister());
         }
+
+        for(int i=0;i<30;i++){
+            gr.freeRegister();
+        }
     }
 
 }

@@ -35,7 +35,20 @@ public class GestionRegisters {
         }
     }
 
-
+    private void putStackInRegister(int reg){
+        String str="\tLDW R"+String.valueOf(reg)+", (SP) \n \tADQ 2, SP \n";
+        try {
+            char buffer[]=new char[str.length()];
+            str.getChars(0,str.length(),buffer,0);
+            FileWriter fw = new FileWriter(PATH, true);
+            fw.write(buffer);
+            fw.close();
+        }
+        catch(Exception ex){
+            System.out.println("Pas le bon path");
+            ex.printStackTrace();
+        }
+    }
 
     //Renvoie l'indice d'un registre disponible
     public int GetRegister(){
@@ -53,9 +66,17 @@ public class GestionRegisters {
     }
 
 
-    //En argument le registre ayant été libéré
-    public void freeRegister(int reg){
-
+    //Libère le dernier registre "réservé"
+    public void freeRegister(){
+        if(regDisp>-1 && regDisp<REGMAX){
+            regDisp++;
+        }
+        else{
+            int req;
+            req=(REGMAX-1)-(-(regDisp+1))%REGMAX;
+            putStackInRegister(req);
+            regDisp++;
+        }
     }
 
 }
