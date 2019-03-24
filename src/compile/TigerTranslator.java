@@ -1,22 +1,12 @@
 package compile;
 
-import misc.Constants;
 import misc.Notifier;
 import org.antlr.runtime.tree.Tree;
 import semantic.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
-
-import java.util.*;
-
-import org.antlr.runtime.tree.Tree;
-
-import misc.Constants;
-import misc.Notifier;
 
 import static syntactic.TigerParser.ARRTYPE;
 import static syntactic.TigerParser.RECTYPE;
@@ -29,7 +19,6 @@ import static syntactic.TigerParser.FIELD;
 import static syntactic.TigerParser.ID;
 import static syntactic.TigerParser.STR;
 import static syntactic.TigerParser.INT;
-import static syntactic.TigerParser.*;
 
 public class TigerTranslator {
 
@@ -46,57 +35,76 @@ public class TigerTranslator {
 	private Namespace<FunctionOrVariable> functionsAndVariables;
 */
 
-	private Tree currentASTNode;    // Noeud de l'AST actuel
+//	private Tree currentASTNode;    // Noeud de l'AST actuel
 	private SymbolTable currentTDS; // TDS actuelle
+	private ArrayList<String> fonctionCode; // Tableau du codes des fonctions assembleur
+	private ArrayList<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
 
+	
 	private TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
+		fonctionCode = new ArrayList<>();
+		childrenIndexStack = new ArrayList<>();
 	}
 
-	public Type fillWith(Tree tree, Notifier notifier) {
+	private void descendTDS(){
+		// Met à jour this.currentTDS pour y mettre la TDS fille de la currentTDS de bon index, met à jour childrenIndexStack
+		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1); // Récupère l'index de la TDS fille à prendre
+		childrenIndexStack.set(childrenIndexStack.size()-1, indexOfNextChild + 1);  // Incrémente l'index de la prochaine TDS à prendre
+		childrenIndexStack.add(0);  // Ajoute une entrée dans childrenIndexStack pour reprendre le compte pour la nouvelle currentTDS
+		this.currentTDS = this.currentTDS.getChild(indexOfNextChild);
+	}
+
+	private void ascendTDS(){
+		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
+		this.currentTDS = this.currentTDS.getParent();  // Remonte de TDS
+		childrenIndexStack.remove(childrenIndexStack.size() - 1);   // Retire le dernière index empilé
+	}
+
+	public Type translate(Tree tree, int registerIndex) {
 		switch (tree.getType ()) {
-			case SEQ: return this.fillWithSEQ(tree, notifier);
-			case ARR: return this.fillWithARR(tree, notifier);
-			case REC: return this.fillWithREC(tree, notifier);
-			case CALL: return this.fillWithCALL(tree, notifier);
-			case ITEM: return this.fillWithITEM(tree, notifier);
-			case FIELD: return this.fillWithFIELD(tree, notifier);
-			case ID: return this.fillWithID(tree, notifier);
-			case STR: return this.fillWithSTR(tree, notifier);
-			case INT: return this.fillWithINT(tree, notifier);
+			case SEQ: return this.translateSEQ(tree, registerIndex);
+			case ARR: return this.translateARR(tree, registerIndex);
+			case REC: return this.translateREC(tree, registerIndex);
+			case CALL: return this.translateCALL(tree, registerIndex);
+			case ITEM: return this.translateITEM(tree, registerIndex);
+			case FIELD: return this.translateFIELD(tree, registerIndex);
+			case ID: return this.translateID(tree, registerIndex);
+			case STR: return this.translateSTR(tree, registerIndex);
+			case INT: return this.translateINT(tree, registerIndex);
 		}
 		switch (tree.toString()) {
-			case ":=": return this.fillWithAssignment(tree, notifier);
+			case ":=": return this.translateAssignment(tree, registerIndex);
 			case "=":
-			case "<>": return this.fillWithEqualOrNot(tree, notifier);
+			case "<>": return this.translateEqualOrNot(tree, registerIndex);
 			case ">":
 			case "<":
 			case ">=":
-			case "<=": return this.fillWithComparator(tree, notifier);
+			case "<=": return this.translateComparator(tree, registerIndex);
 			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
 			case "|":
 			case "&":
 			case "+":
 			case "-":
 			case "*":
-			case "/": return this.fillWithIntOperator(tree, notifier);
-			case "if": return this.fillWithIf(tree, notifier);
-			case "while": return this.fillWithWhile(tree, notifier);
-			case "for": return this.fillWithFor(tree, notifier);
-			case "let": return this.fillWithLet(tree, notifier);
-			case "nil": return this.fillWithNil(tree, notifier);
-			case "break": return this.fillWithBreak(tree, notifier);
+			case "/": return this.translateIntOperator(tree, registerIndex);
+			case "if": return this.translateIf(tree, registerIndex);
+			case "while": return this.translateWhile(tree, registerIndex);
+			case "for": return this.translateFor(tree, registerIndex);
+			case "let": return this.translateLet(tree, registerIndex);
+			case "nil": return this.translateNil(tree, registerIndex);
+			case "break": return this.translateBreak(tree, registerIndex);
 			default: {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-					this.fillWith(tree.getChild(i), notifier);
+					this.translate(tree.getChild(i), registerIndex);
 				}
 				return null;
 			}
 		}
 	}
 
-	private Type fillWithCALL(Tree tree, Notifier notifier) {
+	private Type translateCALL(Tree tree, int registerIndex) {
 		/* Appel d'une fonction
 		 *
 		 */
@@ -106,7 +114,7 @@ public class TigerTranslator {
 		//TODO : gérer code d'appel à fonction
 
 		for (int i = 0 ; i < tree.getChildCount(); i++) {   //Parcours des arguments de la fonction
-			fillWith(tree.getChild(i), notifier);
+			translate(tree.getChild(i), registerIndex);
 			//TODO : code pour empiler l'argument
 		}
 		returnType = function.getType();
@@ -114,7 +122,7 @@ public class TigerTranslator {
 		return returnType;
 	}
 
-	private Type fillWithREC(Tree tree, Notifier notifier) {
+	private Type translateREC(Tree tree, int registerIndex) {
 		/* Déclaration d'une structure
 		 * (1) Vérification de l'existence du type de structure
 		 * (2) Vérification du nombre de champs
@@ -149,12 +157,12 @@ public class TigerTranslator {
 			}
 		}
 		for (; i < l; i += 2) {
-			this.fillWith(tree.getChild(i + 1), notifier);
+			this.translate(tree.getChild(i + 1), registerIndex);
 		}
 		return returnType;
 	}
 
-	private Type fillWithARR(Tree tree, Notifier notifier) {
+	private Type translateARR(Tree tree, int registerIndex) {
 		/* Déclaration d'un tableau
 		 * (1) Vérification de l'existence du type de tableau
 		 * (2) Vérification du type de la taille du tableau
@@ -176,71 +184,63 @@ public class TigerTranslator {
 		return returnType;
 	}
 
-	private Type fillWithAssignment(Tree tree, Notifier notifier) {
-		Tree exp = tree.getChild(0);
-		switch (exp.getType()) { // vérification que l'expression à gauche du ":=" est un lValue (cherche si le token de 'exp' est bien parmis les tokens imaginaires ANTLR correspondant à un lValue)
-			case ID:
-			case ITEM:
-			case FIELD: {
-				if (exp.getType() == ID) {
-					Variable variable = this.findVariable(exp.toString());
-					if (variable != null && !variable.isWritable()) {
-						notifier.semanticError(exp, "loop index %s cannot be assigned", exp.toString());
-						this.fillWith(tree.getChild(1), notifier);
-						break;
-					}
-				}
-				this.checkType(tree.getChild(1), notifier, this.fillWith(exp, notifier)); // vérification de cohérence de type entre l'expression gauche et droite
+	private Type translateAssignment(Tree tree, int registerIndex) {
+		Tree lValue = tree.getChild(0);
+		Tree expToAssign = tree.getChild(1);
+		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
+			case ID: Variable variable = this.currentTDS.findVariable(lValue.toString());
+			//TODO : Générer code d'assignement avec un ID
 				break;
-			}
-			default: {
-				notifier.semanticError(exp, "%s is not a valid target for an assignment", exp.toString());
-				this.fillWith(tree.getChild(1), notifier);
-			}
+			case ITEM:
+				//TODO : Générer code d'assignement avec un ITEM
+			case FIELD:
+				//TODO : Générer code d'assignement avec un FIELD
+			default:
+				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
 		return null;
 	}
 
-	private Type fillWithSEQ(Tree tree, Notifier notifier) {
+	private Type translateSEQ(Tree tree, int registerIndex) {
 		Type returnType = null;
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
-			returnType = this.fillWith(tree.getChild(i), notifier);
+			returnType = this.translate(tree.getChild(i), registerIndex);
 		}
 		return returnType;
 	}
 
-	private Type fillWithSTR(Tree tree, Notifier notifier) {
-		return semantic.SymbolTable.stringType;
+	private Type translateSTR(Tree tree, int registerIndex) {
+		//TODO : Générer le code pour STRING
+		return this.currentTDS.stringType;
 	}
 
-	private Type fillWithID(Tree tree, Notifier notifier) {
-		Variable variable = this.findVariable(tree.toString());
-		if (variable == null) {
-			notifier.semanticError(tree, "variable %s is not defined", tree.toString());
-		} else{
-			return variable.getType();
-		}
-		return null;
+	private Type translateID(Tree tree, int registerIndex) {
+		Variable variable = this.currentTDS.findVariable(tree.toString());
+		//TODO : Générer code de recherche de la variable pour la placer dans le registre regiterIndex
+		return variable.getType();
 	}
 
-	private Type fillWithITEM(Tree tree, Notifier notifier) {
+	private Type translateITEM(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.fillWith(exp, notifier);
+		Type expType = this.translate(exp, registerIndex);
+		//TODO : générer le code pour récupérer l'index entier représenté par le fils droit
+		//TODO : générer le code pour accèder à l'ITEM
 		Type returnType = null;
-		if (!(expType instanceof Array)) { // on regarde si le fils gauche est bien un tableau
+		/*if (!(expType instanceof Array)) { // on regarde si le fils gauche est bien un tableau
 			notifier.semanticError(exp, "%s is not an array", exp.toString());
 		} else { // on sait qu'on a bien un tableau
 			Array array = (Array) expType;
 			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
-		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier
+		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier*/
 		return returnType;
 	}
 
-	private Type fillWithFIELD(Tree tree, Notifier notifier) {
+	private Type translateFIELD(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.fillWith(exp, notifier);
-		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
+		Type expType = this.translate(exp, registerIndex);
+		//TODO : générer le code pour récupérer le FIELD
+/*		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
 			notifier.semanticError(exp, "%s is not a record", exp.toString());
 		} else { // on sait qu'on a bien une structure
 			Record record = (Record) expType;
@@ -250,30 +250,31 @@ public class TigerTranslator {
 			} else { // sinon c'est bon
 				return fields.get(tree.getChild(1).toString()).getType();
 			}
-		}
+		}*/
 		return null;
 	}
 
-	private Type fillWithINT(Tree tree, Notifier notifier) {
-		return semantic.SymbolTable.intType;
+	private Type translateINT(Tree tree, int registerIndex) {
+		//TODO : Générer le code pour l'entier immédiat tree.toString()
+		return this.currentTDS.intType;
 	}
 
-	private Type fillWithEqualOrNot(Tree tree, Notifier notifier) {
+	private Type translateEqualOrNot(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.fillWith(exp, notifier);
+		Type expType = this.translate(exp, registerIndex);
 		if (this.checkType(tree.getChild(1), notifier, expType) == semantic.SymbolTable.nilPseudoType) {
 			notifier.semanticError(exp, "the type of %s cannot be inferred", exp.toString());
 		}
 		return semantic.SymbolTable.intType;
 	}
 
-	private Type fillWithComparator(Tree tree, Notifier notifier) {
+	private Type translateComparator(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.fillWith(exp, notifier);
+		Type expType = this.translate(exp, registerIndex);
 		if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
 			notifier.semanticError(exp, "the type of %s is not a primitive type (%s or %s)");
 			exp = tree.getChild(1);
-			expType = this.fillWith(exp, notifier);
+			expType = this.translate(exp, registerIndex);
 			if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
 				notifier.semanticError(exp, "%s is not a primitive value (either an integer or a string)");
 			}
@@ -284,55 +285,65 @@ public class TigerTranslator {
 		return semantic.SymbolTable.intType;
 	}
 
-	private Type fillWithIntOperator(Tree tree, Notifier notifier) {
+	private Type translateIntOperator(Tree tree, int registerIndex) {
 		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 			this.checkType(tree.getChild(i), notifier, semantic.SymbolTable.intType);
 		}
 		return semantic.SymbolTable.intType;
 	}
 
-	private Type fillWithIf(Tree tree, Notifier notifier) {
-		this.fillWith(tree.getChild(0),notifier);   //Pour le if
-		this.fillWith(tree.getChild(1), notifier);  // Pour le then
+	private Type translateIf(Tree tree, int registerIndex) {
+		//TODO : Générer le code pour le IF (penser à réserver les registres nécessaires)
+		this.translate(tree.getChild(0),registerIndex);   //Pour le if
+		Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
 
 		if (tree.getChildCount() == 2){    // Pour le else
-			this.fillWith(tree.getChild(2), notifier);
+			result = this.translate(tree.getChild(2), registerIndex);
 		}
+		return result;
 	}
 
-	private Type fillWithWhile(Tree tree, Notifier notifier) {
-		//TODO : Génerer code de while
-		this.fillWith(tree.getChild(0),notifier);
-		this.fillWith(tree.getChild(1),notifier);
+	private Type translateWhile(Tree tree, int registerIndex) {
+		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
+		this.translate(tree.getChild(0),registerIndex);
+		this.translate(tree.getChild(1),registerIndex);
 		return null;
 	}
 
-	private Type fillWithFor(Tree tree, Notifier notifier) {
-		semantic.SymbolTable table = new semantic.SymbolTable(this);
-		this.children.add(table);
-		Variable index = new Variable();
-		index.configure(false);
-		index.setType(semantic.SymbolTable.intType);
-		table.functionsAndVariables.set(tree.getChild(0).toString(), index); // Ajout de la variable de boucle for dans sa table de symbole
-		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
-		this.checkType(tree.getChild(2), notifier, semantic.SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
-		table.checkType(tree.getChild(3), notifier, null);	// Remplissage de la table des symboles de la boucle for
+	private Type translateFor(Tree tree, int registerIndex) {
+		descendTDS();   // Met à jour this.currentTDS avec la bonne TDS fille
+		Variable index = currentTDS.findVariable(tree.getChild(0).toString());  // Récupère la variable de boucle
+		translate(tree.getChild(1), registerIndex);	// Génère le code pour la borne inférieure du for
+		translate(tree.getChild(2), registerIndex);	// Génère le code pour la borne supérieure du for
+		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
+		ascendTDS();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
 		return null;
 	}
 
-	private Type fillWithLet(Tree tree, Notifier notifier) {
-		semantic.SymbolTable supTable = this;
-		semantic.SymbolTable table = this;
+	private Type translateLet(Tree tree, int registerIndex) {
+		/* Bloc d'instructions
+		 * (1) Vérification de l'unicité de la déclaration d'un type au sein d'une suite de déclarations de types
+		 * (2) Vérification de l'existence du type des éléments du tableau
+		 * (3) Vérification de l'unicité de la déclaration d'un champ d'une structure
+		 * (4) Vérification de l'existence du type d'un champ d'une structure
+		 * (5) Vérification de la définition non cyclique d'un type
+		 * (6) Vérification de l'unicité de la déclaration d'une fonction au sein d'une suite de déclarations de fonctions
+		 * (7) Vérification de l'unicité de la déclaration d'un paramètre d'une fonction
+		 * (8) Vérification de l'existence du type d'un paramètre d'une fonction
+		 * (9) Vérification de l'existence du type de retour d'une fonction
+		 * (10) Vérification du type de retour d'une fonction
+		 * (11) Vérification du l'existence du type d'une variable
+		 * (12) Vérification du type d'une variable
+		 * (13) Vérification de la possibilité d'inférer le type d'une variable
+		 */
+		int initialDepth = this.childrenIndexStack.size();  // Sauvegarde de la profondeur actuelle de TDS, pour retourner à celui ci à la fin de la fonction
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
-		int variableOffset = 0;
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
-				case "type": {
-					table = new semantic.SymbolTable(supTable);
-					supTable.children.add(table);
-					supTable = table;
+				case "type": { // dans le cas d'une suite de déclarations de types  //TODO : voir ce qu'il y a comme code à générer pour la déclaration de type
+					descendTDS(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					variableOffset = 0;
 					int lj = i;
 					int remainingAliases = 0;
@@ -341,35 +352,32 @@ public class TigerTranslator {
 					do {
 						Type type = null;
 						String name = symbol.getChild(0).toString();
-						if (table.types.has(name)) {
-							notifier.semanticError(symbol.getChild(0), "redeclaration of type %s", name);
-						}
 						Tree shape = symbol.getChild(1);
-						switch (shape.getType()) {
-							case ARRTYPE: {
+						switch (shape.getType()) { // on détecte la sorte de déclaration de type
+							case ARRTYPE: { // il s'agit d'un tableau ; on crée un nouveau type de tableau
 								type = new Array();
 								if (!remainsArraysAndRecords) {
 									remainsArraysAndRecords = true;
 								}
 								break;
 							}
-							case RECTYPE: {
+							case RECTYPE: { // il s'agit d'un structure ; on crée un nouveau type de structure
 								type = new Record();
 								if (!remainsArraysAndRecords) {
 									remainsArraysAndRecords = true;
 								}
 								break;
 							}
-							default: {
+							default: { // il s'agit d'un alias ; on ne crée rien pour l'instant
 								remainingAliases++;
 								if (!remainsAliases) {
 									remainsAliases = true;
 								}
 							}
 						}
-						table.types.set(name, type);
+						table.types.set(name, type); // on ajoute le type déclaré
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
-					aliases: while (remainsAliases) {
+					aliases: while (remainsAliases) { // on résout les dépendances entre types jusqu'à stabilité
 						remainsAliases = false;
 						for (int j = i; j < lj; ++j) {
 							symbol = dec.getChild(j);
@@ -392,32 +400,30 @@ public class TigerTranslator {
 							}
 						}
 					}
-					if (!remainsAliases || remainsArraysAndRecords) {
+					if (!remainsAliases || remainsArraysAndRecords) { // si un alias ne peut être résolu ou qu'un type composite a été déclaré, on effectue un dernier passage sur les déclarations de types concernées
 						for (int j = i; j < lj; ++j) {
 							symbol = dec.getChild(j);
 							String name = symbol.getChild(0).toString();
 							Tree shape = symbol.getChild(1);
 							Type type = table.types.get(name);
 							if (type instanceof Array) {
+								// on effectue des vérifications spécifiques aux tableaux
 								Array array = (Array) type;
 								Type itemType = table.findType(shape.getChild(0).toString());
-								if (itemType == null) {
-									notifier.semanticError(shape.getChild(0), "type %s is not defined", shape.getChild(0).toString());
-								} else {
-									array.setType(itemType);
-								}
+								array.setType(itemType);
 							} else if (type instanceof Record) {
+								// on effectue des vérifications spécifiques aux structures
 								Record record = (Record) type;
 								Namespace<Variable> namespace = record.getNamespace();
 								int fieldOffset = 0;
 								for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
 									Variable field = new Variable();
 									String fieldName = shape.getChild(k).toString();
-									if (namespace.has(fieldName)) {
+									if (namespace.has(fieldName)) { // Test sémantique (3)
 										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
 									}
 									Type fieldType = table.findType(shape.getChild(k + 1).toString());
-									if (fieldType == null) {
+									if (fieldType == null) { // Test sémantique (4)
 										notifier.semanticError(shape.getChild(k + 1), "type %s is not defined", shape.getChild(k + 1).toString());
 									} else {
 										field.setType(fieldType);
@@ -428,135 +434,59 @@ public class TigerTranslator {
 									}
 									namespace.set(fieldName, field);
 								}
-							} else if (type == null) {
-								notifier.semanticError(symbol.getChild(0), "circular definition of type %s", name);
 							}
 						}
 					}
 					i = lj - 1;
+					ascendTDS();
 					break;
 				}
-				case "function": {
-					table = new semantic.SymbolTable(supTable);
-					supTable.children.add(table);
-					supTable = table;
-					variableOffset = 0;
+				case "function": { // dans le cas d'une suite de déclarations de fonctions
+					descendTDS();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					do {
-						semantic.SymbolTable subTable = new semantic.SymbolTable(table);
-						table.children.add(subTable);
-						Function function = new Function();
-						function.setSymbolTable(subTable);
-						String name = symbol.getChild(0).toString();
-						if (table.functionsAndVariables.has(name)) {
-							notifier.semanticError(symbol.getChild(0), "redeclaration of function %s", name);
-						}
-						Tree callType = symbol.getChild(1);
-						int argumentOffset = 0;
-						for (int k = 0, lk = callType.getChildCount(); k < lk; k += 2) {
-							Variable argument = new Variable();
-							String argumentName = callType.getChild(k).toString();
-							if (subTable.functionsAndVariables.has(argumentName)) {
-								notifier.semanticError(callType.getChild(k), "redeclaration of parameter %s", argumentName);
-							}
-							Type argumentType = table.findType(callType.getChild(k + 1).toString());
-							if (argumentType == null) {
-								notifier.semanticError(callType.getChild(k + 1), "type %s is not defined", callType.getChild(k + 1).toString());
-							} else {
-								argument.setType(argumentType);
-							}
-							argument.setOffset(argumentOffset);
-							if (argumentType != null) {
-								argumentOffset += argumentType.getSize();
-							}
-							subTable.functionsAndVariables.set(argumentName, argument);
-						}
-						for (Map.Entry<String, FunctionOrVariable> entry: subTable.functionsAndVariables) {
-							Variable argument = (Variable) entry.getValue();
-							argument.setOffset(argument.getOffset() - argumentOffset);
-						}
-						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
-						if (type != null) {
-							Type returnType = table.findType(type.toString());
-							if (returnType == null) {
-								notifier.semanticError(type, "type %s is not defined", type.toString());
-							} else {
-								function.setType(returnType);
-							}
-						}
-						table.functionsAndVariables.set(name, function);
-					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
-					for (int j = i; j < lj; ++j) {
-						symbol = dec.getChild(j);
+						symbol = dec.getChild(lj);
 						String name = symbol.getChild(0).toString();
 						Tree body = symbol.getChild(2);
-						Function function = (Function) table.functionsAndVariables.get(name);
-						semantic.SymbolTable subTable = function.getSymbolTable();
-						Type returnType = function.getType();
-						if (returnType == null) {
-							subTable.fillWith(body, notifier);
-						} else {
-							subTable.checkType(body, notifier, returnType);
-						}
-					}
+						Function function = this.currentTDS.findFunction(name);
+						descendTDS();   // Descente dans la TDS de la fonction
+						translate(body, registerIndex); //TODO : Générer code pour la déclaration de fonction
+						//TODO : mettre ce code dans fonctionCode
+						ascendTDS();
+					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
+
 					i = lj - 1;
+//					ascendTDS();    // On ne remonte pas la TDS qu'on a créé à la première déclaration de fonction
 					break;
 				}
-				case "var": {
-					Variable variable = new Variable(); // Création de la variable déclarée
-					String name = symbol.getChild(0).toString();
+				case "var": { // dans le cas de la déclaration d'une variable
+					Variable variable = this.currentTDS.findVariable(symbol.getChild(0).toString()); // Récupération de la variable déclarée
 					Tree exp = symbol.getChild(1);
-					Tree type = symbol.getChildCount() > 2 ? symbol.getChild(2) : null;
-					Type returnType;
-					// Détermination du type de la variable : il est soit renseigné dans la déclaration, soit par inférence
-					if (type != null) {	// Cas où le type de la variable est renseigné dans la déclaration
-						returnType = table.findType(type.toString());
-						if (returnType == null) {
-							notifier.semanticError(type, "type %s is not defined", type.toString());
-							returnType = table.fillWith(exp, notifier);
-						} else {
-							table.checkType(exp, notifier, returnType);
-						}
-					} else {	// Cas où le type de la variable doit être déduit par inférence sur le type de l'expression à droite du ':='
-						returnType = table.fillWith(exp, notifier);
-						if (returnType == null || returnType == semantic.SymbolTable.nilPseudoType) {
-							notifier.semanticError(exp, "the type of %s cannot be inferred", name);
-						}
+					if (variable.isAlreadyTranslated()) {   // on crée parfois (dans les cas d'une première déclaration de variable ou d'une redéclaration d'une variable) une nouvelle table
+						descendTDS();
+						this.currentTDS.findVariable(symbol.getChild(0).toString()); // On prend la bonne déclaration de cette variable
 					}
-					variable.setType(returnType); // Spécification du type de la variable
-					if (table == this || table.functionsAndVariables.get(name) != null) {
-						table = new semantic.SymbolTable(supTable);
-						supTable.children.add(table);
-						supTable = table;
-						variableOffset = 0;
-					}
-					variable.setOffset(variableOffset);
-					if (returnType != null) {
-						variableOffset += returnType.getSize();
-					}
-					table.functionsAndVariables.set(name, variable);
+					//TODO : générer le code de la déclaration de variable
+					variable.setAlreadyTranslated(true);
 					break;
 				}
 			}
 		}
-		return table.fillWith(seq, notifier);
+		Type result = translate(seq, registerIndex);
+		while(childrenIndexStack.size() > initialDepth){    // On remonte les TDS pour revenir à la profondeur d'avant le LET
+			ascendTDS();
+		}
+		return result;
 	}
 
-	private Type fillWithNil(Tree tree, Notifier notifier) {
-		return semantic.SymbolTable.nilPseudoType;
+	private Type translateNil(Tree tree, int registerIndex) {
+		return this.currentTDS.nilPseudoType;
 	}
 
-	private Type fillWithBreak(Tree tree, Notifier notifier) {
+	private Type translateBreak(Tree tree, int registerIndex) {
 		Tree parent = tree;
 		Tree child = tree;
-		while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
-			if (parent.toString().equals("while") || parent.toString().equals("for") && child == parent.getChild(3)) {
-				return null;
-			} else {
-				child = parent;
-			}
-		}
-		notifier.semanticError(tree, "%s must be inside loop", tree.toString());
+		//TODO : générer code pour Break
 		return null;
 	}
 }

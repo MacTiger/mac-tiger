@@ -21,9 +21,9 @@ import static syntactic.TigerParser.INT;
 
 public class SymbolTable {
 
-	private static Type nilPseudoType;
-	private static Type intType;
-	private static Type stringType;
+	public static Type nilPseudoType;
+	public static Type intType;
+	public static Type stringType;
 	private static SymbolTable root;
 
 	static {
@@ -148,6 +148,10 @@ public class SymbolTable {
 
 	public List<SymbolTable> getChildren() {
 		return children;
+	}
+
+	public SymbolTable getChild(int i){
+		return children.get(i);
 	}
 
 	public Namespace<Type> getTypes() {
@@ -650,7 +654,7 @@ public class SymbolTable {
 					variableOffset = 0;
 					int lj = i;
 					do {
-						SymbolTable subTable = new SymbolTable(table); // chaque fonction dispose de sa problème table interne
+						SymbolTable subTable = new SymbolTable(table); // chaque fonction dispose de sa propre table interne
 						table.children.add(subTable);
 						Function function = new Function();
 						function.setSymbolTable(subTable);
