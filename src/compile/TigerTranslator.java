@@ -37,14 +37,12 @@ public class TigerTranslator {
 
 //	private Tree currentASTNode;    // Noeud de l'AST actuel
 	private SymbolTable currentTDS; // TDS actuelle
-	private ArrayList<String> fonctionCode; // Tableau du codes des fonctions assembleur
 	private ArrayList<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
 
 	
 	private TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
-		fonctionCode = new ArrayList<>();
 		childrenIndexStack = new ArrayList<>();
 	}
 
