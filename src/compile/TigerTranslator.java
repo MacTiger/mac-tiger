@@ -117,6 +117,8 @@ public class TigerTranslator {
 			translate(tree.getChild(i), registerIndex);
 			//TODO : code pour empiler l'argument
 		}
+
+		//TODO : JSR labelFonction
 		returnType = function.getType();
 
 		return returnType;
@@ -130,7 +132,9 @@ public class TigerTranslator {
 		 * (4) Vérification des types des champs
 		 */
 		String name = tree.getChild(0).toString();
-		Type returnType = this.findType(name);
+		Type returnType = null;
+		//TODO : Générer le code d'intanciation d'une structure
+		/*Type returnType = this.findType(name);
 		int i = 1;
 		int l = tree.getChildCount();
 		if (returnType == null) { // Test sémantique (1)
@@ -158,7 +162,7 @@ public class TigerTranslator {
 		}
 		for (; i < l; i += 2) {
 			this.translate(tree.getChild(i + 1), registerIndex);
-		}
+		}*/
 		return returnType;
 	}
 
@@ -169,8 +173,10 @@ public class TigerTranslator {
 		 * (3) Vérification du type des éléments du tableau
 		 */
 		String name = tree.getChild(0).toString();
-		Type returnType = this.findType(name);
-		if (returnType == null) { // Test sémantique (1)
+		Type returnType = null;
+//		Type returnType = this.findType(name);
+		//TODO : générer le code d'instanciation d'un tableau
+		/*if (returnType == null) { // Test sémantique (1)
 			notifier.semanticError(tree, "type %s is not defined", name);
 		} else if (!(returnType instanceof Array)) { // Test sémantique (1)
 			notifier.semanticError(tree, "type %s is not an array type", name);
@@ -180,7 +186,7 @@ public class TigerTranslator {
 		if (returnType != null) {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
-		}
+		}*/
 		return returnType;
 	}
 
@@ -260,34 +266,38 @@ public class TigerTranslator {
 	}
 
 	private Type translateEqualOrNot(Tree tree, int registerIndex) {
-		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
-		if (this.checkType(tree.getChild(1), notifier, expType) == semantic.SymbolTable.nilPseudoType) {
-			notifier.semanticError(exp, "the type of %s cannot be inferred", exp.toString());
-		}
+		Tree exp0 = tree.getChild(0);
+		Tree exp1 = tree.getChild(1);
+
+		int registerIndex0 = 0;
+		int registerIndex1 = 0;
+
+		//TODO : gérer les registres où stocker les résultats des deux opérandes
+		translate(exp0, registerIndex0);
+		translate(exp1, registerIndex1);
+
+		//TODO : Générer le code de l'égalité entre ce qui est stocké dans registerIndex0 et registerIndex1
 		return semantic.SymbolTable.intType;
 	}
 
 	private Type translateComparator(Tree tree, int registerIndex) {
-		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
-		if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
-			notifier.semanticError(exp, "the type of %s is not a primitive type (%s or %s)");
-			exp = tree.getChild(1);
-			expType = this.translate(exp, registerIndex);
-			if ((expType != semantic.SymbolTable.intType) && (expType != semantic.SymbolTable.stringType)) {
-				notifier.semanticError(exp, "%s is not a primitive value (either an integer or a string)");
-			}
-		} else {
-			exp = tree.getChild(1);
-			expType = this.checkType(exp, notifier, expType);
-		}
+		Tree exp0 = tree.getChild(0);
+		Tree exp1 = tree.getChild(1);
+
+		int registerIndex0 = 0;
+		int registerIndex1 = 0;
+
+		//TODO : gérer les registres où stocker les résultats des deux opérandes
+		translate(exp0, registerIndex0);
+		translate(exp1, registerIndex1);
+
+		//TODO : Générer le code de la comparaison entre ce qui est stocké dans registerIndex0 et registerIndex1
 		return semantic.SymbolTable.intType;
 	}
 
 	private Type translateIntOperator(Tree tree, int registerIndex) {
 		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-			this.checkType(tree.getChild(i), notifier, semantic.SymbolTable.intType);
+			//TODO : générer le code pour appliquer l'opération tree.toString() entre tous les fils de tree (accessibles avec tree.getChild(i))
 		}
 		return semantic.SymbolTable.intType;
 	}
@@ -320,125 +330,21 @@ public class TigerTranslator {
 		return null;
 	}
 
+	/**
+	 * Traduit l'AST passé en paramètre représentant une expression LET, met le résultat de l'expression dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 * @return
+	 */
 	private Type translateLet(Tree tree, int registerIndex) {
-		/* Bloc d'instructions
-		 * (1) Vérification de l'unicité de la déclaration d'un type au sein d'une suite de déclarations de types
-		 * (2) Vérification de l'existence du type des éléments du tableau
-		 * (3) Vérification de l'unicité de la déclaration d'un champ d'une structure
-		 * (4) Vérification de l'existence du type d'un champ d'une structure
-		 * (5) Vérification de la définition non cyclique d'un type
-		 * (6) Vérification de l'unicité de la déclaration d'une fonction au sein d'une suite de déclarations de fonctions
-		 * (7) Vérification de l'unicité de la déclaration d'un paramètre d'une fonction
-		 * (8) Vérification de l'existence du type d'un paramètre d'une fonction
-		 * (9) Vérification de l'existence du type de retour d'une fonction
-		 * (10) Vérification du type de retour d'une fonction
-		 * (11) Vérification du l'existence du type d'une variable
-		 * (12) Vérification du type d'une variable
-		 * (13) Vérification de la possibilité d'inférer le type d'une variable
-		 */
 		int initialDepth = this.childrenIndexStack.size();  // Sauvegarde de la profondeur actuelle de TDS, pour retourner à celui ci à la fin de la fonction
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
-				case "type": { // dans le cas d'une suite de déclarations de types  //TODO : voir ce qu'il y a comme code à générer pour la déclaration de type
+				case "type": { // dans le cas d'une suite de déclarations de types
 					descendTDS(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
-					variableOffset = 0;
-					int lj = i;
-					int remainingAliases = 0;
-					boolean remainsAliases = false;
-					boolean remainsArraysAndRecords = false;
-					do {
-						Type type = null;
-						String name = symbol.getChild(0).toString();
-						Tree shape = symbol.getChild(1);
-						switch (shape.getType()) { // on détecte la sorte de déclaration de type
-							case ARRTYPE: { // il s'agit d'un tableau ; on crée un nouveau type de tableau
-								type = new Array();
-								if (!remainsArraysAndRecords) {
-									remainsArraysAndRecords = true;
-								}
-								break;
-							}
-							case RECTYPE: { // il s'agit d'un structure ; on crée un nouveau type de structure
-								type = new Record();
-								if (!remainsArraysAndRecords) {
-									remainsArraysAndRecords = true;
-								}
-								break;
-							}
-							default: { // il s'agit d'un alias ; on ne crée rien pour l'instant
-								remainingAliases++;
-								if (!remainsAliases) {
-									remainsAliases = true;
-								}
-							}
-						}
-						table.types.set(name, type); // on ajoute le type déclaré
-					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
-					aliases: while (remainsAliases) { // on résout les dépendances entre types jusqu'à stabilité
-						remainsAliases = false;
-						for (int j = i; j < lj; ++j) {
-							symbol = dec.getChild(j);
-							String name = symbol.getChild(0).toString();
-							Tree shape = symbol.getChild(1);
-							Type type = table.types.get(name);
-							if (type == null) {
-								type = table.findType(shape.toString());
-								if (type != null) {
-									table.types.set(name, type);
-									if (remainingAliases == 1) {
-										break aliases;
-									} else {
-										remainingAliases--;
-										if (!remainsAliases) {
-											remainsAliases = true;
-										}
-									}
-								}
-							}
-						}
-					}
-					if (!remainsAliases || remainsArraysAndRecords) { // si un alias ne peut être résolu ou qu'un type composite a été déclaré, on effectue un dernier passage sur les déclarations de types concernées
-						for (int j = i; j < lj; ++j) {
-							symbol = dec.getChild(j);
-							String name = symbol.getChild(0).toString();
-							Tree shape = symbol.getChild(1);
-							Type type = table.types.get(name);
-							if (type instanceof Array) {
-								// on effectue des vérifications spécifiques aux tableaux
-								Array array = (Array) type;
-								Type itemType = table.findType(shape.getChild(0).toString());
-								array.setType(itemType);
-							} else if (type instanceof Record) {
-								// on effectue des vérifications spécifiques aux structures
-								Record record = (Record) type;
-								Namespace<Variable> namespace = record.getNamespace();
-								int fieldOffset = 0;
-								for (int k = 0, lk = shape.getChildCount(); k < lk; k += 2) {
-									Variable field = new Variable();
-									String fieldName = shape.getChild(k).toString();
-									if (namespace.has(fieldName)) { // Test sémantique (3)
-										notifier.semanticError(shape.getChild(k), "redeclaration of field %s", fieldName);
-									}
-									Type fieldType = table.findType(shape.getChild(k + 1).toString());
-									if (fieldType == null) { // Test sémantique (4)
-										notifier.semanticError(shape.getChild(k + 1), "type %s is not defined", shape.getChild(k + 1).toString());
-									} else {
-										field.setType(fieldType);
-									}
-									field.setOffset(fieldOffset);
-									if (fieldType != null) {
-										fieldOffset += fieldType.getSize();
-									}
-									namespace.set(fieldName, field);
-								}
-							}
-						}
-					}
-					i = lj - 1;
-					ascendTDS();
 					break;
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
@@ -456,7 +362,7 @@ public class TigerTranslator {
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 
 					i = lj - 1;
-//					ascendTDS();    // On ne remonte pas la TDS qu'on a créé à la première déclaration de fonction
+//					ascendTDS();    // !! On ne remonte pas la TDS qu'on a créé à la première déclaration de fonction !!
 					break;
 				}
 				case "var": { // dans le cas de la déclaration d'une variable
