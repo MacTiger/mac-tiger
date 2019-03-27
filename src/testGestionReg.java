@@ -1,4 +1,4 @@
-import misc.GestionRegisters;
+import compile.GestionRegisters;
 
 public class testGestionReg {
 

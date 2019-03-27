@@ -1,4 +1,4 @@
-package misc;
+package compile;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,10 +9,7 @@ public class GestionRegisters {
     private final int REGMAX=16;//nb max de registres R0-> R15
     private final String PATH="misc/asm/temp.src";
 
-
     private int regDisp;//Registres dispo : 16 -> -N
-
-
 
     public GestionRegisters(){
         regDisp=REGMAX;
