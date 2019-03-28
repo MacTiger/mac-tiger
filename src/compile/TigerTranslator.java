@@ -38,12 +38,13 @@ public class TigerTranslator {
 //	private Tree currentASTNode;    // Noeud de l'AST actuel
 	private SymbolTable currentTDS; // TDS actuelle
 	private ArrayList<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
-
+	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
 	
 	private TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
 		childrenIndexStack = new ArrayList<>();
+		this.writer = new Writer();
 	}
 
 	private void descendTDS(){
@@ -52,12 +53,16 @@ public class TigerTranslator {
 		childrenIndexStack.set(childrenIndexStack.size()-1, indexOfNextChild + 1);  // Incrémente l'index de la prochaine TDS à prendre
 		childrenIndexStack.add(0);  // Ajoute une entrée dans childrenIndexStack pour reprendre le compte pour la nouvelle currentTDS
 		this.currentTDS = this.currentTDS.getChild(indexOfNextChild);
+		writer.descendFunctionAssembly();   // Descend le writer pour écrire le code de cette fonction
+
 	}
 
 	private void ascendTDS(){
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
 		this.currentTDS = this.currentTDS.getParent();  // Remonte de TDS
 		childrenIndexStack.remove(childrenIndexStack.size() - 1);   // Retire le dernière index empilé
+		writer.ascendFunctionAssembly();    // Remonte le writer : on a finit d'écrire le code de cette fonction
+
 	}
 
 	public Type translate(Tree tree, int registerIndex) {
@@ -343,10 +348,12 @@ public class TigerTranslator {
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
 					descendTDS(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
+					//TODO : gérer les suites de déclaration : ne pas descendre
 					break;
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
 					descendTDS();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
+					//TODO : gérer les suites de déclaration : ne pas descendre
 					int lj = i;
 					do {
 						symbol = dec.getChild(lj);
@@ -354,8 +361,10 @@ public class TigerTranslator {
 						Tree body = symbol.getChild(2);
 						Function function = this.currentTDS.findFunction(name);
 						descendTDS();   // Descente dans la TDS de la fonction
+
 						translate(body, registerIndex); //TODO : Générer code pour la déclaration de fonction
 						//TODO : mettre ce code dans fonctionCode
+
 						ascendTDS();
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 
