@@ -5,8 +5,8 @@ import java.io.IOException;
 
 public class GestionRegisters {
 
-
-    private final int REGMAX=16;//nb max de registres R0-> R15
+    //R1 à R10
+    private final int REGMAX=10;//nb max de registres R0-> R15
     private final String PATH="misc/asm/temp.src";
 
     private int regDisp;//Registres dispo : 16 -> -N
@@ -50,27 +50,27 @@ public class GestionRegisters {
     //Renvoie l'indice d'un registre disponible
     public int GetRegister(){
         if(regDisp>0){
-            return --regDisp;//Pour 16 places renvoie 15, etc.
+            return regDisp--;//Pour 16 places renvoie 15, etc.
         }
         else{//Registres pleins
             int reg;
             reg=(REGMAX-1)-(-regDisp)%REGMAX;//Registre à libérer.
             //regDisp = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
             regDisp--;
-            putRegisterInStack(reg);
-            return reg;
+            putRegisterInStack(reg+1);
+            return reg+1;
         }
     }
 
 
     //Libère le dernier registre "réservé"
     public void freeRegister(){
-        if(regDisp>-1 && regDisp<REGMAX){
+        if(regDisp>0 && regDisp<REGMAX){
             regDisp++;
         }
         else{
             int req;
-            req=(REGMAX-1)-(-(regDisp+1))%REGMAX;
+            req=(REGMAX)-(-(regDisp+1))%REGMAX;
             putStackInRegister(req);
             regDisp++;
         }
