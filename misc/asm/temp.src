@@ -17,60 +17,71 @@ LDW SP, #STACK_ADRS
 
 
 
+//Comparer des strings
+// Fonctionne, à ajuster 
+// renvoie 2 si str1 > str2
+// renvoie 1 si str1 < str2
+// renvoie 0 si str1=str2
+
+
+
+STRING1 string "baba" //75 61 => 2 si str1 > str2
+STRING2 string "babar" //74 62 => 1 si str1 < str2
+
+
+eq_
+	LDW R0,#0
+	BMP cont_-$-2
+le_
+	LDW R0,#1
+	BMP streq_end_if_1-$-2
+ge_
+	LDW R0,#2
+	BMP streq_end_if_1-$-2
+
+
 main_
-	ADQ -2, SP 
- 	STW R15, (SP)
-	ADQ -2, SP 
- 	STW R14, (SP)
-	ADQ -2, SP 
- 	STW R13, (SP)
-	ADQ -2, SP 
- 	STW R12, (SP)
-	ADQ -2, SP 
- 	STW R11, (SP)
-	ADQ -2, SP 
- 	STW R10, (SP)
-	ADQ -2, SP 
- 	STW R9, (SP)
-	ADQ -2, SP 
- 	STW R8, (SP)
-	ADQ -2, SP 
- 	STW R7, (SP)
-	ADQ -2, SP 
- 	STW R6, (SP)
-	ADQ -2, SP 
- 	STW R5, (SP)
-	ADQ -2, SP 
- 	STW R4, (SP)
-	ADQ -2, SP 
- 	STW R3, (SP)
-	ADQ -2, SP 
- 	STW R2, (SP)
-	LDW R2, (SP) 
- 	ADQ 2, SP 
-	LDW R3, (SP) 
- 	ADQ 2, SP 
-	LDW R4, (SP) 
- 	ADQ 2, SP 
-	LDW R5, (SP) 
- 	ADQ 2, SP 
-	LDW R6, (SP) 
- 	ADQ 2, SP 
-	LDW R7, (SP) 
- 	ADQ 2, SP 
-	LDW R8, (SP) 
- 	ADQ 2, SP 
-	LDW R9, (SP) 
- 	ADQ 2, SP 
-	LDW R10, (SP) 
- 	ADQ 2, SP 
-	LDW R11, (SP) 
- 	ADQ 2, SP 
-	LDW R12, (SP) 
- 	ADQ 2, SP 
-	LDW R13, (SP) 
- 	ADQ 2, SP 
-	LDW R14, (SP) 
- 	ADQ 2, SP 
-	LDW R15, (SP) 
- 	ADQ 2, SP 
+	LDW SP,#STACK_ADRS
+
+	//COMPARER DEUX STRINGS <=
+	LDW R4,#0
+	
+	//Charge R1 et R2 avec 2 premiers octets mot mémoire pointé par R1-R2 
+deb_
+	LDW R1,#STRING1 //charge adresse 
+	LDW R2,#STRING2
+	
+	ADD R1,R4,R1 //décale de deux octets s1 et s2
+	ADD R2,R4,R2
+
+	LDW R1,(R1)
+	LDW R2,(R2)
+
+
+	//R1-R2 -> R0
+	SUB R1,R2,R0
+	BEQ eq_-$-2 //égalité
+	BLW le_-$-2 //str1<str2 : Fin
+	BGT ge_-$-2 //str2<str1 : Fin
+
+
+	//On veut savoir si il y a un nul qqe part
+	//Regarder si 1e octet vaut nul
+cont_
+	LDW R3,#65280
+	AND R1,R3,R0 //Retire 2e octet str1
+	BEQ streq_end_if_1-$-2  //Valait nul
+	LDW R3,#255
+	AND R1,R3,R0 //Retire 1e octet str1
+	BEQ streq_end_if_1-$-2  //Valait nul
+
+	ADQ 2,R4
+	BMP deb_-$-2
+	
+
+streq_end_if_1 //fin
+	//LDQ WRITE_EXC,WR
+	//TRP WR//Affiche R0
+	TRP #EXIT_EXC
+
+
