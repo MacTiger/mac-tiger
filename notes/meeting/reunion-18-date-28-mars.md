@@ -1,0 +1,52 @@
+# Réunion 18
+
+**Date et heure.** 28 mars 2019 à 17 heures
+
+**Prochaine réunion.** 5 avril 2019 à 14 heures
+
+**Ordre du jour.**
+
+- Point sur ce qui a été fait
+- Travail à faire
+
+## 1. Point sur ce qui a été fait
+
+Philippe a écrit la classe permettant la gestion des registres. Les résultats sont concluants dans le test : on y libère une trentaines de registres pour les relibérés. Les tests ont été fait en java et on édite le fichier assembleur en même temps. Attention, R0 ne peut pas être utilisé, R15 non plus, et possiblement R11, R12, R13. Par mesure de prudence, mieux vaut n'utiliser que ceux de 1 à 10.
+
+Tristan remarque que l'on a directement écrit dans un fichier avec `file.append`, pour des raisons que David nous décrira plus tard. Mieux, il faudrait renvoyer le code assembleur pour qu'une autre fonction écrive à un moment différent. Le code ne va pas être écrit dans l'ordre.
+
+David explique : c'est la partie du travail qu'il a effectué. Lorsqu'on a une série d'instructions, elle est exécutée. Mais si on déclare une fonction, le code assembleur de la fonction va être mis au début du fichier `.src`. On ne peux pas à chaque fois en ajoutant à la fin du fichier. Mais il y a des cas plus délicats : si on déclare une fonction dans une fonction, son code assembleur respectif ne sera pas dans le code assembleur de la première.
+
+La solution est d'écrire une classe qui effectue tout cela. Celle-ci possèderait une méthode *écrire* qui est à peu près la seule que l'on utilisera. Cette classe a déjà été écrite et est intitulée `Writer`, elle n'est pas encore sur la branche master.
+
+Quand on écrit notre code (Java), il ne faut pas utiliser de labels. C'est David et Tristan qui vont s'en occuper. Les labels sont uniques. Tristan demande à David si le `Writer` prend en paramètre des chaînes de caractères multilignes. D'après David, cela devrait fonctionner. Tous les labels commencent par des underscore `_`.
+
+D'après Tristan, il faut quelques modifications sur la fonction `print` donnée par M. Parodi. Il attire l'attention sur l'instruction `flush`. C'est cette instruction qui fait effectivement l'affichage. La différence entre `flush` et `print` n'est pas très claire. Il faudrait peut-être envoyer un mail aux enseignents pour avoir plus de détails.
+
+Tiger autorise les backslash suivis de guillemets, il faut donc les parser et les remplacer par leurs bonnes valeurs. Ce que l'on doit gérer, c'est, à partir d'une chaîne de caractère Tiger. En plus, Tiger autorise un backslash suivit de plusieurs espaces (c'est-à-dire au moins 1) puis d'un autre backslash. Ces espaces doivent être ignorés.
+
+Philippe et Alexis ont travaillé sur la gestion des strings : comparaison et égalité.
+
+David a terminé la partie principale de `TigerTranslator` qui gérait le bon parcours de l'AST et de la TDS. Les deux classes en plus, `Writer` (pour écrire au bon endroit) et celle de la gestion des labels. La structure est quasiment similaire au `SymbolTable` : on a `translateFor`, `translateWhile`, etc. David a mis des Todo un peu partout pour qu'on sache où il faut écrire le code. Tous les translates prennent en argument le registre où l'on veut que se retrouve le résultat de ce que l'on va écrire. Ce registre est sous forme d'entier. Cette fonction retourne le type de l'expression, mais on pourra éventuellement le retiré car celui-ci ne sert à rien. Tristan propose de savoir si ce qu'on a retourné est un pointeur ou non.
+
+Les `translateRec` `translateArr` risquent de poser un peu problème. Le reste, on peu y aller et faire le code qu'il faut. Pour les boucles, il faut un label de début de boucle, mais aussi un label de fin de boucle. Mais pour le `for`, on a une TDS, donc d'après Tristan, il suffit de faire un RTS.
+
+Tristan demande qui a accès à `Writer`. D'après David, seule `TigerTranslator` y a accès. À la création de `GestionRegister`, on donne l'instance `writer`.
+
+David propose d'ajouter des commentaires dans le code généré.
+
+## 2. Travail à faire
+
+**Alexis et Philippe.**
+
+- Programmer les opérateurs de base
+- Mettre-à-jour la classe `GestionRegister` pour qu'elle prenne en paramètre l'instance `writer`
+- Mettre les registres de 1 à 10
+- Tester la classe `GestionRegister` dans MicroPIUPK
+
+**David et Tristan.**
+
+- Écrire la fonction permettant de récupérer le décalage d'une variable
+- Coder l'accès à un champ
+- Faire le tas
+- print_i
