@@ -54,18 +54,18 @@ public class GestionRegisters {
         }
         else{//Registres pleins
             int reg;
-            reg=(REGMAX-1)-(-regDisp)%REGMAX;//Registre à libérer.
+            reg=(REGMAX)-(-regDisp)%REGMAX;//Registre à libérer.
             //regDisp = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
             regDisp--;
-            putRegisterInStack(reg+1);
-            return reg+1;
+            putRegisterInStack(reg);
+            return reg;
         }
     }
 
 
     //Libère le dernier registre "réservé"
     public void freeRegister(){
-        if(regDisp>0 && regDisp<REGMAX){
+        if(regDisp>-1 && regDisp<REGMAX){
             regDisp++;
         }
         else{
