@@ -39,12 +39,14 @@ public class TigerTranslator {
 	private SymbolTable currentTDS; // TDS actuelle
 	private ArrayList<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
 	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
-	
+	private LabelGenerator labelGenerator;
+
 	private TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
 		childrenIndexStack = new ArrayList<>();
 		this.writer = new Writer();
+		this.labelGenerator = new LabelGenerator();
 	}
 
 	private void descendTDS(){
@@ -61,7 +63,7 @@ public class TigerTranslator {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
 		this.currentTDS = this.currentTDS.getParent();  // Remonte de TDS
 		childrenIndexStack.remove(childrenIndexStack.size() - 1);   // Retire le dernière index empilé
-		writer.ascendFunctionAssembly();    // Remonte le writer : on a finit d'écrire le code de cette fonction
+		writer.ascendFunctionAssembly();    // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)
 
 	}
 
@@ -213,6 +215,7 @@ public class TigerTranslator {
 	private Type translateSEQ(Tree tree, int registerIndex) {
 		Type returnType = null;
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
+			//TODO : gérer les registres :
 			returnType = this.translate(tree.getChild(i), registerIndex);
 		}
 		return returnType;
@@ -318,6 +321,7 @@ public class TigerTranslator {
 
 	private Type translateWhile(Tree tree, int registerIndex) {
 		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
+		labelGenerator.addFunction(tree);   // Création des labels de cette boucle while
 		this.translate(tree.getChild(0),registerIndex);
 		this.translate(tree.getChild(1),registerIndex);
 		return null;
@@ -325,7 +329,11 @@ public class TigerTranslator {
 
 	private Type translateFor(Tree tree, int registerIndex) {
 		descendTDS();   // Met à jour this.currentTDS avec la bonne TDS fille
+		labelGenerator.addFunction(currentTDS);    // Création des labels de la TDS liée à ce for
+		labelGenerator.addFunction(tree);    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)
+
 		Variable index = currentTDS.findVariable(tree.getChild(0).toString());  // Récupère la variable de boucle
+		//TODO : gérer les registres :
 		translate(tree.getChild(1), registerIndex);	// Génère le code pour la borne inférieure du for
 		translate(tree.getChild(2), registerIndex);	// Génère le code pour la borne supérieure du for
 		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
@@ -348,22 +356,26 @@ public class TigerTranslator {
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
 					descendTDS(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
-					//TODO : gérer les suites de déclaration : ne pas descendre
+					int lj = i;
+					symbol = dec.getChild(lj);
+					do{
+					} while(++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
 					break;
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
 					descendTDS();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
-					//TODO : gérer les suites de déclaration : ne pas descendre
 					int lj = i;
 					do {
 						symbol = dec.getChild(lj);
 						String name = symbol.getChild(0).toString();
 						Tree body = symbol.getChild(2);
 						Function function = this.currentTDS.findFunction(name);
-						descendTDS();   // Descente dans la TDS de la fonction
 
-						translate(body, registerIndex); //TODO : Générer code pour la déclaration de fonction
-						//TODO : mettre ce code dans fonctionCode
+						descendTDS();   // Descente dans la TDS de la fonction
+						labelGenerator.addFunction(function,name);  // Création du label de la fonction
+
+						// TODO : choisir dans quel registre registerIndex mettre le résultat du corps de la fonction : probablement toujours R0
+						translate(body, registerIndex); // Génère code pour le corps de la fonction
 
 						ascendTDS();
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
