@@ -10,12 +10,14 @@ public class Variable extends FunctionOrVariable {
 
 	private Type type;
 	private boolean writable;
+	private boolean alreadyTranslated;  // Indique durant le passage de TigerTranslator si cette variable a déjà été traduite, pour permettre la redéclaration de variable dans le même bloc
 	private int offset;
 
 	public Variable() {
 		this.type = null;
 		this.writable = true;
 		this.offset = 0;
+		this.alreadyTranslated = false;
 	}
 
 	public void setType(Type type) {
@@ -40,6 +42,14 @@ public class Variable extends FunctionOrVariable {
 
 	public boolean isWritable() {
 		return this.writable;
+	}
+
+	public boolean isAlreadyTranslated() {
+		return alreadyTranslated;
+	}
+
+	public void setAlreadyTranslated(boolean alreadyTranslated) {
+		this.alreadyTranslated = alreadyTranslated;
 	}
 
 	public ArrayList<String> makeCellGraphviz(String nameOfVar, String nameOfThisTDS, String numOfCell){

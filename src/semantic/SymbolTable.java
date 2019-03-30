@@ -21,9 +21,9 @@ import static syntactic.TigerParser.INT;
 
 public class SymbolTable {
 
-	private static Type nilPseudoType;
-	private static Type intType;
-	private static Type stringType;
+	public static Type nilPseudoType;
+	public static Type intType;
+	public static Type stringType;
 	private static SymbolTable root;
 
 	static {
@@ -150,6 +150,10 @@ public class SymbolTable {
 		return children;
 	}
 
+	public SymbolTable getChild(int i){
+		return children.get(i);
+	}
+
 	public Namespace<Type> getTypes() {
 		return types;
 	}
@@ -169,7 +173,7 @@ public class SymbolTable {
 		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
 	}
 
-	private Type findType(String name) {
+	public Type findType(String name) {
 		// recherche le type indiqué dans les tables des symboles supérieures et retourne celui-ci si trouvé ou 'null' sinon
 		Type type = types.get(name);
 		if (type != null) {	// Si le type est trouvé dans cette table des symboles
@@ -181,7 +185,7 @@ public class SymbolTable {
 		}
 	}
 
-	private Function findFunction(String name) {
+	public Function findFunction(String name) {
 		// recherche la fonction indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
 		if (functionOrVariable != null) {	// Si la fonction est trouvé dans cette table des symboles
@@ -197,7 +201,7 @@ public class SymbolTable {
 		}
 	}
 
-	private Variable findVariable(String name) {
+	public Variable findVariable(String name) {
 		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
 		if (functionOrVariable != null) {	// Si la variable est trouvé dans cette table des symboles
@@ -283,7 +287,7 @@ public class SymbolTable {
 			}
 			returnType = function.getType();
 		}
-		for (; i < l; ++i) {
+		for (; i < l; ++i) {    //On parcourt les arguments supplémentaires
 			this.fillWith(tree.getChild(i), notifier);
 		}
 		return returnType;
@@ -650,7 +654,7 @@ public class SymbolTable {
 					variableOffset = 0;
 					int lj = i;
 					do {
-						SymbolTable subTable = new SymbolTable(table); // chaque fonction dispose de sa problème table interne
+						SymbolTable subTable = new SymbolTable(table); // chaque fonction dispose de sa propre table interne
 						table.children.add(subTable);
 						Function function = new Function();
 						function.setSymbolTable(subTable);
