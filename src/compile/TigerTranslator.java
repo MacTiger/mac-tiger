@@ -41,7 +41,7 @@ public class TigerTranslator {
 	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
 	private LabelGenerator labelGenerator;
 
-	private TigerTranslator(SymbolTable currentTDS) {
+	public TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
 		childrenIndexStack = new ArrayList<>();
@@ -413,5 +413,9 @@ public class TigerTranslator {
 		Tree child = tree;
 		//TODO : générer code pour Break
 		return null;
+	}
+
+	public String toString() {
+		return this.writer.toString();
 	}
 }

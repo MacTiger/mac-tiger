@@ -1,6 +1,5 @@
 #!/bin/bash
 time=$SECONDS
-regexp='\.tiger$'
 a="0"
 b="0"
 c="0"
@@ -20,21 +19,17 @@ test() {
 	mkdir -p "log/$dir"
 	for file in $(ls -A tests/$dir)
 	do
-		if [[ $file =~ $regexp ]]
+		if [[ $file =~ \.tiger$ ]]
 		then
 			local stdin="tests/$dir/$file"
 			local stdout
+			local stderr="log/$dir/$file.log"
+			local status
 			if [[ (($refstatus == 4)) ]]
 			then
 				stdout="asm/$dir/$file.src"
-			else
-				stdout="/dev/null"
-			fi
-			local stderr="log/$dir/$file.log"
-			java -cp bin:lib/* Main --no-color 2> $stderr 1> $stdout < $stdin
-			local status=$((($? + 4) % 5))
-			if [[ (($refstatus == 4)) ]]
-			then
+				java -cp bin:lib/* Main --no-color --src 2> $stderr 1> $stdout < $stdin
+				status=$((($? + 4) % 5))
 				local prgm="asm/$dir/$file.iup"
 				local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1> $stderr)
 				if [[ $err == "" ]]
@@ -51,6 +46,10 @@ test() {
 					echo $err >> $stderr
 					status="0"
 				fi
+			else
+				stdout="/dev/null"
+				java -cp bin:lib/* Main --no-color --no-output 2> $stderr 1> $stdout < $stdin
+				status=$((($? + 4) % 5))
 			fi
 			if [[ (($status == 0)) ]]
 			then
