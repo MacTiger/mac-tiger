@@ -20,3 +20,5 @@
 /logs
 /misc/GraphTDS
 commit_message
+/src/output/
+/output/
