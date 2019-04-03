@@ -201,6 +201,26 @@ public class SymbolTable {
 		}
 	}
 
+	/**
+	 * Compte le nombre de chaînages statiques à remonter pour accèder à la variable nameOfVariable
+	 * @param nameOfVariable
+	 * @return : nombre de chaînages statiques à remonter
+	 */
+	public int countStaticChainToVariable(String nameOfVariable){
+		SymbolTable symbolTable = this;
+		int staticChainCount = 0;
+		while (! symbolTable.functionsAndVariables.has(nameOfVariable)){
+			staticChainCount++;
+			if (symbolTable.parent != null){
+				symbolTable = symbolTable.parent;
+			}
+			else{
+				return -1; // Cas d'erreur : la variable n'est pas trouvable
+			}
+		}
+		return staticChainCount;
+	}
+
 	public Variable findVariable(String name) {
 		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);

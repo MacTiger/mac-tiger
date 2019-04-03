@@ -243,10 +243,34 @@ public class TigerTranslator {
 		return this.currentTDS.stringType;
 	}
 
+	/**
+	 * Ecrit le code pour mettre l'adresse de l'identifiant dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 * @return
+	 */
 	private Type translateID(Tree tree, int registerIndex) {
 		Variable variable = this.currentTDS.findVariable(tree.toString());
-		//TODO : Générer code de recherche de la variable pour la placer dans le registre regiterIndex
-		return variable.getType();
+		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
+
+		String code = "\n";
+		int depl_stat = 4;  // TODO : Vérifier la bonne valeur du déplacement statique
+
+		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
+			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
+			String loopLabel = labelGenerator.addFunction(tree).get(0);    // Création d'un label de boucle unique pour la remontée du chaînage statique
+			code += "LDW D0, #countStaticChain  // Nombre de chaînes statiques à remonter pour accéder à la variable\n" +
+					"LDW R1, BP  // Copie le registre de base\n" +
+					"BOUCLE  LDW R1, (R1)depl_stat  // Remontage des chaînages statiques\n" +
+					"  ADQ #-1, D0\n" +
+					"BNE BOUCLE\n";
+			code = code.replaceAll("countStaticChain", String.valueOf(countStaticChain)).replaceAll("D0","R"+String.valueOf(loopLabel)).replaceAll("depl_stat", String.valueOf(depl_stat)).replaceAll("BOUCLE",loopLabel);
+		}
+
+		code += "ADQ #deplacement, R1  // L'adresse de la variable recherchée est maintenant dans registre voulu\n";
+		code.replaceAll("R1", "R"+String.valueOf(registerIndex)).replaceAll("deplacement", String.valueOf(variable.getOffset()));
+		writer.write(code);
+		return null;
 	}
 
 	private Type translateITEM(Tree tree, int registerIndex) {
