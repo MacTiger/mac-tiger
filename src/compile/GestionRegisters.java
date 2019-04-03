@@ -11,7 +11,7 @@ public class GestionRegisters {
 
     private int regDisp;//Registres dispo : 16 -> -N
 
-    public GestionRegisters(){
+    public GestionRegisters(/* Writer en argument */){
         regDisp=REGMAX;
     }
 
