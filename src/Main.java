@@ -10,28 +10,42 @@ import misc.Notifier;
 import lexical.TigerLexer;
 import syntactic.TigerParser;
 import semantic.SymbolTable;
+import compile.TigerTranslator;
 
 public class Main {
 
+	static int defaultColor = 1;
+	static int defaultOutput = 2;
+
 	public static void main(String[] arguments) throws Exception {
-		boolean noColor = false;
-		boolean syntaxOnly = false;
-		boolean graphic = false;
+		int color = -1;
+		int output = -1;
 		for (String argument: arguments) {
-			if (argument.equals("--no-color") && !noColor) {
-				noColor = true;
-			} else if (argument.equals("--syntax-only") && !syntaxOnly) {
-				syntaxOnly = true;
-			} else if (argument.equals("--graphic")){
-				graphic = true;
+			if (argument.equals("--no-color") && color == -1) {
+				color = 0;
+			} else if (argument.equals("--color") && color == -1) {
+				color = 1;
+			} else if (argument.equals("--no-output") && output == -1) {
+				output = 0;
+			} else if (argument.equals("--dot") && output == -1) {
+				output = 1;
+			} else if (argument.equals("--src") && output == -1) {
+				output = 2;
 			} else {
-				throw new Exception("Illegal argument");
+				throw new Exception("Illegal argument: " + argument);
 			}
 		}
-		System.exit(Main.compile(System.in, noColor, syntaxOnly, graphic));
+		if (color == -1) {
+			color = defaultColor;
+		}
+		if (output == -1) {
+			output = defaultOutput;
+		}
+		System.exit(Main.compile(System.in, color, output));
 	}
 
-	public static int compile(InputStream stream, boolean noColor, boolean syntaxOnly, boolean graphic) throws Exception {
+	public static int compile(InputStream stream, int color, int output) throws Exception {
+		boolean noColor = color == 0;
 		Notifier notifier = new Notifier(TigerParser.tokenNames, noColor);
 		ANTLRInputStream input = new ANTLRInputStream(System.in);
 		TigerLexer lexer = new TigerLexer(input) {
@@ -59,14 +73,14 @@ public class Main {
 		};
 		TigerParser.program_return result = parser.program();
 		SymbolTable root = new SymbolTable();
-		if (!syntaxOnly) {
-			Tree tree = (Tree) result.getTree();
-			root.fillWith(tree, notifier);
-		}
+		Tree tree = (Tree) result.getTree();
+		root.fillWith(tree, notifier);
 		int[] errorCounts = notifier.reset();
-		if (errorCounts[0] == 0 && errorCounts[1] == 0 && errorCounts[2] == 0 ){ // S'il n'y a pas eu d'erreur : on peut faire la visualisation graphique
-			if (graphic){   // Ecrit sur la sortie standard le code .gv permettant de visualiser la TDS
+		if (output != 0 && errorCounts[0] == 0 && errorCounts[1] == 0 && errorCounts[2] == 0 ){ // S'il n'y a pas eu d'erreur : on peut faire la visualisation graphique
+			if (output == 1) {   // Ecrit sur la sortie standard le code .gv permettant de visualiser la TDS
 				System.out.println(root.toGraphVizFirst());
+			} else if (output == 2) {
+				System.out.println(new TigerTranslator(root).toString());
 			}
 		}
 		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[2] > 0 ? 4 : 0;

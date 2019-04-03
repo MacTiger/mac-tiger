@@ -7,9 +7,9 @@ import java.util.Stack;
  * Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
  */
 public class Writer {
-	private ArrayList<String> fonctionCode; // Tableau du codes des fonctions assembleur
-	private String mainBody;    // Code n'étant pas dans des fonctions
-	private Stack<Integer> fonctionPile;    // Pile des fonctions en cours d'écriture
+	private ArrayList<String> fonctionCode; // Tableau du code des fonctions assembleur
+	private String mainBody; // Code n'étant pas dans des fonctions
+	private Stack<Integer> fonctionPile; // Pile des fonctions en cours d'écriture
 
 	public Writer(){
 		fonctionCode = new ArrayList<>();

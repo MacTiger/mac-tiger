@@ -1,0 +1,99 @@
+EXIT_EXC EQU 64
+READ_EXC EQU 65
+WRITE_EXC EQU 66
+STACK_ADRS EQU 0X1000
+LOAD_ADRS EQU 0xF000
+NIL EQU 0
+
+SP EQU R15
+WR EQU R14
+BP EQU R13
+
+ORG LOAD_ADRS
+START main_
+
+main_
+      ADQ -2, SP
+      STW R10, (SP)
+      ADQ -2, SP
+      STW R9, (SP)
+      ADQ -2, SP
+      STW R8, (SP)
+      ADQ -2, SP
+      STW R7, (SP)
+      ADQ -2, SP
+      STW R6, (SP)
+      ADQ -2, SP
+      STW R5, (SP)
+      ADQ -2, SP
+      STW R4, (SP)
+      ADQ -2, SP
+      STW R3, (SP)
+      ADQ -2, SP
+      STW R2, (SP)
+      ADQ -2, SP
+      STW R1, (SP)
+      ADQ -2, SP
+      STW R10, (SP)
+      ADQ -2, SP
+      STW R9, (SP)
+      ADQ -2, SP
+      STW R8, (SP)
+      ADQ -2, SP
+      STW R7, (SP)
+      ADQ -2, SP
+      STW R6, (SP)
+      ADQ -2, SP
+      STW R5, (SP)
+      ADQ -2, SP
+      STW R4, (SP)
+      ADQ -2, SP
+      STW R3, (SP)
+      ADQ -2, SP
+      STW R2, (SP)
+      ADQ -2, SP
+      STW R1, (SP)
+      LDW R1, (SP)
+      ADQ 2, SP
+      LDW R2, (SP)
+      ADQ 2, SP
+      LDW R3, (SP)
+      ADQ 2, SP
+      LDW R4, (SP)
+      ADQ 2, SP
+      LDW R5, (SP)
+      ADQ 2, SP
+      LDW R6, (SP)
+      ADQ 2, SP
+      LDW R7, (SP)
+      ADQ 2, SP
+      LDW R8, (SP)
+      ADQ 2, SP
+      LDW R9, (SP)
+      ADQ 2, SP
+      LDW R10, (SP)
+      ADQ 2, SP
+      LDW R1, (SP)
+      ADQ 2, SP
+      LDW R2, (SP)
+      ADQ 2, SP
+      LDW R3, (SP)
+      ADQ 2, SP
+      LDW R4, (SP)
+      ADQ 2, SP
+      LDW R5, (SP)
+      ADQ 2, SP
+      LDW R6, (SP)
+      ADQ 2, SP
+      LDW R7, (SP)
+      ADQ 2, SP
+      LDW R8, (SP)
+      ADQ 2, SP
+      LDW R9, (SP)
+      ADQ 2, SP
+      LDW R10, (SP)
+      ADQ 2, SP
+
+      TRP #EXIT_EXC
+      LDW WR, #EXIT_EXC
+      TRP WR

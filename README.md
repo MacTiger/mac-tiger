@@ -61,9 +61,8 @@ $ make build
 Pour tester si un programme *Tiger* en particulier est valide, exécutez les commandes suivantes à la racine du projet en remplaçant `<file>` par le chemin vers le fichier le contenant :
 
 ```shell
-$ java -cp bin:lib/* Main > /dev/null < <file>
+$ java -cp bin:lib/* Main --no-output < <file>
 ```
-
 
 Pour tester un programme *Tiger* directement rédigé au sein du terminal, utilisez le raccourci suivant :
 
@@ -73,29 +72,46 @@ $ make prompt
 
 Dans les deux cas, si le programme est invalide, des messages d'erreurs seront affichés sur la sortie d'erreur.
 
-#### Les options du `Main` :
-- `--graphic` : pour obtenir le code _.gv_ de la visualisation de la TDS en sortie standard.
+### Options du compilateur:
+
+Contrôle de la sortie d'erreur :
+
+- `--no-color` : les messages d'erreurs lexicales, syntaxiques et sémantiques seront monochromes
+
+- `--color` (par défaut) : les messages d'erreurs lexicales, syntaxiques et sémantiques seront colorés
+
+Contrôle de la sortie standard :
+
+- `--no-output` : seuls l'analyse lexicale, l'analyse syntaxique et les contrôles sémantiques seront réalisés et rien n'est émis sur la sortie standard
+
+- `--dot` : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *DOT* est émis sur la sortie standard pour permettre la visualisation des tables des symboles via *Graphviz* (consultez la partie sur [l'installation et l'utilisation de *Graphviz*](#installation-et-utilisation-de-graphviz))
+
+- `--src` (par défaut) : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *SRC* est émis sur la sortie standard pour permettre la traduction en code *IUP* via *microPIUP/ASM*
 
 ### Lancement de la suite de tests avec *Bash*
 
-Pour lancer l'intégralité des tests lexicaux, syntaxiques et sémantiques, exécutez la commande suivante (la durée peut varier selon la machine) :
+Pour lancer l'intégralité des tests lexicaux, syntaxiques, sémantiques et à l'exécution, exécutez la commande suivante (la durée peut varier selon la machine) :
 
 ```shell
 $ make test
 ```
 
-Un fichier marqué `[PASS]` est un test qui a réussi ou échoué comme prévu, tandis qu'un fichier marqué `[FAIL]` est un test qui a réussi ou échoué alors que le contraire était attendu. Plus rarement, il est possible de rencontrer un fichier marqué `[EXIT]` qui dénote un plantage du compilateur ou un fichier marqué `[WARN]` qui indique qu'une erreur a été trouvée à une étape de la compilation antérieure à celle testée.
+Un fichier marqué `[PASS]` est un test qui a réussi ou échoué comme prévu, tandis qu'un fichier marqué `[FAIL]` est un test qui a réussi ou échoué alors que le contraire était attendu. Plus rarement, il est possible de rencontrer un fichier marqué `[EXIT]` qui dénote un plantage du compilateur ou du programme, ou encore un fichier marqué `[WARN]` qui indique qu'une erreur a été trouvée à une étape de la compilation antérieure à celle testée.
 
-### Installation de *graphviz*`
+### Installation et utilisation de *Graphviz*`
+
+Pour installer *Graphviz* :
 
 ```shell
 $ make graphviz
 $ cd lib/graphviz-2.40.1
 $ ./configure
 $ make
-$ make install```
+$ make install
+```
 
-Ensuite, pour créer l'image à partir d'un fichier écrit en syntaxe _dot_ :
+Ensuite, pour convertir un code *DOT* en une image *PS* :
+
 ```shell
-dot -Tps sourceFile.gv -o destFile.ps
+dot -Tps code.dot -o image.ps
 ```
