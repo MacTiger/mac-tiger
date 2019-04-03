@@ -1,6 +1,3 @@
-/* Les fonctions commentées n'ont pas vraiment
- * de sens en C. Il faut les laisser commentées.
- */
 int add(int, int);//ok
 int substract(int, int);
 int multiply(int, int);//ok
@@ -24,25 +21,9 @@ int lneq_int(int, int);
 int and(int, int);
 int or(int, int);
 
-int add(int x, int y) {
-	return x + y;
-}
-
-int substract(int x, int y) {
-
-}
-
-int multiply(int x, int y) {
-
-}
-
-int divide(int x, int y) {
-
-}
-
 int equal_str(char* x, char* y) {
-		int i = 0;    
-		while (True) {
+		int i = 0;
+		while (1) {
 				if (x[i] == '\0' || y[i] == '\0') {
 						if (x[i] == '\0' && y[i] == '\0') {
 								return 1;
@@ -59,44 +40,8 @@ int equal_str(char* x, char* y) {
 		}
 }
 
-int equal_int(int x, int y) {
-	return (x == y);
-}
-
-int nequal_str(char x*, char y*) {
-
-}
-
-int nequal_int(int x, int y) {
-
-}
-
-int geq_str(char x*, char y*) {
-
-}
-
-int geq_int(int x, int y) {
-
-}
-
-int gneq_str(char x*, char y*) {
-
-}
-
-int gneq_int(int x, int y) {
-
-}
-
-int leq_str(char x*, char y*) {
-
-}
-
-int leq_int(int x, int y) {
-
-}
-
 int lneq_str(char* str1, char* str2) {
-		int i = 0;	
+		int i = 0;
 		while (1) {
 				if (str1[i] == '\0' && str2[i] == '\0') {
 						return 0;
@@ -113,16 +58,3 @@ int lneq_str(char* str1, char* str2) {
 				}
 		}
 }
-
-int lneq_int(int x, int y) {
-
-}
-
-int and(int x, int y) {
-
-}
-
-int or(int x, int y) {
-
-}
-
