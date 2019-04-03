@@ -4,7 +4,9 @@ import misc.Notifier;
 import org.antlr.runtime.tree.Tree;
 import semantic.*;
 
+import javax.swing.text.html.HTMLDocument;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -116,13 +118,28 @@ public class TigerTranslator {
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findFunction(name);
 		Type returnType = null;
+
+		//Calcul du déplacement
+		//On fait la somme des offsets de toutes les variables locales de la fonction
+		int offset=0;//octets
+		Iterator<Map.Entry<String, FunctionOrVariable>> it;
+		it=function.getSymbolTable().getFunctionsAndVariables().iterator();
+		FunctionOrVariable var;
+		while(it.hasNext()){
+			var=it.next().getValue();
+			if(var instanceof Variable){
+				offset+=((Variable) var).getOffset();
+			}
+		}
 		//TODO : gérer code d'appel à fonction
 
 		for (int i = 0 ; i < tree.getChildCount(); i++) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
 			//TODO : code pour empiler l'argument
-		}
 
+		}
+		//Partie LINK
+		writer.write("\tADQ -2,SP\n\tSTW BP,(SP)\n\tLDW BP,SP\n\tSUB SP,"+offset+",SP");
 		//TODO : JSR labelFonction
 		returnType = function.getType();
 
