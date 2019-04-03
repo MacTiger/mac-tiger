@@ -8,13 +8,28 @@ import java.util.Stack;
  */
 public class Writer {
 	private ArrayList<String> fonctionCode; // Tableau du code des fonctions assembleur
-	private String mainBody; // Code n'étant pas dans des fonctions
 	private Stack<Integer> fonctionPile; // Pile des fonctions en cours d'écriture
+
+	private String mainBody; // Code n'étant pas dans des fonctions
+	private String header;  // Header à écrire en début de code assembleur
 
 	public Writer(){
 		fonctionCode = new ArrayList<>();
 		fonctionPile = new Stack<>();
 		mainBody = "";
+		header = "EXIT_EXC EQU 64\n" +
+				"READ_EXC EQU 65\n" +
+				"WRITE_EXC EQU 66\n" +
+				"STACK_ADRS EQU 0X1000\n" +
+				"LOAD_ADRS EQU 0xF000\n" +
+				"NIL EQU 0\n" +
+				"\n" +
+				"SP EQU R15\n" +
+				"WR EQU R14\n" +
+				"BP EQU R13\n" +
+				"\n" +
+				"ORG LOAD_ADRS\n" +
+				"START main_";
 	}
 
 	/**
@@ -30,6 +45,14 @@ public class Writer {
 			String oldCode = fonctionCode.get(index);
 			fonctionCode.set(index, oldCode + stringToWrite);
 		}
+	}
+
+	/**
+	 * Ecrit en fin de header.
+	 * @param headerToWrite : String à ajouter en fin de header.
+	 */
+	public void writeHeader(String headerToWrite){
+		header += headerToWrite;
 	}
 
 	/**
@@ -54,6 +77,8 @@ public class Writer {
 	 */
 	public String toString(){
 		String res = "";
+
+		res += header;
 		for (String codeOfFunction : fonctionCode){
 			//TODO : gérer l'ajout des labels !
 			res += codeOfFunction;
