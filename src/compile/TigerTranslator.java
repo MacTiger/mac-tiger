@@ -94,12 +94,12 @@ public class TigerTranslator {
 			case ">=":
 			case "<=": return this.translateComparator(tree, registerIndex);
 			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
-			case "|":
-			case "&":
-			case "+":
-			case "-":
-			case "*":
-			case "/": return this.translateIntOperator(tree, registerIndex);
+			case "|": return this.translateOrOperator(tree, registerIndex);
+			case "&": return this.translateAndOperator(tree, registerIndex);
+			case "+": return this.translateAddOperator(tree, registerIndex);
+			case "-": return this.translateSubOperator(tree, registerIndex);
+			case "*": return this.translateMulOperator(tree, registerIndex);
+			case "/": return this.translateDivOperator(tree, registerIndex);
 			case "if": return this.translateIf(tree, registerIndex);
 			case "while": return this.translateWhile(tree, registerIndex);
 			case "for": return this.translateFor(tree, registerIndex);
@@ -113,6 +113,60 @@ public class TigerTranslator {
 				return null;
 			}
 		}
+	}
+
+	private Type translateAndOperator(Tree tree, int registerIndex) {
+		return null;
+	}
+
+	private Type translateOrOperator(Tree tree, int registerIndex) {
+		return null;
+	}
+
+	private Type translateAddOperator(Tree tree, int registerIndex) {
+		int register = registersManager.provideRegister();
+
+		translate(tree.getChild(0), registerIndex);
+
+		for (int i = 1; i < tree.getChildCount(); i++) {
+			translate(tree.getChild(i), register);
+			writer.write(String.format("\tADD R%d, R%d, R%d", register, registerIndex, registerIndex));
+		}
+
+		registersManager.freeRegister();
+		return null;
+	}
+
+	private Type translateSubOperator(Tree tree, int registerIndex) {
+		if (tree.getChildCount() == 1) {
+			translate(tree.getChild(0), registerIndex);
+			writer.write(String.format("\tSUB #0, R%d, R%d", registerIndex, registerIndex));
+		} else {
+			int registerLeft = registersManager.provideRegister();
+			translate(tree.getChild(0), registerLeft);
+			translate(tree.getChild(1), registerIndex);
+			writer.write(String.format("\tSUB R%d, R%d, R%d", registerLeft, registerIndex, registerIndex));
+			registersManager.freeRegister();
+		}
+		return null;
+	}
+
+	private Type translateMulOperator(Tree tree, int registerIndex) {
+		int register = registersManager.provideRegister();
+
+		translate(tree.getChild(0), registerIndex);
+
+		for (int i = 1; i < tree.getChildCount(); i++) {
+			translate(tree.getChild(i), register);
+			writer.write(String.format("\tMUL R%d, R%d, R%d", register, registerIndex, registerIndex));
+		}
+
+		registersManager.freeRegister();
+		return null;
+	}
+
+	private Type translateDivOperator(Tree tree, int registerIndex) {
+		return null;
 	}
 
 	private Type translateCALL(Tree tree, int registerIndex) {
@@ -312,7 +366,7 @@ public class TigerTranslator {
 	}
 
 	private Type translateINT(Tree tree, int registerIndex) {
-		//TODO : Générer le code pour l'entier immédiat tree.toString()
+		writer.write("\tLDW R" + registerIndex + " #" + tree.toString());
 		return this.currentTDS.intType;
 	}
 
