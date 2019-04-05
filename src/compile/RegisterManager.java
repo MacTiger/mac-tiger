@@ -1,22 +1,29 @@
 package compile;
 
-import java.io.FileWriter;
 import java.util.Stack;
 
-public class RegistersManager {
+public class RegisterManager {
 
     //R1 à R10
     private final int REGMAX = 10;//nb max de registres R1->R10
-    private final String PATH = "misc/asm/temp.src";
 
     private Stack<Integer> availableRegisters;//Registres dispo : 16 -> -N
     private int peak;
     private Writer writer;
 
-    public RegistersManager(Writer writer){
+    public RegisterManager(Writer writer){
 
         this.writer = writer;
         peak = REGMAX;
+    }
+
+    public void descend() {
+        availableRegisters.push(peak);
+        peak = REGMAX;
+    }
+
+    public void ascend() {
+        peak = availableRegisters.pop();
     }
 
     public void saveAll() {
@@ -25,13 +32,9 @@ public class RegistersManager {
         for (int i = 1; i <= registersToSave; i++) {
             save(i);
         }
-
-        availableRegisters.push(peak);
-        peak = REGMAX;
     }
 
     public void restoreAll() {
-        peak = availableRegisters.pop();
         int registersToRestore = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
 
         for (int i = registersToRestore; i >= 1; i--) {
@@ -41,12 +44,14 @@ public class RegistersManager {
 
 
     //Met le registre req dans la pile
-    private void restore(int reg){
-        writer.write("\tADQ -2, SP\n\tSTW R" + String.valueOf(reg) + ", (SP)\n");
+    private void restore(int reg) {
+        writer.writeFunction("ADQ -2, SP");
+        writer.writeFunction(String.format("STW R%d, (SP)", reg));
     }
 
-    private void save(int reg){
-        writer.write("\tLDW R"+String.valueOf(reg)+", (SP) \n \tADQ 2, SP \n");
+    private void save(int reg) {
+        writer.writeFunction(String.format("LDW R%d, (SP)", reg));
+        writer.writeFunction("ADQ 2, SP");
     }
 
     //Renvoie l'indice d'un registre disponible
