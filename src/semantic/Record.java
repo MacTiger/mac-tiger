@@ -47,5 +47,4 @@ public class Record extends Type {
 	public Namespace<Variable> getNamespace() {
 		return this.namespace;
 	}
-
 }

@@ -25,6 +25,7 @@ public class SymbolTable {
 	public static Type intType;
 	public static Type stringType;
 	private static SymbolTable root;
+	public static HashMap<Tree, Type> treeTypeHashMap = new HashMap<>();  //TODO : Lorsque SymbolTable sera séparé en deux classes, mettre cet attribut dans la classe qui aura une instance par programme à compiler
 
 	static {
 		Type nilPseudoType = new Record();
@@ -310,6 +311,7 @@ public class SymbolTable {
 		for (; i < l; ++i) {    //On parcourt les arguments supplémentaires
 			this.fillWith(tree.getChild(i), notifier);
 		}
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}
 
@@ -350,6 +352,7 @@ public class SymbolTable {
 		for (; i < l; i += 2) {
 			this.fillWith(tree.getChild(i + 1), notifier);
 		}
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}
 
@@ -372,6 +375,7 @@ public class SymbolTable {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
 		}
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}
 
@@ -397,6 +401,7 @@ public class SymbolTable {
 				this.fillWith(tree.getChild(1), notifier);
 			}
 		}
+		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return null;
 	}
 
@@ -405,10 +410,12 @@ public class SymbolTable {
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
 			returnType = this.fillWith(tree.getChild(i), notifier);
 		}
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}
 
 	private Type fillWithSTR(Tree tree, Notifier notifier) {
+		treeTypeHashMap.put(tree, SymbolTable.stringType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.stringType;
 	}
 
@@ -419,6 +426,7 @@ public class SymbolTable {
 		} else{
 			return variable.getType();
 		}
+		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return null;
 	}
 
@@ -433,12 +441,14 @@ public class SymbolTable {
 			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
 		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // on regarde si le fils droit est bien un entier
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}
 
 	private Type fillWithFIELD(Tree tree, Notifier notifier) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.fillWith(exp, notifier);
+		Type returnType = null;
 		if (!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
 			notifier.semanticError(exp, "%s is not a record", exp.toString());
 		} else { // on sait qu'on a bien une structure
@@ -447,13 +457,15 @@ public class SymbolTable {
 			if (fields.get(tree.getChild(1).toString()) == null) { // on regarde si le champ existe
 				notifier.semanticError(tree, "field %s is not defined", tree.getChild(1).toString());
 			} else { // sinon c'est bon
-				return fields.get(tree.getChild(1).toString()).getType();
+				returnType =  fields.get(tree.getChild(1).toString()).getType();
 			}
 		}
-		return null;
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
+		return returnType;
 	}
 
 	private Type fillWithINT(Tree tree, Notifier notifier) {
+		treeTypeHashMap.put(tree, SymbolTable.intType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.intType;
 	}
 
@@ -463,6 +475,7 @@ public class SymbolTable {
 		if (this.checkType(tree.getChild(1), notifier, expType) == SymbolTable.nilPseudoType) {
 			notifier.semanticError(exp, "the type of %s cannot be inferred", exp.toString());
 		}
+		treeTypeHashMap.put(tree, SymbolTable.intType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.intType;
 	}
 
@@ -480,6 +493,7 @@ public class SymbolTable {
 			exp = tree.getChild(1);
 			expType = this.checkType(exp, notifier, expType);
 		}
+		treeTypeHashMap.put(tree, SymbolTable.intType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.intType;
 	}
 
@@ -487,6 +501,7 @@ public class SymbolTable {
 		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 			this.checkType(tree.getChild(i), notifier, SymbolTable.intType);
 		}
+		treeTypeHashMap.put(tree, SymbolTable.intType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.intType;
 	}
 
@@ -495,28 +510,35 @@ public class SymbolTable {
 		// Si le type de 'tree' n'est pas 'type', alors `null` est renvoyé
 		// Sinon le type de 'tree' est renvoyé
         Type expType = this.fillWith(tree, notifier);
+        Type returnType = null;
         if (expType == type || expType == SymbolTable.nilPseudoType && type instanceof Record) {
-            return type;
+            returnType = type;
         } else if (type == SymbolTable.nilPseudoType && expType instanceof Record) {
-            return expType;
+            returnType = expType;
         } else {
             notifier.semanticError(tree, "type of %s does not match", tree.toString());
-	        return null;
+	        returnType =  null;
         }
+	    treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
+	    return returnType;
     }
 
 	private Type fillWithIf(Tree tree, Notifier notifier) {
+		Type returnType = null;
 		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
 		if (tree.getChildCount() > 2) {
-			return this.checkType(tree.getChild(2), notifier, this.fillWith(tree.getChild(1), notifier));
+			returnType = this.checkType(tree.getChild(2), notifier, this.fillWith(tree.getChild(1), notifier));
 		} else {
-			return this.checkType(tree.getChild(1), notifier, null);
+			returnType = this.checkType(tree.getChild(1), notifier, null);
 		}
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
+		return returnType;
 	}
 
 	private Type fillWithWhile(Tree tree, Notifier notifier) {
 		this.checkType(tree.getChild(0), notifier, SymbolTable.intType);
 		this.checkType(tree.getChild(1), notifier, null);
+		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return null;
 	}
 
@@ -530,6 +552,7 @@ public class SymbolTable {
 		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
 		this.checkType(tree.getChild(2), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
 		table.checkType(tree.getChild(3), notifier, null);	// Remplissage de la table des symboles de la boucle for
+		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return null;
 	}
 
@@ -770,10 +793,14 @@ public class SymbolTable {
 				}
 			}
 		}
-		return table.fillWith(seq, notifier);
+		Type returnType = null;
+		returnType = table.fillWith(seq, notifier);
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
+		return returnType;
 	}
 
 	private Type fillWithNil(Tree tree, Notifier notifier) {
+		treeTypeHashMap.put(tree, SymbolTable.nilPseudoType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return SymbolTable.nilPseudoType;
 	}
 
@@ -782,12 +809,14 @@ public class SymbolTable {
 		Tree child = tree;
 		while ((parent = parent.getParent()) != null && !parent.toString().equals("function")) {
 			if (parent.toString().equals("while") || parent.toString().equals("for") && child == parent.getChild(3)) {
+				treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 				return null;
 			} else {
 				child = parent;
 			}
 		}
 		notifier.semanticError(tree, "%s must be inside loop", tree.toString());
+		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return null;
 	}
 

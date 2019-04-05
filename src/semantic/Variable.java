@@ -60,5 +60,4 @@ public class Variable extends FunctionOrVariable {
 		String graphLinks = typeGraphs.get(1);
 		return new ArrayList<>(Arrays.asList(partOfGraph, graphLinks));
 	}
-
 }
