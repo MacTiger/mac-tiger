@@ -23,7 +23,7 @@ public class RegistersManager {
         int registersToSave = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
 
         for (int i = 1; i <= registersToSave; i++) {
-            restore(i);
+            save(i);
         }
 
         availableRegisters.push(peak);

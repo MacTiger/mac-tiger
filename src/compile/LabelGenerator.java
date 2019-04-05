@@ -11,6 +11,34 @@ import java.util.HashMap;
  * Classe gérant la création de labels uniques pour toutes les fonctions assembleurs qui seront créées à la compilation (dans compile.TigerTranslator)
  */
 public class LabelGenerator {
+
+	private static int labelLength;
+	private static String emptyLabel;
+
+	static {
+		LabelGenerator.labelLength = 16;
+		LabelGenerator.emptyLabel = LabelGenerator.padOrTrimLabel("");
+	}
+
+	/**
+	 * Complète ou tronque un label pour qu'il ait une taille fixe
+	 * @return : une chaîne contenant le début du label suivi d'espaces
+	 */
+	public static String padOrTrimLabel(String string) {
+		if (string.length() < LabelGenerator.labelLength - 1) {
+			return String.format("%-" + LabelGenerator.labelLength + "s ", string);
+		}
+		return string.substring(0, LabelGenerator.labelLength - 1) + " ";
+	}
+
+	/**
+	 * Renvoit un label vide à des fins d'alignement du code assembleur
+	 * @return : une chaîne ne contenant que des espaces
+	 */
+	public static String getEmptyLabel() {
+		return LabelGenerator.emptyLabel;
+	}
+
 	private HashMap<SymbolTable, String> labelsTDS; // Une TDS = un label
 	private HashMap<Tree, ArrayList<String>> labelsTrees;   // Plusieurs labels pour les noeuds : for, while, if, opérateurs de comparaisons pour des STRINGS, & et |
 
@@ -26,7 +54,7 @@ public class LabelGenerator {
 	 * @return le label unique de function
 	 */
 	public String addFunction(Function function, String nameOfFunction){
-		String label = "TDS_func_"+ labelsTDS.size()+"_"+nameOfFunction+"_";
+		String label = LabelGenerator.padOrTrimLabel("_" + labelsTDS.size() + nameOfFunction);
 		return labelsTDS.put(function.getSymbolTable(),label);
 	}
 
@@ -36,7 +64,7 @@ public class LabelGenerator {
 	 * @return le label unique de SymbolTable
 	 */
 	public String addFunction(SymbolTable symbolTable){
-		String label = "TDS_"+ labelsTDS.size()+"_"+symbolTable.toString()+"_";
+		String label = LabelGenerator.padOrTrimLabel("_" + labelsTDS.size());
 		return labelsTDS.put(symbolTable,label);
 	}
 
@@ -47,7 +75,7 @@ public class LabelGenerator {
 	 */
 	public ArrayList<String> addFunction(Tree tree){
 		//TODO : gérer les label pour les tree "while", "for" ...
-		String label = "tree_"+ labelsTrees.size()+"_"+tree.toString()+"_";
+		String label = LabelGenerator.padOrTrimLabel("__" + labelsTrees.size() + tree.toString());
 		ArrayList<String> labels = new ArrayList<>();
 		labels.add(label);
 		return labelsTrees.put(tree,labels);

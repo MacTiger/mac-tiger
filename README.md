@@ -98,7 +98,7 @@ $ make test
 
 Un fichier marqué `[PASS]` est un test qui a réussi ou échoué comme prévu, tandis qu'un fichier marqué `[FAIL]` est un test qui a réussi ou échoué alors que le contraire était attendu. Plus rarement, il est possible de rencontrer un fichier marqué `[EXIT]` qui dénote un plantage du compilateur ou du programme, ou encore un fichier marqué `[WARN]` qui indique qu'une erreur a été trouvée à une étape de la compilation antérieure à celle testée.
 
-### Installation et utilisation de *Graphviz*`
+### Installation et utilisation de *Graphviz*
 
 Pour installer *Graphviz* :
 
