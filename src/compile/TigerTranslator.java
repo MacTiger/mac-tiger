@@ -42,13 +42,15 @@ public class TigerTranslator {
 	private ArrayList<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
 	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
 	private LabelGenerator labelGenerator;
+	private RegistersManager registersManager;
 
 	public TigerTranslator(SymbolTable currentTDS) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS=currentTDS;     // TDS actuelle
-		childrenIndexStack = new ArrayList<>();
+		this.childrenIndexStack = new ArrayList<>();
 		this.writer = new Writer();
 		this.labelGenerator = new LabelGenerator();
+		this.registersManager = new RegistersManager(this.writer);
 	}
 
 	private void descendTDS(){
@@ -57,7 +59,8 @@ public class TigerTranslator {
 		childrenIndexStack.set(childrenIndexStack.size()-1, indexOfNextChild + 1);  // Incrémente l'index de la prochaine TDS à prendre
 		childrenIndexStack.add(0);  // Ajoute une entrée dans childrenIndexStack pour reprendre le compte pour la nouvelle currentTDS
 		this.currentTDS = this.currentTDS.getChild(indexOfNextChild);
-		writer.descendFunctionAssembly();   // Descend le writer pour écrire le code de cette fonction
+		registersManager.saveAll();
+		writer.descendFunctionAssembly(); // Descend le writer pour écrire le code de cette fonction
 
 	}
 
@@ -65,6 +68,7 @@ public class TigerTranslator {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
 		this.currentTDS = this.currentTDS.getParent();  // Remonte de TDS
 		childrenIndexStack.remove(childrenIndexStack.size() - 1);   // Retire le dernière index empilé
+		registersManager.restoreAll();
 		writer.ascendFunctionAssembly();    // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)
 
 	}
@@ -369,6 +373,7 @@ public class TigerTranslator {
 	}
 
 	private Type translateFor(Tree tree, int registerIndex) {
+		//TODO : ne pas descendre dans la tds fille tout de suite.
 		descendTDS();   // Met à jour this.currentTDS avec la bonne TDS fille
 		labelGenerator.addFunction(currentTDS);    // Création des labels de la TDS liée à ce for
 		labelGenerator.addFunction(tree);    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)

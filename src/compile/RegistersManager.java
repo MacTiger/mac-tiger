@@ -1,6 +1,7 @@
 package compile;
 
 import java.io.FileWriter;
+import java.util.Stack;
 
 public class RegistersManager {
 
@@ -8,36 +9,57 @@ public class RegistersManager {
     private final int REGMAX = 10;//nb max de registres R1->R10
     private final String PATH = "misc/asm/temp.src";
 
-    private int regDisp;//Registres dispo : 16 -> -N
+    private Stack<Integer> availableRegisters;//Registres dispo : 16 -> -N
+    private int peak;
     private Writer writer;
 
     public RegistersManager(Writer writer){
 
         this.writer = writer;
-        regDisp = REGMAX;
+        peak = REGMAX;
+    }
+
+    public void saveAll() {
+        int registersToSave = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
+
+        for (int i = 1; i <= registersToSave; i++) {
+            restore(i);
+        }
+
+        availableRegisters.push(peak);
+        peak = REGMAX;
+    }
+
+    public void restoreAll() {
+        peak = availableRegisters.pop();
+        int registersToRestore = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
+
+        for (int i = registersToRestore; i >= 1; i--) {
+            restore(i);
+        }
     }
 
 
     //Met le registre req dans la pile
-    private void putRegisterInStack(int reg){
+    private void restore(int reg){
         writer.write("\tADQ -2, SP\n\tSTW R" + String.valueOf(reg) + ", (SP)\n");
     }
 
-    private void putStackInRegister(int reg){
+    private void save(int reg){
         writer.write("\tLDW R"+String.valueOf(reg)+", (SP) \n \tADQ 2, SP \n");
     }
 
     //Renvoie l'indice d'un registre disponible
     public int provideRegister() {
-        if(regDisp>0){
-            return regDisp--;//Pour 16 places renvoie 15, etc.
+        if(peak > 0){
+            return peak--;//Pour 16 places renvoie 15, etc.
         }
         else{//Registres pleins
             int reg;
-            reg=(REGMAX)-(-regDisp)%REGMAX;//Registre à libérer.
-            //regDisp = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
-            regDisp--;
-            putRegisterInStack(reg);
+            reg=(REGMAX)-(-peak)%REGMAX;//Registre à libérer.
+            //peak = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
+            peak--;
+            restore(reg);
             return reg;
         }
     }
@@ -45,14 +67,14 @@ public class RegistersManager {
 
     //Libère le dernier registre "réservé"
     public void freeRegister(){
-        if(regDisp>-1 && regDisp<REGMAX){
-            regDisp++;
+        if(peak > -1 && peak < REGMAX){
+            peak++;
         }
         else{
             int req;
-            req=(REGMAX)-(-(regDisp+1))%REGMAX;
-            putStackInRegister(req);
-            regDisp++;
+            req=(REGMAX)-(-(peak+1))%REGMAX;
+            restore(req);
+            peak++;
         }
     }
 
