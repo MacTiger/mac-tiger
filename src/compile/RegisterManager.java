@@ -7,14 +7,14 @@ public class RegisterManager {
     //R1 à R10
     private final int REGMAX = 10;//nb max de registres R1->R10
 
+    private Writer writer;
     private Stack<Integer> availableRegisters;//Registres dispo : 16 -> -N
     private int peak;
-    private Writer writer;
 
     public RegisterManager(Writer writer){
-
         this.writer = writer;
-        peak = REGMAX;
+        this.availableRegisters = new Stack<Integer>();
+        this.peak = REGMAX;
     }
 
     public void descend() {
@@ -60,11 +60,10 @@ public class RegisterManager {
             return peak--;//Pour 16 places renvoie 15, etc.
         }
         else{//Registres pleins
-            int reg;
-            reg=(REGMAX)-(-peak)%REGMAX;//Registre à libérer.
+            int reg = REGMAX - -peak % REGMAX;//Registre à libérer.
             //peak = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
+            save(reg);
             peak--;
-            restore(reg);
             return reg;
         }
     }
@@ -76,10 +75,9 @@ public class RegisterManager {
             peak++;
         }
         else{
-            int req;
-            req=(REGMAX)-(-(peak+1))%REGMAX;
-            restore(req);
             peak++;
+            int reg = REGMAX - -peak % REGMAX;
+            restore(reg);
         }
     }
 

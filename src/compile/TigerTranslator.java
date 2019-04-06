@@ -44,7 +44,7 @@ public class TigerTranslator {
 	private LabelGenerator labelGenerator;
 	private RegisterManager registerManager;
 
-	public TigerTranslator(SymbolTable root) {
+	public TigerTranslator(Tree tree, SymbolTable root) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
 		this.currentTDS = root;     // TDS actuelle
 		this.childrenIndexStack = new ArrayList<Integer>();
@@ -52,6 +52,7 @@ public class TigerTranslator {
 		this.labelGenerator = new LabelGenerator(16);
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
+		this.translate(tree, 0);
 	}
 
 	private void descendTDS(){
@@ -456,6 +457,7 @@ public class TigerTranslator {
 	 */
 	private Type translateLet(Tree tree, int registerIndex) {
 		int initialDepth = this.childrenIndexStack.size();  // Sauvegarde de la profondeur actuelle de TDS, pour retourner à celui ci à la fin de la fonction
+		SymbolTable table = this.currentTDS;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
@@ -492,14 +494,15 @@ public class TigerTranslator {
 					break;
 				}
 				case "var": { // dans le cas de la déclaration d'une variable
-					Variable variable = this.currentTDS.findVariable(symbol.getChild(0).toString()); // Récupération de la variable déclarée
+					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
-					if (variable.isAlreadyTranslated()) {   // on crée parfois (dans les cas d'une première déclaration de variable ou d'une redéclaration d'une variable) une nouvelle table
+					// TODO : choisir dans quel registre registerIndex mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
+					translate(exp, registerIndex);
+					if (this.currentTDS == table || this.currentTDS.getFunctionsAndVariables().get(name) != null) {
 						descendTDS();
-						this.currentTDS.findVariable(symbol.getChild(0).toString()); // On prend la bonne déclaration de cette variable
 					}
+					Variable variable = this.currentTDS.findVariable(name); // Récupération de la variable déclarée
 					//TODO : générer le code de la déclaration de variable
-					variable.setAlreadyTranslated(true);
 					break;
 				}
 			}

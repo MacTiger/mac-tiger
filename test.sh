@@ -30,21 +30,25 @@ test() {
 				stdout="asm/$dir/$file.src"
 				java -cp bin:lib/* Main --no-color --src 2> $stderr 1> $stdout < $stdin
 				status=$((($? + 4) % 5))
-				local prgm="asm/$dir/$file.iup"
-				local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1> $stderr)
-				if [[ $err == "" ]]
+				if [[ (($status == 4)) ]]
 				then
-					err=$(java -jar lib/microPIUPK.jar -batch $prgm 2>&1)
+					local prgm="asm/$dir/$file.iup"
+					local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1>> $stderr)
 					if [[ $err == "" ]]
 					then
-						# TODO: tester la sortie standard
-						status="5"
+						err=$(java -jar lib/microPIUPK.jar -batch $prgm 2>&1 1> "/dev/null")
+						echo $?
+						if [[ $err == "" ]]
+						then
+							# TODO: tester la sortie standard
+							status="5"
+						fi
 					fi
-				fi
-				if [[ $err != "" ]]
-				then
-					echo $err >> $stderr
-					status="0"
+					if [[ $err != "" ]]
+					then
+						echo $err >> $stderr
+						status="0"
+					fi
 				fi
 			else
 				stdout="/dev/null"

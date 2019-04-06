@@ -43,8 +43,8 @@ public class Record extends Type {
 		return new ArrayList<>(Arrays.asList(partOfGraph, graphLinks));
 	}
 
-
 	public Namespace<Variable> getNamespace() {
 		return this.namespace;
 	}
+
 }

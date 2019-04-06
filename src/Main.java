@@ -80,7 +80,7 @@ public class Main {
 			if (output == 1) {   // Ecrit sur la sortie standard le code .gv permettant de visualiser la TDS
 				System.out.println(root.toGraphVizFirst());
 			} else if (output == 2) {
-				System.out.println(new TigerTranslator(root).toString());
+				System.out.println(new TigerTranslator(tree, root).toString());
 			}
 		}
 		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[2] > 0 ? 4 : 0;

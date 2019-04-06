@@ -421,13 +421,14 @@ public class SymbolTable {
 
 	private Type fillWithID(Tree tree, Notifier notifier) {
 		Variable variable = this.findVariable(tree.toString());
+		Type returnType = null;
 		if (variable == null) {
 			notifier.semanticError(tree, "variable %s is not defined", tree.toString());
 		} else{
-			return variable.getType();
+			returnType = variable.getType();
 		}
-		treeTypeHashMap.put(tree, null);  // Associe à ce tree son type, pour garder cet information à la génération de code
-		return null;
+		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
+		return returnType;
 	}
 
 	private Type fillWithITEM(Tree tree, Notifier notifier) {
@@ -457,7 +458,7 @@ public class SymbolTable {
 			if (fields.get(tree.getChild(1).toString()) == null) { // on regarde si le champ existe
 				notifier.semanticError(tree, "field %s is not defined", tree.getChild(1).toString());
 			} else { // sinon c'est bon
-				returnType =  fields.get(tree.getChild(1).toString()).getType();
+				returnType = fields.get(tree.getChild(1).toString()).getType();
 			}
 		}
 		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
@@ -517,7 +518,7 @@ public class SymbolTable {
             returnType = expType;
         } else {
             notifier.semanticError(tree, "type of %s does not match", tree.toString());
-	        returnType =  null;
+	        returnType = null;
         }
 	    treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 	    return returnType;
@@ -793,8 +794,7 @@ public class SymbolTable {
 				}
 			}
 		}
-		Type returnType = null;
-		returnType = table.fillWith(seq, notifier);
+		Type returnType = table.fillWith(seq, notifier);
 		treeTypeHashMap.put(tree, returnType);  // Associe à ce tree son type, pour garder cet information à la génération de code
 		return returnType;
 	}

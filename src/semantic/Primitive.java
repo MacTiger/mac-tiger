@@ -41,4 +41,5 @@ public class Primitive extends Type {
 		}
 		return true;
 	}
+
 }

@@ -124,8 +124,8 @@ public class Writer {
 	 */
 	public void descend() {
 		int index = fonctionCode.size();
-		fonctionCode.set(index,"");     // Initialise le code de la fonction assembleur
-		fonctionPile.push(fonctionCode.size()); // Ajoute le nouvel index de fonction dans la pile
+		fonctionCode.add("");     // Initialise le code de la fonction assembleur
+		fonctionPile.push(index); // Ajoute le nouvel index de fonction dans la pile
 	}
 
 	/**
