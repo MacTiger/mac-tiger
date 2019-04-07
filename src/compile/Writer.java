@@ -15,8 +15,8 @@ public class Writer {
 			"EXIT_EXC EQU 64 // Trappe exit\n" +
 			"READ_EXC EQU 65 // Trappe read\n" +
 			"WRITE_EXC EQU 66 // Trappe write\n" +
-			"STACK_ADDR EQU 0X1000 // Adresse du bas de la pile\n" +
-			"HEAP_ADDR EQU 0X1002 // Adresse du haut du tas\n" +
+			"STACK_ADDR EQU 0x1000 // Adresse du bas de la pile\n" +
+			"HEAP_ADDR EQU 0x1002 // Adresse du haut du tas\n" +
 			"LOAD_ADDR EQU 0xF000 // Adresse du haut du programme\n" +
 			"NIL EQU 0X1000 // Adresse spéciale pour la constante nil\n" +
 			"\n" +
@@ -71,7 +71,7 @@ public class Writer {
 	 * @param statement une instruction à écrire
 	 */
 	public void writeHeader(String statement) {
-		this.writeHeaderLine(statement);
+		this.writeHeaderLine(labelGenerator.getIndent() + statement);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class Writer {
 	 * @param statement une instruction à écrire
 	 */
 	public void writeMain(String statement) {
-		this.writeMainLine(statement);
+		this.writeMainLine(labelGenerator.getIndent() + statement);
 	}
 
 	/**

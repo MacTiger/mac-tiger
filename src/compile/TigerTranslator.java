@@ -43,6 +43,7 @@ public class TigerTranslator {
 	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
 	private LabelGenerator labelGenerator;
 	private RegisterManager registerManager;
+	private int heapBase; // l'adresse qui suit la partie statique du tas
 
 	public TigerTranslator(Tree tree, SymbolTable root) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
@@ -52,9 +53,20 @@ public class TigerTranslator {
 		this.labelGenerator = new LabelGenerator(16);
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
+		this.heapBase = 4098;
 		for (Map.Entry<String, FunctionOrVariable> entry: root.getParent().getFunctionsAndVariables()) {
-			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), entry.getKey());
-			this.writer.writeHeader(label, "RTS"); // TODO
+			String name = entry.getKey();
+			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
+			switch (name) {
+				case "print": {
+					this.writer.writeHeader(label, "RTS"); // TODO
+					break;
+				}
+				default: {
+					this.writer.writeHeader(label, "RTS"); // TODO
+					break;
+				}
+			}
 			this.writer.writeHeader();
 		}
 		this.translate(tree, 0);
@@ -310,7 +322,69 @@ public class TigerTranslator {
 	}
 
 	private Type translateSTR(Tree tree, int registerIndex) {
-		//TODO : Générer le code pour STRING
+		List<Integer> ordinals = new ArrayList<Integer>();
+		String string = tree.toString();
+		for (int i = 1, li = string.length() - 1; i < li; ++i) {
+			char character = string.charAt(i);
+			if (character == '\\') {
+				character = string.charAt(++i);
+				switch (character) {
+					case 'n': {
+						ordinals.add(10);
+						break;
+					}
+					case 't': {
+						ordinals.add(9);
+						break;
+					}
+					case '"': {
+						ordinals.add(34);
+						break;
+					}
+					case '\\': {
+						ordinals.add(92);
+						break;
+					}
+					case '^': {
+						character = string.charAt(++i);
+						if (character != '@') { // on ignore les caractères nuls
+							ordinals.add(((int) character) - 64);
+						}
+						break;
+					}
+					case '0':
+					case '1': {
+						int ordinal = (((int) character) - 48) * 100;
+						character = string.charAt(++i);
+						ordinal += (((int) character) - 48) * 10;
+						character = string.charAt(++i);
+						ordinal += ((int) character) - 48;
+						if (ordinal != 0) { // on ignore les caractères nuls
+							ordinals.add(ordinal);
+						}
+						break;
+					}
+					default: {
+						while ((character = string.charAt(++i)) != '\\');
+						break;
+					}
+				}
+			} else {
+				ordinals.add((int) character);
+			}
+		}
+		ordinals.add(0); // on ajoute le caractère nul de fin de chaîne
+		if ((ordinals.size() % 2) == 1) {
+			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
+		}
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", ordinals.get(0) << 16 + ordinals.get(1), string));
+		this.writer.writeMain("STW R0, (HP)+");
+		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
+			this.writer.writeMain(String.format("LDW R0, #%d", ordinals.get(i) << 16 + ordinals.get(i + 1)));
+			this.writer.writeMain("STW R0, (HP)+");
+		}
+		this.heapBase += ordinals.size() * 2;
+		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
 		return this.currentTDS.stringType;
 	}
 
@@ -410,13 +484,6 @@ public class TigerTranslator {
 		translate(exp1, registerIndex1);
 
 		//TODO : Générer le code de la comparaison entre ce qui est stocké dans registerIndex0 et registerIndex1
-		return semantic.SymbolTable.intType;
-	}
-
-	private Type translateIntOperator(Tree tree, int registerIndex) {
-		for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-			//TODO : générer le code pour appliquer l'opération tree.toString() entre tous les fils de tree (accessibles avec tree.getChild(i))
-		}
 		return semantic.SymbolTable.intType;
 	}
 
