@@ -6,13 +6,15 @@ import java.util.Arrays;
 public class Variable extends FunctionOrVariable {
 
 	private Type type;
-	private boolean writable;
 	private int offset;
+	private boolean writable;
+	private boolean translated;
 
 	public Variable() {
 		this.type = null;
-		this.writable = true;
 		this.offset = 0;
+		this.writable = true;
+		this.translated = false;
 	}
 
 	public void setType(Type type) {
@@ -37,6 +39,14 @@ public class Variable extends FunctionOrVariable {
 
 	public boolean isWritable() {
 		return this.writable;
+	}
+
+	public void translate(boolean translated) {
+		this.translated = translated;
+	}
+
+	public boolean isTranslated() {
+		return this.translated;
 	}
 
 	public ArrayList<String> makeCellGraphviz(String nameOfVar, String nameOfThisTDS, String numOfCell){

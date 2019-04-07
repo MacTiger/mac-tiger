@@ -52,10 +52,20 @@ public class TigerTranslator {
 		this.labelGenerator = new LabelGenerator(16);
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
+		for (Map.Entry<String, FunctionOrVariable> entry: root.getParent().getFunctionsAndVariables()) {
+			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), entry.getKey());
+			this.writer.writeHeader(label, "RTS"); // TODO
+			this.writer.writeHeader();
+		}
 		this.translate(tree, 0);
 	}
 
-	private void descendTDS(){
+	private SymbolTable next() {
+		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1);
+		return this.currentTDS.getChild(indexOfNextChild);
+	}
+
+	private void descend() {
 		// Met à jour this.currentTDS pour y mettre la TDS fille de la currentTDS de bon index, met à jour childrenIndexStack
 		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1); // Récupère l'index de la TDS fille à prendre
 		childrenIndexStack.set(childrenIndexStack.size()-1, indexOfNextChild + 1);  // Incrémente l'index de la prochaine TDS à prendre
@@ -63,16 +73,18 @@ public class TigerTranslator {
 		this.childrenIndexStack.add(0); // Ajoute une entrée dans childrenIndexStack pour reprendre le compte pour la nouvelle currentTDS
 		this.registerManager.descend(); // Descend le registerManagaer
 		this.writer.descend(); // Descend le writer pour écrire le code de cette fonction
-		this.writer.writeFunction("ADQ -2, SP // empilage du chaînage dynamique"); // Partie LINK
+		String label = labelGenerator.getLabel(this.currentTDS); // Création ou récupération du label de la nouvelle currentTDS
+		this.writer.writeFunction(label, "ADQ -2, SP // Empilage du chaînage dynamique"); // Partie LINK
 		this.writer.writeFunction("STW BP, (SP)");
 		this.writer.writeFunction("LDW BP, SP");
 	}
 
-	private void ascendTDS(){
+	private void ascend() {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
-		this.writer.writeFunction("LDW SP, BP // dépilage du chaînage dynamique"); // Partie UNLINK
+		this.writer.writeFunction("LDW SP, BP // Dépilage du chaînage dynamique"); // Partie UNLINK
 		this.writer.writeFunction("LDW BP, (SP)");
 		this.writer.writeFunction("ADQ 2, SP");
+		this.writer.writeFunction("RTS");
 		this.writer.ascend(); // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)
 		this.registerManager.ascend();
 		this.childrenIndexStack.remove(childrenIndexStack.size() - 1); // Retire le dernière index empilé
@@ -131,43 +143,36 @@ public class TigerTranslator {
 	}
 
 	private Type translateAddOperator(Tree tree, int registerIndex) {
-		int register = registerManager.provideRegister();
-
 		translate(tree.getChild(0), registerIndex);
-
+		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
 			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", register, registerIndex, registerIndex));
+			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
-
 		registerManager.freeRegister();
 		return null;
 	}
 
 	private Type translateSubOperator(Tree tree, int registerIndex) {
+		translate(tree.getChild(0), registerIndex);
 		if (tree.getChildCount() == 1) {
-			translate(tree.getChild(0), registerIndex);
-			this.writer.writeFunction(String.format("SUB #0, R%d, R%d", registerIndex, registerIndex));
+			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
 		} else {
-			int registerLeft = registerManager.provideRegister();
-			translate(tree.getChild(0), registerLeft);
-			translate(tree.getChild(1), registerIndex);
-			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerIndex, registerIndex));
+			int register = registerManager.provideRegister();
+			translate(tree.getChild(1), register);
+			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerIndex, register, registerIndex));
 			registerManager.freeRegister();
 		}
 		return null;
 	}
 
 	private Type translateMulOperator(Tree tree, int registerIndex) {
-		int register = registerManager.provideRegister();
-
 		translate(tree.getChild(0), registerIndex);
-
+		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
 			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", register, registerIndex, registerIndex));
+			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
-
 		registerManager.freeRegister();
 		return null;
 	}
@@ -199,7 +204,7 @@ public class TigerTranslator {
 		}
 		//TODO : gérer code d'appel à fonction
 
-		for (int i = 0 ; i < tree.getChildCount(); i++) {   //Parcours des arguments de la fonction
+		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
 			//TODO : code pour empiler l'argument
 
@@ -335,7 +340,7 @@ public class TigerTranslator {
 
 		code += "ADQ #deplacement, R1  // L'adresse de la variable recherchée est maintenant dans registre voulu\n";
 		code.replaceAll("R1", "R"+String.valueOf(registerIndex)).replaceAll("deplacement", String.valueOf(variable.getOffset()));
-		// writer.write(code); // TODO utiliser writer.writeFunctino
+		// writer.write(code); // TODO utiliser writer.writeFunction
 		return null;
 	}
 
@@ -435,17 +440,16 @@ public class TigerTranslator {
 	}
 
 	private Type translateFor(Tree tree, int registerIndex) {
-		//TODO : ne pas descendre dans la tds fille tout de suite.
-		descendTDS();   // Met à jour this.currentTDS avec la bonne TDS fille
-		labelGenerator.getLabel(currentTDS);    // Création des labels de la TDS liée à ce for
 		labelGenerator.getLabel(tree, "test");    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)
 
 		Variable index = currentTDS.findVariable(tree.getChild(0).toString());  // Récupère la variable de boucle
 		//TODO : gérer les registres :
 		translate(tree.getChild(1), registerIndex);	// Génère le code pour la borne inférieure du for
 		translate(tree.getChild(2), registerIndex);	// Génère le code pour la borne supérieure du for
+		this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
+		this.descend(); // Met à jour this.currentTDS avec la bonne TDS fille
 		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
-		ascendTDS();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
+		this.ascend();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
 		return null;
 	}
 
@@ -456,7 +460,6 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private Type translateLet(Tree tree, int registerIndex) {
-		int initialDepth = this.childrenIndexStack.size();  // Sauvegarde de la profondeur actuelle de TDS, pour retourner à celui ci à la fin de la fonction
 		SymbolTable table = this.currentTDS;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
@@ -464,7 +467,8 @@ public class TigerTranslator {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
-					descendTDS(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
+					this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
+					this.descend(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					symbol = dec.getChild(lj);
 					do{
@@ -472,21 +476,19 @@ public class TigerTranslator {
 					break;
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
-					descendTDS();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
+					this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
+					this.descend();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					do {
 						symbol = dec.getChild(lj);
 						String name = symbol.getChild(0).toString();
 						Tree body = symbol.getChild(2);
 						Function function = this.currentTDS.findFunction(name);
-
-						descendTDS();   // Descente dans la TDS de la fonction
-						labelGenerator.getLabel(function.getSymbolTable(), name);  // Création du label de la fonction
-
+						labelGenerator.getLabel(function.getSymbolTable(), name); // Création du label de la fonction
+						this.descend();   // Descente dans la TDS de la fonction
 						// TODO : choisir dans quel registre registerIndex mettre le résultat du corps de la fonction : probablement toujours R0
 						translate(body, registerIndex); // Génère code pour le corps de la fonction
-
-						ascendTDS();
+						this.ascend();
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 
 					i = lj - 1;
@@ -498,18 +500,26 @@ public class TigerTranslator {
 					Tree exp = symbol.getChild(1);
 					// TODO : choisir dans quel registre registerIndex mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
 					translate(exp, registerIndex);
-					if (this.currentTDS == table || this.currentTDS.getFunctionsAndVariables().get(name) != null) {
-						descendTDS();
+					if (this.currentTDS == table) {
+						this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
+						this.descend();
+					} else {
+						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
+						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
+							this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
+							this.descend();
+						}
 					}
 					Variable variable = this.currentTDS.findVariable(name); // Récupération de la variable déclarée
+					variable.translate(true);
 					//TODO : générer le code de la déclaration de variable
 					break;
 				}
 			}
 		}
 		Type result = translate(seq, registerIndex);
-		while(childrenIndexStack.size() > initialDepth){    // On remonte les TDS pour revenir à la profondeur d'avant le LET
-			ascendTDS();
+		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
+			this.ascend();
 		}
 		return result;
 	}

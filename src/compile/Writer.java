@@ -17,7 +17,7 @@ public class Writer {
 			"WRITE_EXC EQU 66 // Trappe write\n" +
 			"STACK_ADDR EQU 0X1000 // Adresse du bas de la pile\n" +
 			"HEAP_ADDR EQU 0X1002 // Adresse du haut du tas\n" +
-			"LOAD_ADRS EQU 0xF000 // Adresse du haut du programme\n" +
+			"LOAD_ADDR EQU 0xF000 // Adresse du haut du programme\n" +
 			"NIL EQU 0X1000 // Adresse spéciale pour la constante nil\n" +
 			"\n" +
 			"SP EQU R15 // Adresse du haut de la pile\n" +
@@ -25,8 +25,9 @@ public class Writer {
 			"BP EQU R13 // Adresse de la base de l'environnement courant\n" +
 			"HP EQU R12 // Adresse du bas du tas\n" +
 			"\n" +
-			"ORG LOAD_ADRS // Chargement du programme\n" +
-			"START main // Lancement du programme\n";
+			"ORG LOAD_ADDR // Chargement du programme\n" +
+			"START MAIN // Lancement du programme\n" +
+			"\n";
 	}
 
 	private LabelGenerator labelGenerator; // Générateur d'étiquettes
@@ -45,7 +46,7 @@ public class Writer {
 		this.fonctionPile.push(0);
 		this.header = "";
 		this.mainStart =
-			labelGenerator.padLabel("main") + "LDW SP, #STACK_ADDR // Initialisation du haut de la pile\n" +
+			labelGenerator.padLabel("MAIN") + "LDW SP, #STACK_ADDR // Initialisation du haut de la pile\n" +
 			labelGenerator.getIndent() + "LDW HP, #HEAP_ADDR // Initialisation du bas de la pile\n";
 		this.main = "";
 		this.mainEnd =
@@ -54,6 +55,15 @@ public class Writer {
 
 	private void writeHeaderLine(String line) {
 		this.header += line + "\n";
+	}
+
+	/**
+	 * Écrit l'instruction étiquettée dans l'en-tête
+	 * @param label une étiquette
+	 * @param statement une instruction
+	 */
+	public void writeHeader(String label, String statement) {
+		this.writeHeaderLine(labelGenerator.padLabel(label) + statement);
 	}
 
 	/**
@@ -73,6 +83,15 @@ public class Writer {
 
 	private void writeMainLine(String line) {
 		this.main += line + "\n";
+	}
+
+	/**
+	 * Écrit l'instruction étiquettée dans le corps du programme
+	 * @param label une étiquette
+	 * @param statement une instruction
+	 */
+	public void writeMain(String label, String statement) {
+		this.writeMainLine(labelGenerator.padLabel(label) + statement);
 	}
 
 	/**
@@ -143,7 +162,6 @@ public class Writer {
 		String string =
 			Writer.defaultHeader +
 			this.header +
-			"\n" +
 			this.mainStart +
 			this.main +
 			this.fonctionCode.get(0) +

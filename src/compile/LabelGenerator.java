@@ -62,7 +62,7 @@ public class LabelGenerator {
 		if (this.tableLabels.containsKey(table)) {
 			return this.tableLabels.get(table);
 		}
-		String label = this.trimLabel("_" + this.tableLabels.size() + "_" + name);
+		String label = this.trimLabel("A" + this.tableLabels.size() + name);
 		this.tableLabels.put(table, label);
 		return label;
 	}
@@ -95,7 +95,7 @@ public class LabelGenerator {
 			labels = new HashMap<String, String>();
 			this.treeLabels.put(tree, labels);
 		}
-		String label = this.trimLabel("__" + this.treeLabels.size() + "_" + tree.toString() + "_" + key);
+		String label = this.trimLabel("B" + this.treeLabels.size() + tree.toString() + "_" + key);
 		labels.put(key, label);
 		return label;
 	}

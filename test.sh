@@ -37,7 +37,6 @@ test() {
 					if [[ $err == "" ]]
 					then
 						err=$(java -jar lib/microPIUPK.jar -batch $prgm 2>&1 1> "/dev/null")
-						echo $?
 						if [[ $err == "" ]]
 						then
 							# TODO: tester la sortie standard

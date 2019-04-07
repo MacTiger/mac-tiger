@@ -1,3 +1,4 @@
+#!/bin/bash
 dir="tests/semantic/fail"
 stdin="torture.tiger"
 > $stdin
