@@ -1,13 +1,14 @@
-import compile.RegistersManager;
+import compile.LabelGenerator;
+import compile.RegisterManager;
 import compile.Writer;
 
 public class testGestionReg {
 
 
     public static void main(String[] args){
-        RegistersManager gr;
-        Writer writer = new Writer();
-        gr = new RegistersManager(writer);
+        RegisterManager gr;
+        Writer writer = new Writer(new LabelGenerator(0));
+        gr = new RegisterManager(writer);
         int n = 30;
 
         for(int i=0 ; i<n ; i++){

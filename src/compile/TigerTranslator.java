@@ -272,7 +272,7 @@ public class TigerTranslator {
 
 		}
 		registerManager.saveAll();
-		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table)));
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table,name)));
 		registerManager.restoreAll();
 		returnType = function.getType();
 
@@ -563,7 +563,7 @@ public class TigerTranslator {
 		this.translate(tree.getChild(0),registerIndex);   //Pour le if
 		Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
 
-		if (tree.getChildCount() == 2){    // Pour le else
+		if (tree.getChildCount() == 3){    // Pour le else
 			result = this.translate(tree.getChild(2), registerIndex);
 		}
 		return result;
