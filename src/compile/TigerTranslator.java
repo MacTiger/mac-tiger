@@ -59,7 +59,10 @@ public class TigerTranslator {
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
 				case "print": {
-					this.writer.writeHeader(label, "RTS"); // TODO
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("LDW R1, #WRITE_EXC");
+					this.writer.writeHeader("TRP R1");
+					this.writer.writeHeader("RTS");
 					break;
 				}
 				default: {
@@ -401,6 +404,7 @@ public class TigerTranslator {
 					}
 				}
 			} else {
+				System.err.println((int) character);
 				ordinals.add((int) character);
 			}
 		}
@@ -408,14 +412,14 @@ public class TigerTranslator {
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", ordinals.get(0) << 16 + ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 16) + ordinals.get(1), string));
 		this.writer.writeMain("STW R0, (HP)+");
 		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
-			this.writer.writeMain(String.format("LDW R0, #%d", ordinals.get(i) << 16 + ordinals.get(i + 1)));
+			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 16) + ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
-		this.heapBase += ordinals.size() * 2;
 		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
+		this.heapBase += ordinals.size() * 2;
 		return this.currentTDS.stringType;
 	}
 
