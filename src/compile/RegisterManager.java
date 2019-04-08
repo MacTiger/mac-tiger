@@ -8,7 +8,7 @@ public class RegisterManager {
     private final int REGMAX = 10;//nb max de registres R1->R10
 
     private Writer writer;
-    private Stack<Integer> availableRegisters;//Registres dispo : 16 -> -N
+    private Stack<Integer> availableRegisters;
     private int peak;
 
     public RegisterManager(Writer writer){
@@ -17,7 +17,7 @@ public class RegisterManager {
         this.peak = REGMAX;
     }
 
-    public void descend() {
+    public void descend() {//On descend dans le fils : push du nb de regitres disponibles
         availableRegisters.push(peak);
         peak = REGMAX;
     }
@@ -44,12 +44,12 @@ public class RegisterManager {
 
 
     //Met le registre req dans la pile
-    private void restore(int reg) {
+    private void save(int reg) {
         writer.writeFunction("ADQ -2, SP");
         writer.writeFunction(String.format("STW R%d, (SP)", reg));
     }
 
-    private void save(int reg) {
+    private void restore(int reg) {
         writer.writeFunction(String.format("LDW R%d, (SP)", reg));
         writer.writeFunction("ADQ 2, SP");
     }

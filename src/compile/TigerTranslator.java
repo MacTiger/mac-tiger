@@ -59,7 +59,10 @@ public class TigerTranslator {
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
 				case "print": {
-					this.writer.writeHeader(label, "RTS"); // TODO
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("LDW R1, #WRITE_EXC");
+					this.writer.writeHeader("TRP R1");
+					this.writer.writeHeader("RTS");
 					break;
 				}
 				default: {
@@ -244,32 +247,28 @@ public class TigerTranslator {
 		/* Appel d'une fonction
 		 *
 		 */
+		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findFunction(name);
 		Type returnType = null;
 		SymbolTable table = function.getSymbolTable();
 
-		//Calcul du déplacement
-		//On fait la somme des offsets de toutes les variables locales de la fonction
-		int offset=0;//octets
-		Iterator<Map.Entry<String, FunctionOrVariable>> it;
-		it=function.getSymbolTable().getFunctionsAndVariables().iterator();
-		FunctionOrVariable var;
-		while(it.hasNext()){
-			var=it.next().getValue();
-			if(var instanceof Variable){
-				offset+=((Variable) var).getOffset();
-			}
-		}
+
+		// Sauvegarde les registres de l'environnement appelant
+		registerManager.saveAll();
+
 		//TODO : gérer code d'appel à fonction
 
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
-			//TODO : code pour empiler l'argument
+			this.writer.writeMain("ADQ -2,SP");
+			this.writer.writeMain("STW R"+registerIndex+", (SP)");
+		}//Tous les arguments sont empilés
 
-		}
-		registerManager.saveAll();
-		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table)));
+
+
+
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table,name)));
 		registerManager.restoreAll();
 		returnType = function.getType();
 
@@ -424,14 +423,14 @@ public class TigerTranslator {
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", ordinals.get(0) << 16 + ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 16) + ordinals.get(1), string));
 		this.writer.writeMain("STW R0, (HP)+");
 		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
-			this.writer.writeMain(String.format("LDW R0, #%d", ordinals.get(i) << 16 + ordinals.get(i + 1)));
+			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 16) + ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
-		this.heapBase += ordinals.size() * 2;
 		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
+		this.heapBase += ordinals.size() * 2;
 		return this.currentTDS.stringType;
 	}
 
@@ -536,7 +535,7 @@ public class TigerTranslator {
 
 			return semantic.SymbolTable.intType;
 		} else {
-
+			return semantic.SymbolTable.stringType;
 		}
 	}
 
@@ -557,7 +556,7 @@ public class TigerTranslator {
 
 	private Type translateIf(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(0), registerIndex);
-		boolean hasElse = (tree.getChildCount() == 2);
+		boolean hasElse = (tree.getChildCount() == 3);
 
 		if (hasElse) {
 			// Labels
