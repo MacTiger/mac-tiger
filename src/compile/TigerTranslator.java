@@ -556,14 +556,35 @@ public class TigerTranslator {
 	}
 
 	private Type translateIf(Tree tree, int registerIndex) {
-		//TODO : Générer le code pour le IF (penser à réserver les registres nécessaires)
-		this.translate(tree.getChild(0),registerIndex);   //Pour le if
-		Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
+		this.translate(tree.getChild(0), registerIndex);
+		boolean hasElse = (tree.getChildCount() == 2);
 
-		if (tree.getChildCount() == 2){    // Pour le else
-			result = this.translate(tree.getChild(2), registerIndex);
+		if (hasElse) {
+			// Labels
+			String elseLabel = this.labelGenerator.getLabel(tree, "else");
+			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
+
+			// On saute au `else` si l'instruction évaluée est fausse
+			this.writer.writeFunction(String.format("BEQ %s-$-2", elseLabel));
+
+			Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
+			this.writer.writeFunction(endifLabel, "NOP");
+
+			if (tree.getChildCount() == 2) { // Pour le else
+				this.writer.writeFunction(elseLabel, "NOP");
+				result = this.translate(tree.getChild(2), registerIndex);
+			}
+			return result;
+		} else {
+			// Labels
+			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
+
+			// On saute au `else` si l'instruction évaluée est fausse
+			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
+
+			return result;
 		}
-		return result;
 	}
 
 	private Type translateWhile(Tree tree, int registerIndex) {
