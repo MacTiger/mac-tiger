@@ -213,14 +213,31 @@ public class TigerTranslator {
 		return null;
 	}
 
+	// A/B
 	private Type translateDivOperator(Tree tree, int registerIndex) {
+
+		//registerIndex contient A
+		int registerA = registerManager.provideRegister();
 		translate(tree.getChild(0), registerIndex);
-		int register = registerManager.provideRegister();
-		for (int i = 1; i < tree.getChildCount(); i++) {
-			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerIndex, register, registerIndex));
-		}
-		registerManager.freeRegister();
+
+		//Met B dans registerB
+		int registerB=registerManager.provideRegister();
+		translate(tree.getChild(1),registerB);
+
+		/*
+		//Met A dans registerAsave : dernier registre réservé
+		int registerAsave=registerManager.provideRegister();
+		this.writer.writeMain("LDW R"+registerAsave+", R"+registerA);
+		*/
+
+		//Opération diviser va modifier registerA
+		this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerA, registerB, registerIndex));
+
+		/*
+		this.writer.writeMain("LDW R"+registerA+"");
+		*/
+		registerManager.freeRegister();//Libère registerB
+		registerManager.freeRegister();//Libère registerA
 		return null;
 	}
 
