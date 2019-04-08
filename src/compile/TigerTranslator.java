@@ -445,7 +445,7 @@ public class TigerTranslator {
 		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
 
 		String code = "\n";
-		int depl_stat = 4;  // TODO : Vérifier la bonne valeur du déplacement statique
+		int depl_stat = 2;  // TODO : Vérifier la bonne valeur du déplacement statique
 
 		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
 			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
@@ -628,6 +628,7 @@ public class TigerTranslator {
 					symbol = dec.getChild(lj);
 					do{
 					} while(++lj < li && (symbol = dec.getChild(lj)).toString().equals("type"));
+					i = lj - 1;
 					break;
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
