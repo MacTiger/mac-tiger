@@ -121,13 +121,12 @@ public class TigerTranslator {
 		}
 		switch (tree.toString()) {
 			case ":=": return this.translateAssignment(tree, registerIndex);
-			case "=":
-			case "<>": return this.translateEqualOrNot(tree, registerIndex);
+			case "=": return this.translateEqual(tree, registerIndex);
+			case "<>": return this.translateNotEqual(tree, registerIndex);
 			case ">":
 			case "<":
 			case ">=":
 			case "<=": return this.translateComparator(tree, registerIndex);
-			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
 			case "|": return this.translateOrOperator(tree, registerIndex);
 			case "&": return this.translateAndOperator(tree, registerIndex);
 			case "+": return this.translateAddOperator(tree, registerIndex);
@@ -216,14 +215,31 @@ public class TigerTranslator {
 		return null;
 	}
 
+	// A/B
 	private Type translateDivOperator(Tree tree, int registerIndex) {
+
+		//registerIndex contient A
+		int registerA = registerManager.provideRegister();
 		translate(tree.getChild(0), registerIndex);
-		int register = registerManager.provideRegister();
-		for (int i = 1; i < tree.getChildCount(); i++) {
-			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerIndex, register, registerIndex));
-		}
-		registerManager.freeRegister();
+
+		//Met B dans registerB
+		int registerB=registerManager.provideRegister();
+		translate(tree.getChild(1),registerB);
+
+		/*
+		//Met A dans registerAsave : dernier registre réservé
+		int registerAsave=registerManager.provideRegister();
+		this.writer.writeMain("LDW R"+registerAsave+", R"+registerA);
+		*/
+
+		//Opération diviser va modifier registerA
+		this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerA, registerB, registerIndex));
+
+		/*
+		this.writer.writeMain("LDW R"+registerA+"");
+		*/
+		registerManager.freeRegister();//Libère registerB
+		registerManager.freeRegister();//Libère registerA
 		return null;
 	}
 
@@ -492,19 +508,40 @@ public class TigerTranslator {
 		return this.currentTDS.intType;
 	}
 
-	private Type translateEqualOrNot(Tree tree, int registerIndex) {
-		Tree exp0 = tree.getChild(0);
-		Tree exp1 = tree.getChild(1);
+	private Type translateEqual(Tree tree, int registerIndex) {
+		int registerChild0 = registerIndex;
+		translate(tree.getChild(0), registerChild0);
+		int registerChild1 = registerManager.provideRegister();
+		translate(tree.getChild(1), registerChild1);
 
-		int registerIndex0 = 0;
-		int registerIndex1 = 0;
+		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
+		writer.writeFunction(String.format("BEQ $+4"));
+		writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 
-		//TODO : gérer les registres où stocker les résultats des deux opérandes
-		translate(exp0, registerIndex0);
-		translate(exp1, registerIndex1);
+		registerManager.freeRegister();
 
-		//TODO : Générer le code de l'égalité entre ce qui est stocké dans registerIndex0 et registerIndex1
 		return semantic.SymbolTable.intType;
+	}
+
+	private Type translateNotEqual(Tree tree, int registerIndex) {
+		if (currentTDS.treeTypeHashMap.get(tree) != SymbolTable.stringType) {
+			int registerChild0 = registerIndex;
+			translate(tree.getChild(0), registerChild0);
+			int registerChild1 = registerManager.provideRegister();
+			translate(tree.getChild(1), registerChild1);
+
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
+			writer.writeFunction(String.format("BEQ $+6"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+
+			registerManager.freeRegister();
+
+			return semantic.SymbolTable.intType;
+		} else {
+
+		}
 	}
 
 	private Type translateComparator(Tree tree, int registerIndex) {
