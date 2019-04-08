@@ -124,7 +124,6 @@ public class TigerTranslator {
 			case "<":
 			case ">=":
 			case "<=": return this.translateComparator(tree, registerIndex);
-			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
 			case "|": return this.translateOrOperator(tree, registerIndex);
 			case "&": return this.translateAndOperator(tree, registerIndex);
 			case "+": return this.translateAddOperator(tree, registerIndex);
@@ -490,22 +489,38 @@ public class TigerTranslator {
 
 	private Type translateEqual(Tree tree, int registerIndex) {
 		int registerChild0 = registerIndex;
-		int registerChild1 = registerManager.provideRegister();
 		translate(tree.getChild(0), registerChild0);
+		int registerChild1 = registerManager.provideRegister();
 		translate(tree.getChild(1), registerChild1);
+
 		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-		writer.writeFunction(String.format("BEQ $+2"));
+		writer.writeFunction(String.format("BEQ $+4"));
 		writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+
+		registerManager.freeRegister();
+
 		return semantic.SymbolTable.intType;
 	}
 
 	private Type translateNotEqual(Tree tree, int registerIndex) {
-		int registerChild0 = registerIndex;
-		int registerChild1 = registerManager.provideRegister();
-		translate(tree.getChild(0), registerChild0);
-		translate(tree.getChild(1), registerChild1);
-		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-		return semantic.SymbolTable.intType;
+		if (currentTDS.treeTypeHashMap.get(tree) != SymbolTable.stringType) {
+			int registerChild0 = registerIndex;
+			translate(tree.getChild(0), registerChild0);
+			int registerChild1 = registerManager.provideRegister();
+			translate(tree.getChild(1), registerChild1);
+
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
+			writer.writeFunction(String.format("BEQ $+6"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+
+			registerManager.freeRegister();
+
+			return semantic.SymbolTable.intType;
+		} else {
+
+		}
 	}
 
 	private Type translateComparator(Tree tree, int registerIndex) {
