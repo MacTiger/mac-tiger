@@ -147,10 +147,34 @@ public class TigerTranslator {
 	}
 
 	private Type translateAndOperator(Tree tree, int registerIndex) {
+
+		String endLabel = this.labelGenerator.getLabel(tree, "end");
+
+		for (int i = 0; i < tree.getChildCount(); i++) {
+
+			this.translate(tree.getChild(i), registerIndex);
+
+			// Si le résultat est nul, on peut sauter à la fin du *and*
+			this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+		}
+
+		this.writer.writeFunction(endLabel, "NOP");
 		return null;
 	}
 
 	private Type translateOrOperator(Tree tree, int registerIndex) {
+
+		String endLabel = this.labelGenerator.getLabel(tree, "end");
+
+		for (int i = 0; i < tree.getChildCount(); i++) {
+
+			this.translate(tree.getChild(i), registerIndex);
+
+			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
+			this.writer.writeFunction(String.format("BNE %s-$-2", endLabel));
+		}
+
+		this.writer.writeFunction(endLabel, "NOP");
 		return null;
 	}
 
@@ -190,6 +214,13 @@ public class TigerTranslator {
 	}
 
 	private Type translateDivOperator(Tree tree, int registerIndex) {
+		translate(tree.getChild(0), registerIndex);
+		int register = registerManager.provideRegister();
+		for (int i = 1; i < tree.getChildCount(); i++) {
+			translate(tree.getChild(i), register);
+			this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerIndex, register, registerIndex));
+		}
+		registerManager.freeRegister();
 		return null;
 	}
 
