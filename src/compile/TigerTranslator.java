@@ -245,31 +245,25 @@ public class TigerTranslator {
 		/* Appel d'une fonction
 		 *
 		 */
+		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findFunction(name);
 		Type returnType = null;
 		SymbolTable table = function.getSymbolTable();
 
-		//Calcul du déplacement
-		//On fait la somme des offsets de toutes les variables locales de la fonction
-		int offset=0;//octets
-		Iterator<Map.Entry<String, FunctionOrVariable>> it;
-		it=function.getSymbolTable().getFunctionsAndVariables().iterator();
-		FunctionOrVariable var;
-		while(it.hasNext()){
-			var=it.next().getValue();
-			if(var instanceof Variable){
-				offset+=((Variable) var).getOffset();
-			}
-		}
+
+		// Sauvegarde les registres de l'environnement appelant
+		registerManager.saveAll();
+
 		//TODO : gérer code d'appel à fonction
 
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
-			//TODO : code pour empiler l'argument
+			this.writer.writeMain("ADQ -2,SP");
+			this.writer.writeMain("STW R"+registerIndex+", (SP)");
+		}//Tous les arguments sont empilés
 
-		}
-		registerManager.saveAll();
+
 		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table)));
 		registerManager.restoreAll();
 		returnType = function.getType();
