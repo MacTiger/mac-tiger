@@ -420,7 +420,6 @@ public class TigerTranslator {
 					}
 				}
 			} else {
-				System.err.println((int) character);
 				ordinals.add((int) character);
 			}
 		}
@@ -540,7 +539,7 @@ public class TigerTranslator {
 
 			return semantic.SymbolTable.intType;
 		} else {
-
+			return semantic.SymbolTable.stringType;
 		}
 	}
 
