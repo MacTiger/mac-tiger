@@ -261,8 +261,8 @@ public class TigerTranslator {
 
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
-			this.writer.writeMain("ADQ -2,SP");
-			this.writer.writeMain("STW R"+registerIndex+", (SP)");
+			this.writer.writeFunction("ADQ -2,SP");
+			this.writer.writeFunction("STW R"+registerIndex+", (SP)");
 		}//Tous les arguments sont empilés
 
 
@@ -423,10 +423,10 @@ public class TigerTranslator {
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 16) + ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 8) | ordinals.get(1), string));
 		this.writer.writeMain("STW R0, (HP)+");
 		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
-			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 16) + ordinals.get(i + 1)));
+			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 8) | ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
 		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));

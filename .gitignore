@@ -5,6 +5,8 @@
 /.classpath
 /.idea
 /.project
+/prompt.iup
+/prompt.src
 /torture.tiger
 /asm
 /bin
