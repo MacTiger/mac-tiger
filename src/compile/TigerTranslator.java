@@ -59,7 +59,10 @@ public class TigerTranslator {
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
 				case "print": {
-					this.writer.writeHeader(label, "RTS"); // TODO
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("LDW R1, #WRITE_EXC");
+					this.writer.writeHeader("TRP R1");
+					this.writer.writeHeader("RTS");
 					break;
 				}
 				default: {
@@ -124,7 +127,6 @@ public class TigerTranslator {
 			case "<":
 			case ">=":
 			case "<=": return this.translateComparator(tree, registerIndex);
-			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
 			case "|": return this.translateOrOperator(tree, registerIndex);
 			case "&": return this.translateAndOperator(tree, registerIndex);
 			case "+": return this.translateAddOperator(tree, registerIndex);
@@ -264,7 +266,9 @@ public class TigerTranslator {
 		}//Tous les arguments sont empilés
 
 
-		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table)));
+
+
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(table,name)));
 		registerManager.restoreAll();
 		returnType = function.getType();
 
@@ -419,14 +423,14 @@ public class TigerTranslator {
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", ordinals.get(0) << 16 + ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 16) + ordinals.get(1), string));
 		this.writer.writeMain("STW R0, (HP)+");
 		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
-			this.writer.writeMain(String.format("LDW R0, #%d", ordinals.get(i) << 16 + ordinals.get(i + 1)));
+			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 16) + ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
-		this.heapBase += ordinals.size() * 2;
 		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
+		this.heapBase += ordinals.size() * 2;
 		return this.currentTDS.stringType;
 	}
 
@@ -501,22 +505,38 @@ public class TigerTranslator {
 
 	private Type translateEqual(Tree tree, int registerIndex) {
 		int registerChild0 = registerIndex;
-		int registerChild1 = registerManager.provideRegister();
 		translate(tree.getChild(0), registerChild0);
+		int registerChild1 = registerManager.provideRegister();
 		translate(tree.getChild(1), registerChild1);
+
 		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-		writer.writeFunction(String.format("BEQ $+2"));
+		writer.writeFunction(String.format("BEQ $+4"));
 		writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+
+		registerManager.freeRegister();
+
 		return semantic.SymbolTable.intType;
 	}
 
 	private Type translateNotEqual(Tree tree, int registerIndex) {
-		int registerChild0 = registerIndex;
-		int registerChild1 = registerManager.provideRegister();
-		translate(tree.getChild(0), registerChild0);
-		translate(tree.getChild(1), registerChild1);
-		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-		return semantic.SymbolTable.intType;
+		if (currentTDS.treeTypeHashMap.get(tree) != SymbolTable.stringType) {
+			int registerChild0 = registerIndex;
+			translate(tree.getChild(0), registerChild0);
+			int registerChild1 = registerManager.provideRegister();
+			translate(tree.getChild(1), registerChild1);
+
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
+			writer.writeFunction(String.format("BEQ $+6"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+
+			registerManager.freeRegister();
+
+			return semantic.SymbolTable.intType;
+		} else {
+			return semantic.SymbolTable.stringType;
+		}
 	}
 
 	private Type translateComparator(Tree tree, int registerIndex) {
@@ -539,7 +559,7 @@ public class TigerTranslator {
 		this.translate(tree.getChild(0),registerIndex);   //Pour le if
 		Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
 
-		if (tree.getChildCount() == 2){    // Pour le else
+		if (tree.getChildCount() == 3){    // Pour le else
 			result = this.translate(tree.getChild(2), registerIndex);
 		}
 		return result;

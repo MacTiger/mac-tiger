@@ -18,12 +18,8 @@ START main_
 LDW SP, #STACK_ADRS
 //En tête fichier src
 
-
 STRING1 string "Cabababa" 
 STRING2 string "Cababab"
-
-
-
 
 falseEx_
 	LDW R0,#0
@@ -33,12 +29,9 @@ vraiEx_
 	LDW R0,#1
 	BMP fin_-$-2
 	
-
-
 main_
-	LDW SP,#STACK_ADRS
-	LDW R4,#0 //deplacement dans les deux strings
-	
+	LDW SP, #STACK_ADRS
+	LDW R4, #0 //deplacement dans les deux strings
 
 deb_
 	//charge adresse 
