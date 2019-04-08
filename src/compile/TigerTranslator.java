@@ -693,4 +693,31 @@ public class TigerTranslator {
 	public String toString() {
 		return this.writer.toString();
 	}
+
+
+
+	public void writeEntryFunction(SymbolTable TDSDest, String name){
+		this.writeStaticLinking(TDSDest);
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(TDSDest,name)));
+	}
+
+	public void writeEntryFunction(SymbolTable TDSDest){
+		this.writeStaticLinking(TDSDest);
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(TDSDest)));
+	}
+
+	public void writeStaticLinking(SymbolTable TDSDest){
+		int registerIndex1 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDQ %d, R%s // Calcul du chaînage statique", this.currentTDS.getDepth()-TDSDest.getDepth() + 1), String.valueOf(registerIndex1));
+		int registerIndex2 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%s, BP", String.valueOf(registerIndex2)));
+		String label = ""; // TODO : générer un label
+		this.writer.writeFunction(label, String.format("ADQ -4, R%s", String.valueOf(registerIndex2))); // TODO:  Vérifier la bonne valeur du déplacement statique
+		this.writer.writeFunction(String.format("LDW R%s, (R%s)", String.valueOf(registerIndex2), String.valueOf(registerIndex2)));
+		this.writer.writeFunction(String.format("ADQ -1, R%s", String.valueOf(registerIndex1)));
+		this.writer.writeFunction(String.format("BNE %s", label));
+
+		this.registerManager.freeRegister();
+		this.registerManager.freeRegister();
+	}
 }

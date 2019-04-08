@@ -38,6 +38,7 @@ public class SymbolTable {
 		SymbolTable root = new SymbolTable();
 		root.types.set("int", intType);
 		root.types.set("string", stringType);
+		root.setDepth(0);
 		{
 			Function function = new Function();
 			function.setType(stringType);
@@ -142,6 +143,15 @@ public class SymbolTable {
 	private List<SymbolTable> children;
 	private Namespace<Type> types;
 	private Namespace<FunctionOrVariable> functionsAndVariables;
+	private int depth;
+
+	public int getDepth() {
+		return depth;
+	}
+
+	private void setDepth(int depth) {
+		this.depth = depth;
+	}
 
 	public SymbolTable getParent() {
 		return parent;
@@ -172,6 +182,11 @@ public class SymbolTable {
 		this.children = new ArrayList<SymbolTable>();
 		this.types = new Namespace<Type>();
 		this.functionsAndVariables = new Namespace<FunctionOrVariable>();
+		if (parent != null){
+			this.depth = parent.getDepth()+1;
+		} else{
+			this.depth = 0;
+		}
 	}
 
 	public Type findType(String name) {
