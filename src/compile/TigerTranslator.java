@@ -118,8 +118,8 @@ public class TigerTranslator {
 		}
 		switch (tree.toString()) {
 			case ":=": return this.translateAssignment(tree, registerIndex);
-			case "=":
-			case "<>": return this.translateEqualOrNot(tree, registerIndex);
+			case "=": return this.translateEqual(tree, registerIndex);
+			case "<>": return this.translateNotEqual(tree, registerIndex);
 			case ">":
 			case "<":
 			case ">=":
@@ -488,18 +488,23 @@ public class TigerTranslator {
 		return this.currentTDS.intType;
 	}
 
-	private Type translateEqualOrNot(Tree tree, int registerIndex) {
-		Tree exp0 = tree.getChild(0);
-		Tree exp1 = tree.getChild(1);
+	private Type translateEqual(Tree tree, int registerIndex) {
+		int registerChild0 = registerIndex;
+		int registerChild1 = registerManager.provideRegister();
+		translate(tree.getChild(0), registerChild0);
+		translate(tree.getChild(1), registerChild1);
+		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
+		writer.writeFunction(String.format("BEQ $+2"));
+		writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+		return semantic.SymbolTable.intType;
+	}
 
-		int registerIndex0 = 0;
-		int registerIndex1 = 0;
-
-		//TODO : gérer les registres où stocker les résultats des deux opérandes
-		translate(exp0, registerIndex0);
-		translate(exp1, registerIndex1);
-
-		//TODO : Générer le code de l'égalité entre ce qui est stocké dans registerIndex0 et registerIndex1
+	private Type translateNotEqual(Tree tree, int registerIndex) {
+		int registerChild0 = registerIndex;
+		int registerChild1 = registerManager.provideRegister();
+		translate(tree.getChild(0), registerChild0);
+		translate(tree.getChild(1), registerChild1);
+		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
 		return semantic.SymbolTable.intType;
 	}
 
