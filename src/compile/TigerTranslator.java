@@ -280,9 +280,9 @@ public class TigerTranslator {
 		int registerRight = registerManager.provideRegister();
 		translate(tree.getChild(1), registerRight);
 
-		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+		boolean isString = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 		System.err.println(currentTDS.treeTypeHashMap.get(tree.getChild(0)));
-		if (!isStringComparison) {
+		if (!isString) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
 			writer.writeFunction(String.format("BLE 6"));
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
@@ -319,7 +319,7 @@ public class TigerTranslator {
 			//Met ff00 dans registerOp
 			writer.writeFunction(String.format("LDW R"+registerOp+",#65280"));
 			//Met le premier caractere de registerLeft en regIndex
-			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+"R"+registerIndex));
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerIndex));
 
 
 			//test sur valeur du caractere1
@@ -334,28 +334,28 @@ public class TigerTranslator {
 			//test si str1-str2 >= 0
 			writer.writeFunction(String.format("BGE 6"));
 			// => si str1 - str2 < 0 : true => fin du programme
-			writer.writeFunction(String.format("LDW R"+registerIndex+", 1"));
+			writer.writeFunction(String.format("LDW R"+registerIndex+", #1"));
 			writer.writeFunction(String.format("BMP 18"));//fin des instructions
 
 			//test si str1-str2 == 0
 			// si str1 != str2, alors str1 > str2 : false
 			writer.writeFunction(String.format("BEQ 6"));
-			writer.writeFunction(String.format("LDW R"+registerIndex+", 0"));
+			writer.writeFunction(String.format("LDW R"+registerIndex+", #0"));
 			writer.writeFunction(String.format("BMP 18"));//fin des instructions
 			//A tester !
 
 			//Met 00ff dans le registerOp
 			writer.writeFunction(String.format("LDW R"+registerOp+",#255"));
 			//Met le caractere 2 de str1 dans registerIndex
-			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+"R"+registerIndex));
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerIndex));
 			//test si caractere 2 vaut null
 			writer.writeFunction(String.format("BNE 6"));
 			// si caractere 2 de str1 est null : renvoyer true
-			writer.writeFunction(String.format("LDW R"+registerIndex+",1"));
+			writer.writeFunction(String.format("LDW R"+registerIndex+",#1"));
 			writer.writeFunction(String.format("BMP 4"));
 
 			//ici on sait qu'il faut continuer : décalage
-			writer.writeFunction(String.format("ADQ 2,"+registerDep));
+			writer.writeFunction(String.format("ADQ 2, R"+registerDep));
 			writer.writeFunction(String.format("BMP -66"));//on boucle
 			return null;
 		}
