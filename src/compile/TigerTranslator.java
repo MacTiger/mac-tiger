@@ -136,8 +136,7 @@ public class TigerTranslator {
 					this.writer.writeHeader("BNE 8");
 					this.writer.writeHeader("LDQ 56, R0");
 					this.writer.writeHeader("STB R0, -(SP)");
-					this.writer.writeHeader("LDW R0, R1");
-					this.writer.writeHeader("DIV R0, R4, R1");
+					this.writer.writeHeader("LDW R1, #-3276");
 					this.writer.writeHeader("NEG R1, R1");
 					this.writer.writeHeader("LDW R0, R1");
 					this.writer.writeHeader("DIV R0, R4, R1");
