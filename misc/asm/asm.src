@@ -13,10 +13,5 @@ ORG LOAD_ADRS
 START main_
 
 LDW SP, #STACK_ADRS
-STRING0 string "Hello World !"
 
 main_
-	LDW R1, #STRING0
-	STW R1, (-SP) //met le string en param de fonction appelée
-
-	TRP #EXIT_EXC
