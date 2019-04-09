@@ -21,9 +21,8 @@ public class Writer {
 			"NIL EQU 0X1000 // Adresse spéciale pour la constante nil\n" +
 			"\n" +
 			"SP EQU R15 // Adresse du haut de la pile\n" +
-			"WR EQU R14\n" +
+			"HP EQU R14 // Adresse du bas du tas\n" +
 			"BP EQU R13 // Adresse de la base de l'environnement courant\n" +
-			"HP EQU R12 // Adresse du bas du tas\n" +
 			"\n" +
 			"ORG LOAD_ADDR // Chargement du programme\n" +
 			"START MAIN // Lancement du programme\n" +
@@ -47,7 +46,8 @@ public class Writer {
 		this.header = "";
 		this.mainStart =
 			labelGenerator.padLabel("MAIN") + "LDW SP, #STACK_ADDR // Initialisation du haut de la pile\n" +
-			labelGenerator.getIndent() + "LDW HP, #HEAP_ADDR // Initialisation du bas de la pile\n";
+			labelGenerator.getIndent() + "LDW HP, #HEAP_ADDR // Initialisation du bas de la pile\n" +
+			labelGenerator.getIndent() + "LDW BP, #STACK_ADDR // Initialisation de la base de l'environnement courant\n";
 		this.main = "";
 		this.mainEnd =
 			labelGenerator.getIndent() + "TRP #EXIT_EXC // Terminaison normale du programme\n";

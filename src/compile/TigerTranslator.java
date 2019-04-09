@@ -723,7 +723,7 @@ public class TigerTranslator {
 			this.writer.writeMain("STW R0, (HP)+");
 		}
 		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
-		this.heapBase += ordinals.size() * 2;
+		this.heapBase += ordinals.size();
 		return this.currentTDS.stringType;
 	}
 

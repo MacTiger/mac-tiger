@@ -5,7 +5,7 @@ import java.util.Stack;
 public class RegisterManager {
 
     //R1 à R10
-    private final int REGMAX = 10;//nb max de registres R1->R10
+    private final int REGMAX = 12;//nb max de registres R1->R12
 
     private Writer writer;
     private Stack<Integer> availableRegisters;
