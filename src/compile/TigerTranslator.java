@@ -649,6 +649,9 @@ public class TigerTranslator {
 		this.writer.writeFunction(String.format("ADQ %d,SP  // Dépile les arguments de la fonction", sizeOfArgs));  // Dépile les arguments
 
 		registerManager.restoreAll();
+		if (function.getType() != null) {
+			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
+		}
 		returnType = function.getType();
 
 		return returnType;
