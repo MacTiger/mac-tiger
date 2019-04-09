@@ -1,5 +1,6 @@
 //	str1 < str2
 //	oct2 : octet de poids fort
+// R0 = 0 faux et R0=1 vrai
 
 EXIT_EXC EQU 64
 READ_EXC EQU 65
@@ -18,36 +19,16 @@ START main_
 LDW SP, #STACK_ADRS
 //En tête fichier src
 
-
-STRING1 string "Cababab" 
-STRING2 string "Cababab"
-
+STRING1 string "" 
+STRING2 string "aa"
 
 
-
-falseEx_
-	LDW R0,#0
-	BMP fin_-$-2
-
-vraiEx_
-	LDW R0,#1
-	BMP fin_-$-2
 	
-oct1Nul_
-	AND R2,R3,R0
-	BEQ falseEx_-$-2//Octet de pds fort nul chez str2 : égalité et fin 
-	BMP vraiEx_-$-2//Octet de pds fort non nul chez str2 : str1<str2
-
-
-
-
-
 main_
-	LDW SP,#STACK_ADRS
-	LDW R4,#0 //deplacement dans les deux strings
-	
+	LDW SP, #STACK_ADRS
+	LDW R4, #0 //deplacement dans les deux strings
 
-deb_
+
 	//charge adresse 
 	LDW R1,#STRING1 
 	LDW R2,#STRING2
@@ -64,27 +45,42 @@ deb_
 	//Voir si oct2 nul chez str1
 	LDW R3,#65280
 	AND R1,R3,R0 //Retire 1er octet str1
-	BEQ oct1Nul_-$-2 //Octet de pds fort est nul chez str1 
-
+	BNE 16 //Passe au SUB si ne vaut pas 0
+	//vaut 0 ici
+	AND R2,R3,R0
+	BNE 6
+	//oct2 nul chez str2
+	LDW R0,#0 //faux : égalité
+	BMP 4 	//FIN
+	//oct2 non nul chez str2
+	LDW R0,#1 //vrai : str1<str2
+	BMP 36 //FIN
+	
 
 	//On sait ici que octet pds fort non nul chez str1
 	SUB R1,R2,R0
-	BLW vraiEx_-$-2 //str1<str2 : Fin
-	BGT falseEx_-$-2 //str2<str1 : Fin
+	BGE 6 //Passe au test suivant si str1<str2
+	LDW R0,#1
+	BMP 18 //FIN
+	BEQ 6 //On continue si str1 = str2
+	LDW R0,#0
+	BMP 18 //FIN
+
 	
 	//On sait ici que les deux octets sont égaux chez str1 et str2
 	//voir si oct1 est nul chez str1
 	LDW R3,#255
 	AND R1,R3,R0 //Retire 2e octet str1
-	BEQ falseEx_-$-2  //Valait nul : str1=str2
+	BNE 6  //Si 2e octet str1 ne vaut pas nul on continue
+	LDW R0,#0
+	BMP 4 //FIN
+
 	
 	//on sait ici que octet pds faible non nul chez les deux strings
 	ADQ 2,R4
-	BMP deb_-$-2
+	BMP -76
 	
-fin_ 
-	//LDQ WRITE_EXC,WR
-	//TRP WR//Affiche R0
+	//FIN
 	TRP #EXIT_EXC
 
 	

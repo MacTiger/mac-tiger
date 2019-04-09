@@ -326,7 +326,6 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			return null;
 		} else {//inf.src
 			int registerAddA;//contient adresse de A
 			registerAddA=registerManager.provideRegister();
@@ -357,7 +356,7 @@ public class TigerTranslator {
 			//Met ff00 dans registerOp
 			writer.writeFunction(String.format("LDW R"+registerOp+",#65280"));
 			//Met le premier caractere de registerLeft en regIndex
-			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerIndex));
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerOp));
 
 
 			//test sur valeur du caractere1
@@ -368,7 +367,7 @@ public class TigerTranslator {
 			// => si ne vaut pas null : continue le programme
 
 			//Fait str1-str2
-			writer.writeFunction(String.format("SUB R"+registerLeft+",R"+registerRight+",R"+registerIndex));
+			writer.writeFunction(String.format("SUB R"+registerLeft+",R"+registerRight+",R"+registerOp));
 			//test si str1-str2 >= 0
 			writer.writeFunction(String.format("BGE 6"));
 			// => si str1 - str2 < 0 : true => fin du programme
@@ -385,7 +384,7 @@ public class TigerTranslator {
 			//Met 00ff dans le registerOp
 			writer.writeFunction(String.format("LDW R"+registerOp+",#255"));
 			//Met le caractere 2 de str1 dans registerIndex
-			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerIndex));
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+",R"+registerOp));
 			//test si caractere 2 vaut null
 			writer.writeFunction(String.format("BNE 6"));
 			// si caractere 2 de str1 est null : renvoyer true
@@ -394,9 +393,15 @@ public class TigerTranslator {
 
 			//ici on sait qu'il faut continuer : décalage
 			writer.writeFunction(String.format("ADQ 2, R"+registerDep));
-			writer.writeFunction(String.format("BMP -66"));//on boucle
-			return null;
+			writer.writeFunction(String.format("BMP -62"));//on boucle
+
+			registerManager.freeRegister();
+			registerManager.freeRegister();
+			registerManager.freeRegister();
+			registerManager.freeRegister();
 		}
+		registerManager.freeRegister();
+		return null;
 	}
 
 	private Type translateEqual(Tree tree, int registerIndex) {
