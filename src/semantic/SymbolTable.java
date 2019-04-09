@@ -735,15 +735,15 @@ public class SymbolTable {
 							} else {
 								argument.setType(argumentType);
 							}
-							argument.setOffset(argumentOffset);
 							if (argumentType != null) {
 								argumentOffset += argumentType.getSize();
 							}
+							argument.setOffset(argumentOffset);
 							subTable.functionsAndVariables.set(argumentName, argument);
 						}
 						for (Map.Entry<String, FunctionOrVariable> entry: subTable.functionsAndVariables) {
 							Variable argument = (Variable) entry.getValue();
-							argument.setOffset(argument.getOffset() - argumentOffset);
+							argument.setOffset(argumentOffset - argument.getOffset());
 						}
 						Tree type = symbol.getChildCount() > 3 ? symbol.getChild(3) : null;
 						if (type != null) { // on distigue les procédures des fonctions
@@ -800,10 +800,10 @@ public class SymbolTable {
 						supTable = table;
 						variableOffset = 0;
 					}
-					variable.setOffset(variableOffset);
 					if (returnType != null) {
-						variableOffset += returnType.getSize();
+						variableOffset -= returnType.getSize();
 					}
+					variable.setOffset(variableOffset);
 					table.functionsAndVariables.set(name, variable);
 					break;
 				}

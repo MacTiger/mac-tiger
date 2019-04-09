@@ -54,14 +54,72 @@ public class TigerTranslator {
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
 		this.heapBase = 4098;
-		for (Map.Entry<String, FunctionOrVariable> entry: root.getParent().getFunctionsAndVariables()) {
+		this.writeHeader();
+		this.writeMainAndFunction(tree);
+	}
+
+	private void writeHeader() {
+		for (Map.Entry<String, FunctionOrVariable> entry: this.currentTDS.getParent().getFunctionsAndVariables()) {
 			String name = entry.getKey();
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
+				case "concat": {
+					String str3reg = "R0";
+					String str1reg = "R1";
+					String str2reg = "R2";
+					String size1reg = "R3";
+					String size2reg = "R4";
+					String size3reg = "R5";
+					String charReg = "R6"; // Code ASCII du caractère courant
+					String pairPointerReg = "R7"; // Adresse de la paire de caractères courante
+					String parityReg = "R8"; // 0 ou 1
+					String filterLeftReg = "R9";
+					String filterRightReg = "R10";
+
+					// On empile dans le tas la taille du nouveau string
+					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1reg));
+					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2reg));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1reg));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2reg));
+					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1reg, size2reg, size3reg));
+					this.writer.writeHeader(String.format("STW %s, (HP)+", size3reg));
+
+					// On écrit les filtres droits et gauches
+					this.writer.writeHeader(String.format(""));
+
+					// Extraire le caractère courant
+					this.writer.writeHeader(String.format("LDW %s, (%s)", charReg, pairPointerReg));
+					this.writer.writeHeader(String.format("TST %s", pairPointerReg, pairPointerReg));
+					this.writer.writeHeader(String.format("BNE 6"));
+
+					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterLeftReg, charReg));
+					this.writer.writeHeader(String.format("BMP 4"));
+					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterRightReg, charReg));
+					this.writer.writeHeader(String.format("")); //TODO : mettre à jour pairPointerReg et pairPointerReg
+
+					// Empiler le caractère courant
+						// Si le caractère courant vaut \0
+							// Si on est au deuxième string, empiler \0
+								// TODO
+							// Sinon, passer au deuxième string
+								// TODO
+						// Sinon, empiler
+
+					// Empiler \0
+						// TODO
+
+					break;
+				}
 				case "print": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R1, #WRITE_EXC");
 					this.writer.writeHeader("TRP R1");
+					this.writer.writeHeader("RTS");
+					break;
+				}
+				case "size": {
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("LDW R0, (R0)-2");
 					this.writer.writeHeader("RTS");
 					break;
 				}
@@ -72,7 +130,12 @@ public class TigerTranslator {
 			}
 			this.writer.writeHeader();
 		}
-		this.translate(tree, 0);
+	}
+
+	private void writeMainAndFunction(Tree tree) {
+		int registerIndex = this.registerManager.provideRegister();
+		this.translate(tree, registerIndex);
+		this.registerManager.freeRegister();
 	}
 
 	private SymbolTable next() {
@@ -157,7 +220,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateStrictGreaterThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGT 6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateStrictGreaterThan lorsque les fils sont des strings
@@ -174,7 +241,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateStrictLessThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLT 6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateStrictLessThan lorsque les fils sont des strings
@@ -191,7 +262,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGE 6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des strings
@@ -208,7 +283,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateLessOrEqualThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLE 6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateLessOrEqualThan lorsque les fils sont des strings
@@ -226,7 +305,7 @@ public class TigerTranslator {
 
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BEQ $+4"));
+			writer.writeFunction(String.format("BEQ 4"));
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 
 			registerManager.freeRegister();
@@ -248,9 +327,9 @@ public class TigerTranslator {
 
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BEQ $+6"));
+			writer.writeFunction(String.format("BEQ 6"));
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 
 			registerManager.freeRegister();
@@ -533,13 +612,15 @@ public class TigerTranslator {
 				ordinals.add((int) character);
 			}
 		}
+		int size = ordinals.size();
 		ordinals.add(0); // on ajoute le caractère nul de fin de chaîne
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 8) | ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", size, string));
 		this.writer.writeMain("STW R0, (HP)+");
-		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
+		this.heapBase += 2;
+		for (int i = 0, li = ordinals.size(); i < li; i += 2) {
 			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 8) | ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
@@ -555,26 +636,40 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private Type translateID(Tree tree, int registerIndex) {
-		Variable variable = this.currentTDS.findVariable(tree.toString());
-		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
+		String name = tree.toString();
+		Variable variable = this.currentTDS.findVariable(name);
 
-		String code = "\n";
-		int depl_stat = 2;  // TODO : Vérifier la bonne valeur du déplacement statique
-
-		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
-			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
-			String loopLabel = labelGenerator.getLabel(tree, "static");    // Création d'un label de boucle unique pour la remontée du chaînage statique
-			code += "LDW D0, #countStaticChain  // Nombre de chaînes statiques à remonter pour accéder à la variable\n" +
-					"LDW R1, BP  // Copie le registre de base\n" +
-					"BOUCLE  LDW R1, (R1)depl_stat  // Remontage des chaînages statiques\n" +
-					"  ADQ #-1, D0\n" +
-					"BNE BOUCLE\n";
-			code = code.replaceAll("countStaticChain", String.valueOf(countStaticChain)).replaceAll("D0","R"+String.valueOf(loopLabel)).replaceAll("depl_stat", String.valueOf(depl_stat)).replaceAll("BOUCLE",loopLabel);
+		int depl_stat = -4;  // Taille de zone de liaison : chaînage dynamique et chaînage statique // TODO : Vérifier la bonne valeur du déplacement statique
+		int deplacementVariable = variable.getOffset();
+		String typeOfVar;
+		if (deplacementVariable < 0){   // Si variable est une variable locale
+			deplacementVariable += depl_stat;   // On doit compter le déplacement statique
+			typeOfVar = "variable locale";
+		} else {    // variable est un argument de fonction
+			deplacementVariable += 2;   // Taille de l'adresse de retour
+			typeOfVar = "argument";
 		}
 
-		code += "ADQ #deplacement, R1  // L'adresse de la variable recherchée est maintenant dans registre voulu\n";
-		code.replaceAll("R1", "R"+String.valueOf(registerIndex)).replaceAll("deplacement", String.valueOf(variable.getOffset()));
-		// writer.write(code); // TODO utiliser writer.writeFunction
+		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
+
+		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
+		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
+			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
+
+
+			int loopRegister = this.registerManager.provideRegister();
+
+			this.writer.writeFunction(String.format("LDQ %d, R%d  // Début de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre" ,countStaticChain, loopRegister, typeOfVar, name));
+			// Début de boucle :
+			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, depl_stat));
+			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
+			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -6, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
+			// Fin de boucle
+
+			this.registerManager.freeRegister();
+		}
+		this.writer.writeFunction(String.format("ADQ %d, R%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", deplacementVariable, registerIndex,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
+
 		return null;
 	}
 
@@ -631,7 +726,7 @@ public class TigerTranslator {
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// On saute à la fin
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("BMP %s-$-2", endifLabel));
 			// On génère le l'étiquette et le code de else
 			this.writer.writeFunction(elseLabel, "NOP");
 			this.translate(tree.getChild(2), registerIndex);
@@ -776,15 +871,17 @@ public class TigerTranslator {
 	}
 
 	public void writeStaticLinking(SymbolTable TDSDest){
+		int depl_stat = -4; // TODO:  Vérifier la bonne valeur du déplacement statique
+
 		int registerIndex1 = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s // Calcul du chaînage statique", this.currentTDS.getDepth()-TDSDest.getDepth() + 1), String.valueOf(registerIndex1));
+		this.writer.writeFunction(String.format("LDQ %d, R%d // Calcul du chaînage statique", this.currentTDS.getDepth()-TDSDest.getDepth() + 1, registerIndex1));
 		int registerIndex2 = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDW R%s, BP", String.valueOf(registerIndex2)));
-		String label = ""; // TODO : générer un label
-		this.writer.writeFunction(label, String.format("ADQ -4, R%s", String.valueOf(registerIndex2))); // TODO:  Vérifier la bonne valeur du déplacement statique
-		this.writer.writeFunction(String.format("LDW R%s, (R%s)", String.valueOf(registerIndex2), String.valueOf(registerIndex2)));
-		this.writer.writeFunction(String.format("ADQ -1, R%s", String.valueOf(registerIndex1)));
-		this.writer.writeFunction(String.format("BNE %s", label));
+		this.writer.writeFunction(String.format("LDW R%d, BP", registerIndex2));
+		// Début de boucle :
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex2, registerIndex2, depl_stat));
+		this.writer.writeFunction(String.format("ADQ -1, R%d", registerIndex1));
+		this.writer.writeFunction(String.format("BNE %d", -4)); // Jump à 2 instructions plus tôt
+		// Fin de boucle
 
 		this.registerManager.freeRegister();
 		this.registerManager.freeRegister();
