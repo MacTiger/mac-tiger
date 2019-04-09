@@ -5,6 +5,7 @@ import org.antlr.runtime.tree.Tree;
 import semantic.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,8 @@ public class TigerTranslator {
 	private LabelGenerator labelGenerator;
 	private RegisterManager registerManager;
 	private int heapBase; // l'adresse qui suit la partie statique du tas
+	private Map<String, Integer> strings; // chaînes de caractères statiques
+	private int nextString; // nombre de chaînes de caractères statiques
 
 	public TigerTranslator(Tree tree, SymbolTable root) {
 		// Pour lancer le translator sur l'ensemble du programme, passer la TDS de niveau 0 (pas le root)
@@ -54,6 +57,7 @@ public class TigerTranslator {
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
 		this.heapBase = 4098;
+		this.strings = new HashMap<String, Integer>();
 		this.writeHeader();
 		this.writeMainAndFunction(tree);
 	}
@@ -666,70 +670,94 @@ public class TigerTranslator {
 
 	private Type translateSTR(Tree tree, int registerIndex) {
 		List<Integer> ordinals = new ArrayList<Integer>();
-		String string = tree.toString();
-		for (int i = 1, li = string.length() - 1; i < li; ++i) {
-			char character = string.charAt(i);
+		String inputString = tree.toString();
+		String commentString = "";
+		String outputString = "";
+		for (int i = 1, li = inputString.length() - 1; i < li; ++i) {
+			char character = inputString.charAt(i);
 			if (character == '\\') {
-				character = string.charAt(++i);
+				character = inputString.charAt(++i);
 				switch (character) {
 					case 'n': {
+						commentString += "\\n";
 						ordinals.add(10);
+						outputString += "\n";
 						break;
 					}
 					case 't': {
+						commentString += "\\t";
 						ordinals.add(9);
+						outputString += "\t";
 						break;
 					}
 					case '"': {
+						commentString += "\\\"";
 						ordinals.add(34);
+						outputString += "\"";
 						break;
 					}
 					case '\\': {
+						commentString += "\\\\";
 						ordinals.add(92);
+						outputString += "\\";
 						break;
 					}
 					case '^': {
-						character = string.charAt(++i);
+						commentString += "\\^";
+						character = inputString.charAt(++i);
+						commentString += character;
 						if (character != '@') { // on ignore les caractères nuls
-							ordinals.add(((int) character) - 64);
+							ordinals.add(character - 64);
+							outputString += (char) (character - 64);
 						}
 						break;
 					}
 					case '0':
 					case '1': {
-						int ordinal = (((int) character) - 48) * 100;
-						character = string.charAt(++i);
-						ordinal += (((int) character) - 48) * 10;
-						character = string.charAt(++i);
-						ordinal += ((int) character) - 48;
+						commentString += "\\" + character;
+						int ordinal = (character - 48) * 100;
+						character = inputString.charAt(++i);
+						commentString += character;
+						ordinal += (character - 48) * 10;
+						character = inputString.charAt(++i);
+						commentString += character;
+						ordinal += character - 48;
 						if (ordinal != 0) { // on ignore les caractères nuls
 							ordinals.add(ordinal);
+							outputString += (char) ordinal;
 						}
 						break;
 					}
 					default: {
-						while ((character = string.charAt(++i)) != '\\');
+						while ((character = inputString.charAt(++i)) != '\\');
 						break;
 					}
 				}
 			} else {
+				commentString += character;
 				ordinals.add((int) character);
+				outputString += character;
 			}
 		}
-		int size = ordinals.size();
-		ordinals.add(0); // on ajoute le caractère nul de fin de chaîne
-		if ((ordinals.size() % 2) == 1) {
-			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
-		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", size, string));
-		this.writer.writeMain("STW R0, (HP)+");
-		this.heapBase += 2;
-		for (int i = 0, li = ordinals.size(); i < li; i += 2) {
-			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 8) | ordinals.get(i + 1)));
+		if (this.strings.containsKey(outputString)) {
+			this.writer.writeFunction(String.format("LDW R%d, #%s", registerIndex, this.strings.get(outputString)));
+		} else {
+			int size = ordinals.size();
+			ordinals.add(0); // on ajoute le caractère nul de fin de chaîne
+			if ((ordinals.size() % 2) == 1) {
+				ordinals.add(0); // on complète pour avoir une chaîne de taille paire
+			}
+			this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne \"%s\"", size, commentString));
 			this.writer.writeMain("STW R0, (HP)+");
+			this.heapBase += 2;
+			for (int i = 0, li = ordinals.size(); i < li; i += 2) {
+				this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 8) | ordinals.get(i + 1)));
+				this.writer.writeMain("STW R0, (HP)+");
+			}
+			this.strings.put(outputString, this.heapBase);
+			this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
+			this.heapBase += ordinals.size();
 		}
-		this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
-		this.heapBase += ordinals.size();
 		return this.currentTDS.stringType;
 	}
 

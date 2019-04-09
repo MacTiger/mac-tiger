@@ -1,1 +1,24 @@
-print("ABC")
+(
+	print(
+		"ABCDEF\n\
+		\123456\n\
+		\A\000A\n\
+		\A\^@A\n\
+		\A\009A\n\
+		\A\^IA\n\
+		\A\tA\n\
+		\A\"A\n"
+	);
+	printi(0);
+	print("\n");
+	printi(42);
+	print("\n");
+	printi(32767);
+	print("\n");
+	printi(32768);
+	print("\n");
+	printi(-32768);
+	print("\n");
+	printi(-32767);
+	print("\n")
+)

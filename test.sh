@@ -28,6 +28,10 @@ test() {
 			if [[ (($refstatus == 4)) ]]
 			then
 				stdout="asm/$dir/$file.src"
+				local refin="tests/$dir/$file.in"
+				local refout="tests/$dir/$file.out"
+				touch $refin
+				touch $refout
 				java -cp bin:lib/* Main --no-color --src 2> $stderr 1> $stdout < $stdin
 				status=$((($? + 4) % 5))
 				if [[ (($status == 4)) ]]
@@ -36,10 +40,9 @@ test() {
 					local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1>> $stderr)
 					if [[ $err == "" ]]
 					then
-						err=$(java -jar lib/microPIUPK.jar -batch $prgm 2>&1 1> "/dev/null")
+						err=$(diff <(java -jar lib/microPIUPK.jar -batch $prgm < $refin | sed '$d' | sed '$d' | sed '$s/\(.\+\)Simulation terminée ----------------------------------$/\1\n/' | sed '$d') <(cat $refout))
 						if [[ $err == "" ]]
 						then
-							# TODO: tester la sortie standard
 							status="5"
 						fi
 					fi
