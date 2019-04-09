@@ -70,6 +70,33 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS");
 					break;
 				}
+				case "printi": {
+					this.writer.writeHeader(label, "LDW R1, (SP)2");
+					this.writer.writeHeader("LDW R2, #WRITE_EXC");
+					this.writer.writeHeader("LDW R3, SP");
+					this.writer.writeHeader("LDQ 10, R4");
+					this.writer.writeHeader("LDQ 0, R0");
+					this.writer.writeHeader("STB R0, -(SP)");
+					this.writer.writeHeader("LDW R0, R1");
+					this.writer.writeHeader("BGE 14");
+					this.writer.writeHeader("NEG R1, R1");
+					this.writer.writeHeader("LDQ 45, R0");
+					this.writer.writeHeader("STB R0, -(SP)");
+					this.writer.writeHeader("LDW R0, SP");
+					this.writer.writeHeader("TRP R2");
+					this.writer.writeHeader("ADQ 1, SP");
+					this.writer.writeHeader("LDW R0, R1");
+					this.writer.writeHeader("DIV R0, R4, R1");
+					this.writer.writeHeader("ADQ 48, R0");
+					this.writer.writeHeader("STB R0, -(SP)");
+					this.writer.writeHeader("TST R1");
+					this.writer.writeHeader("BNE -12");
+					this.writer.writeHeader("LDW R0, SP");
+					this.writer.writeHeader("TRP R2");
+					this.writer.writeHeader("LDW SP, R3");
+					this.writer.writeHeader("RTS");
+					break;
+				}
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
@@ -407,8 +434,7 @@ public class TigerTranslator {
 
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			translate(tree.getChild(i), registerIndex);
-			this.writer.writeFunction("ADQ -2,SP");
-			this.writer.writeFunction("STW R"+registerIndex+", (SP)");
+			this.writer.writeFunction("STW R"+registerIndex+", -(SP)");
 		}//Tous les arguments sont empilés
 
 
@@ -665,7 +691,7 @@ public class TigerTranslator {
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// On saute à la fin
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("BMP %s-$-2", endifLabel));
 			// On génère le l'étiquette et le code de else
 			this.writer.writeFunction(elseLabel, "NOP");
 			this.translate(tree.getChild(2), registerIndex);
