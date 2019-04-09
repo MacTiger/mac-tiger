@@ -84,13 +84,16 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1reg, size2reg, size3reg));
 					this.writer.writeHeader(String.format("STW, %s, +(HP)", size3reg));
 
+					// On écrit les filtres droits et gauches
+					this.writer.writeHeader(String.format(""));
+
 					// Extraire le caractère courant
 					this.writer.writeHeader(String.format("LDW, %s, (%s)", charReg, pairPointerReg));
 					this.writer.writeHeader(String.format("TST, %s", pairPointerReg, pairPointerReg));
 					this.writer.writeHeader(String.format("BNE 6"));
-					this.writer.writeHeader(String.format("AND %s, 0xFF00, %s", charReg, charReg));
+					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterLeftReg, charReg));
 					this.writer.writeHeader(String.format("BMP 4"));
-					this.writer.writeHeader(String.format("AND %s, 0x00FF, %s", charReg, charReg));
+					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterRightReg, charReg));
 					this.writer.writeHeader(String.format("TODO : mettre à jour pairPointerReg et pairPointerReg"));
 
 
