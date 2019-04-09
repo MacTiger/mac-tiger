@@ -157,7 +157,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateStrictGreaterThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGT $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateStrictGreaterThan lorsque les fils sont des strings
@@ -174,7 +178,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateStrictLessThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLT $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateStrictLessThan lorsque les fils sont des strings
@@ -191,7 +199,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGE $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des strings
@@ -208,7 +220,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			// TODO: code translateLessOrEqualThan lorsque les fils sont des entiers (ou adresses)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLE $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
 		} else {
 			// TODO: code translateLessOrEqualThan lorsque les fils sont des strings
