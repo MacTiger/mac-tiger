@@ -281,7 +281,7 @@ public class TigerTranslator {
 		translate(tree.getChild(1), registerRight);
 
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
-
+		System.err.println(currentTDS.treeTypeHashMap.get(tree.getChild(0)));
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
 			writer.writeFunction(String.format("BLE 6"));
@@ -289,8 +289,74 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
 			return null;
-		} else {
-			// TODO: code translateLessOrEqualThan lorsque les fils sont des strings
+		} else {//inf.src
+			int registerAddA;//contient adresse de A
+			registerAddA=registerManager.provideRegister();
+			int registerAddB;//contient adresse de B
+			registerAddB=registerManager.provideRegister();
+			int registerDep;//Déplacement tas
+			registerDep=registerManager.provideRegister();
+			int registerOp;//sert à faire des masques
+			registerOp=registerManager.provideRegister();
+
+			//Met les adresses des strings dans regsiterAdd A et B
+			writer.writeFunction(String.format("LDW R"+registerAddA+",R"+registerLeft));
+			writer.writeFunction(String.format("LDW R"+registerAddB+",R"+registerRight));
+
+			//Met les adresses des strings dans registerLeft et registerRight
+			writer.writeFunction(String.format("LDW R"+registerLeft+",R"+registerAddA));
+			writer.writeFunction(String.format("LDW R"+registerRight+",R"+registerAddB));
+
+			//Se décaler dans le tas
+			writer.writeFunction(String.format("ADD R"+registerLeft+",R"+registerDep+",R"+registerLeft));
+			writer.writeFunction(String.format("ADD R"+registerRight+",R"+registerDep+",R"+registerRight));
+
+			//Charge le registre avec les deux premiers caracteres
+			writer.writeFunction(String.format("LDW R"+registerLeft+",(R"+registerLeft+")"));
+			writer.writeFunction(String.format("LDW R"+registerRight+",(R"+registerRight+")"));
+
+
+			//Met ff00 dans registerOp
+			writer.writeFunction(String.format("LDW R"+registerOp+",#65280"));
+			//Met le premier caractere de registerLeft en regIndex
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+"R"+registerIndex));
+
+
+			//test sur valeur du caractere1
+			writer.writeFunction(String.format("BNE 6"));
+			// => si vaut null : true => fin du programme
+			writer.writeFunction(String.format("LDW R"+registerIndex+", #1"));
+			writer.writeFunction(String.format("BMP 36"));//fin des instructions
+			// => si ne vaut pas null : continue le programme
+
+			//Fait str1-str2
+			writer.writeFunction(String.format("SUB R"+registerLeft+",R"+registerRight+",R"+registerIndex));
+			//test si str1-str2 >= 0
+			writer.writeFunction(String.format("BGE 6"));
+			// => si str1 - str2 < 0 : true => fin du programme
+			writer.writeFunction(String.format("LDW R"+registerIndex+", 1"));
+			writer.writeFunction(String.format("BMP 18"));//fin des instructions
+
+			//test si str1-str2 == 0
+			// si str1 != str2, alors str1 > str2 : false
+			writer.writeFunction(String.format("BEQ 6"));
+			writer.writeFunction(String.format("LDW R"+registerIndex+", 0"));
+			writer.writeFunction(String.format("BMP 18"));//fin des instructions
+			//A tester !
+
+			//Met 00ff dans le registerOp
+			writer.writeFunction(String.format("LDW R"+registerOp+",#255"));
+			//Met le caractere 2 de str1 dans registerIndex
+			writer.writeFunction(String.format("AND R"+registerLeft+",R"+registerOp+"R"+registerIndex));
+			//test si caractere 2 vaut null
+			writer.writeFunction(String.format("BNE 6"));
+			// si caractere 2 de str1 est null : renvoyer true
+			writer.writeFunction(String.format("LDW R"+registerIndex+",1"));
+			writer.writeFunction(String.format("BMP 4"));
+
+			//ici on sait qu'il faut continuer : décalage
+			writer.writeFunction(String.format("ADQ 2,"+registerDep));
+			writer.writeFunction(String.format("BMP -66"));//on boucle
 			return null;
 		}
 	}
