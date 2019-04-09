@@ -54,7 +54,12 @@ public class TigerTranslator {
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
 		this.heapBase = 4098;
-		for (Map.Entry<String, FunctionOrVariable> entry: root.getParent().getFunctionsAndVariables()) {
+		this.writeHeader();
+		this.writeMainAndFunction(tree);
+	}
+
+	private void writeHeader() {
+		for (Map.Entry<String, FunctionOrVariable> entry: this.currentTDS.getParent().getFunctionsAndVariables()) {
 			String name = entry.getKey();
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
@@ -65,6 +70,12 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS");
 					break;
 				}
+				case "size": {
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("LDW R0, (R0)-2");
+					this.writer.writeHeader("RTS");
+					break;
+				}
 				default: {
 					this.writer.writeHeader(label, "RTS"); // TODO
 					break;
@@ -72,7 +83,12 @@ public class TigerTranslator {
 			}
 			this.writer.writeHeader();
 		}
-		this.translate(tree, 0);
+	}
+
+	private void writeMainAndFunction(Tree tree) {
+		int registerIndex = this.registerManager.provideRegister();
+		this.translate(tree, registerIndex);
+		this.registerManager.freeRegister();
 	}
 
 	private SymbolTable next() {
@@ -419,13 +435,15 @@ public class TigerTranslator {
 				ordinals.add((int) character);
 			}
 		}
+		int size = ordinals.size();
 		ordinals.add(0); // on ajoute le caractère nul de fin de chaîne
 		if ((ordinals.size() % 2) == 1) {
 			ordinals.add(0); // on complète pour avoir une chaîne de taille paire
 		}
-		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", (ordinals.get(0) << 8) | ordinals.get(1), string));
+		this.writer.writeMain(String.format("LDW R0, #%d // Allocation statique de la chaîne %s", size, string));
 		this.writer.writeMain("STW R0, (HP)+");
-		for (int i = 2, li = ordinals.size(); i < li; i += 2) {
+		this.heapBase += 2;
+		for (int i = 0, li = ordinals.size(); i < li; i += 2) {
 			this.writer.writeMain(String.format("LDW R0, #%d", (ordinals.get(i) << 8) | ordinals.get(i + 1)));
 			this.writer.writeMain("STW R0, (HP)+");
 		}
