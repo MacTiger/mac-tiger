@@ -139,10 +139,10 @@ public class TigerTranslator {
 			case ":=": return this.translateAssignment(tree, registerIndex);
 			case "=": return this.translateEqual(tree, registerIndex);
 			case "<>": return this.translateNotEqual(tree, registerIndex);
-			case ">":
-			case "<":
-			case ">=":
-			case "<=": return this.translateComparator(tree, registerIndex);
+			case ">": return this.translateStrictGreaterThan(tree, registerIndex);
+			case "<": return this.translateStrictLessThan(tree, registerIndex);
+			case ">=": return this.translateGreaterOrEqualThan(tree, registerIndex);
+			case "<=": return this.translateLessOrEqualThan(tree, registerIndex);
 			case "|": return this.translateOrOperator(tree, registerIndex);
 			case "&": return this.translateAndOperator(tree, registerIndex);
 			case "+": return this.translateAddOperator(tree, registerIndex);
@@ -161,6 +161,136 @@ public class TigerTranslator {
 				}
 				return null;
 			}
+		}
+	}
+
+	private Type translateStrictGreaterThan(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGT $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			return null;
+		} else {
+			// TODO: code translateStrictGreaterThan lorsque les fils sont des strings
+			return null;
+		}
+	}
+
+	private Type translateStrictLessThan(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLT $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			return null;
+		} else {
+			// TODO: code translateStrictLessThan lorsque les fils sont des strings
+			return null;
+		}
+	}
+
+	private Type translateGreaterOrEqualThan(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BGE $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			return null;
+		} else {
+			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des strings
+			return null;
+		}
+	}
+
+	private Type translateLessOrEqualThan(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BLE $+6"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			return null;
+		} else {
+			// TODO: code translateLessOrEqualThan lorsque les fils sont des strings
+			return null;
+		}
+	}
+
+	private Type translateEqual(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BEQ $+4"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+
+			registerManager.freeRegister();
+
+			return null;
+		} else {
+			// TODO: code translateEqual lorsque les fils sont des strings
+			return null;
+		}
+	}
+
+	private Type translateNotEqual(Tree tree, int registerIndex) {
+		int registerLeft = registerIndex;
+		translate(tree.getChild(0), registerLeft);
+		int registerRight = registerManager.provideRegister();
+		translate(tree.getChild(1), registerRight);
+
+		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) != SymbolTable.stringType);
+
+		if (!isStringComparison) {
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("BEQ $+6"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP $+4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+
+			registerManager.freeRegister();
+
+			return null;
+		} else {
+			// TODO: code translateNotEqual lorsque les fils sont des strings
+			return null;
 		}
 	}
 
@@ -521,57 +651,6 @@ public class TigerTranslator {
 		return this.currentTDS.intType;
 	}
 
-	private Type translateEqual(Tree tree, int registerIndex) {
-		int registerChild0 = registerIndex;
-		translate(tree.getChild(0), registerChild0);
-		int registerChild1 = registerManager.provideRegister();
-		translate(tree.getChild(1), registerChild1);
-
-		writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-		writer.writeFunction(String.format("BEQ $+4"));
-		writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-
-		registerManager.freeRegister();
-
-		return semantic.SymbolTable.intType;
-	}
-
-	private Type translateNotEqual(Tree tree, int registerIndex) {
-		if (currentTDS.treeTypeHashMap.get(tree) != SymbolTable.stringType) {
-			int registerChild0 = registerIndex;
-			translate(tree.getChild(0), registerChild0);
-			int registerChild1 = registerManager.provideRegister();
-			translate(tree.getChild(1), registerChild1);
-
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerChild0, registerChild1, registerIndex));
-			writer.writeFunction(String.format("BEQ $+6"));
-			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP $+4"));
-			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
-
-			registerManager.freeRegister();
-
-			return semantic.SymbolTable.intType;
-		} else {
-			return semantic.SymbolTable.stringType;
-		}
-	}
-
-	private Type translateComparator(Tree tree, int registerIndex) {
-		Tree exp0 = tree.getChild(0);
-		Tree exp1 = tree.getChild(1);
-
-		int registerIndex0 = 0;
-		int registerIndex1 = 0;
-
-		//TODO : gérer les registres où stocker les résultats des deux opérandes
-		translate(exp0, registerIndex0);
-		translate(exp1, registerIndex1);
-
-		//TODO : Générer le code de la comparaison entre ce qui est stocké dans registerIndex0 et registerIndex1
-		return semantic.SymbolTable.intType;
-	}
-
 	private Type translateIf(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(0), registerIndex);
 		boolean hasElse = (tree.getChildCount() == 3);
@@ -583,24 +662,29 @@ public class TigerTranslator {
 
 			// On saute au `else` si l'instruction évaluée est fausse
 			this.writer.writeFunction(String.format("BEQ %s-$-2", elseLabel));
-
-			Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
+			// On génère le code de `then`
+			this.translate(tree.getChild(1), registerIndex);
+			// On saute à la fin
+			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			// On génère le l'étiquette et le code de else
+			this.writer.writeFunction(elseLabel, "NOP");
+			this.translate(tree.getChild(2), registerIndex);
+			// Étiquette endif
 			this.writer.writeFunction(endifLabel, "NOP");
 
-			if (tree.getChildCount() == 2) { // Pour le else
-				this.writer.writeFunction(elseLabel, "NOP");
-				result = this.translate(tree.getChild(2), registerIndex);
-			}
-			return result;
+			return null;
 		} else {
 			// Labels
 			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
 
-			// On saute au `else` si l'instruction évaluée est fausse
+			// On saute au `endif` si l'instruction évaluée est fausse
 			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
-			Type result = this.translate(tree.getChild(1), registerIndex);  // Pour le then
+			// On génère le code de `then`
+			this.translate(tree.getChild(1), registerIndex);
+			// Étiquette endif
+			this.writer.writeFunction(endifLabel, "NOP");
 
-			return result;
+			return null;
 		}
 	}
 
