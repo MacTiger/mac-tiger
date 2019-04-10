@@ -639,6 +639,94 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 
 		} else {
+			//adresse str1
+			int addOne;
+			addOne = registerManager.provideRegister();
+			//adresse str2
+			int addTwo;
+			addTwo = registerManager.provideRegister();
+			//Pour appliquer les masques, diverses opérations
+			int regOp;
+			regOp = registerManager.provideRegister();
+
+
+			// I
+			//Vérifier la taille : avant dans le tas. Taille dans addOne resp two.
+			writer.writeFunction(String.format("LDW R" + addOne + ", R" + registerLeft));
+			writer.writeFunction(String.format("LDW R" + addTwo + ", R" + registerRight));
+			//Enleve deux à adresse = adresse taille
+			writer.writeFunction(String.format("ADQ -2, R" + addOne));
+			writer.writeFunction(String.format("ADQ -2, R" + addTwo));
+			//Déréférencement : addOne et two contiennent les longueurs
+			writer.writeFunction(String.format("LDW R" + addOne + ", (R" + addOne + ")"));
+			writer.writeFunction(String.format("LDW R" + addTwo + ", (R" + addTwo + ")"));
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", addOne, addTwo, regOp));
+			writer.writeFunction(String.format("BEQ 6"));
+			//Tailles différentes : FALSE
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP 70"));// A REFLECHIR : go fin programme FIN
+			// 70 OK
+
+
+			// II
+			//Premier test fait : size est identique
+			//stocker les adresses respectives
+			writer.writeFunction(String.format("STW R%d, R%d", registerLeft, addOne));
+			writer.writeFunction(String.format("STW R%d, R%d", registerRight, addTwo));
+
+			//On doit boucler à cet endroit
+			//Met les bonnes adresses (décalées) dans regLeft et regRight
+			writer.writeFunction(String.format("STW R%d, R%d", addOne, registerLeft));
+			writer.writeFunction(String.format("STW R%d, R%d", addTwo, registerRight));
+			//Charge les deux premiers caracteres regl et regr
+			writer.writeFunction(String.format("LDW R%d, (R%d)", registerLeft, registerLeft));
+			writer.writeFunction(String.format("LDW R%d, (R%d)", registerRight, registerRight));
+
+			//Masque
+			writer.writeFunction(String.format("LDW R%d, #65280", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerLeft, regOp, regOp));
+			writer.writeFunction(String.format("BNE 20"));//A voir => (A)
+			//Premier caractere str1 vaut nul
+			writer.writeFunction(String.format("LDW R%d, #65280", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerRight, regOp, regOp));
+			writer.writeFunction(String.format("BNE 6"));//A voir
+			//Premier caractere str2 vaut nul : égalité true
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+			writer.writeFunction(String.format("BMP 36"));//FIN : TRUE
+			//A tester : temp
+
+			//Premier caractere str2 différent de nul : égalité false
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP 28"));//FIN : FALSE
+			//A tester : temp
+
+
+			//Premier caractere str1 différent de nul (A)
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, regOp));
+			writer.writeFunction(String.format("BEQ 6"));//A voir
+			// Ici str1-str2 != 0
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP 20"));//FIN : FALSE
+			// Ici str1-str2 = 0
+			writer.writeFunction(String.format("LDW R%d, #255", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerLeft, regOp, regOp));
+			writer.writeFunction(String.format("BNE 6"));
+			// Ici deuxieme caractere str1 vaut nul
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+			writer.writeFunction(String.format("BMP 8"));//FIN : TRUE
+
+			// Ici deuxieme caractère str1 != nul : continuer
+			//Décalage dans le tas
+			writer.writeFunction(String.format("ADQ 2,R%d", addOne));
+			writer.writeFunction(String.format("ADQ 2,R%d", addTwo));
+			//On boucle !
+			writer.writeFunction(String.format("BMP -66"));//A voir
+			//A tester : temp
+
+			//LIBERATION
+			registerManager.freeRegister();
+			registerManager.freeRegister();
+			registerManager.freeRegister();
 			// TODO: code translateNotEqual lorsque les fils sont des strings
 		}
 	}
