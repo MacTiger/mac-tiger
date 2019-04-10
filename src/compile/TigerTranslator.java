@@ -64,49 +64,64 @@ public class TigerTranslator {
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
 				case "concat": {
-					String str3reg = "R0";
-					String str1reg = "R1";
-					String str2reg = "R2";
-					String size1reg = "R3";
-					String size2reg = "R4";
-					String size3reg = "R5";
-					String charReg = "R6"; // Code ASCII du caractère courant
-					String pairPointerReg = "R7"; // Adresse de la paire de caractères courante
-					String parityReg = "R8"; // 0 ou 1
-					String filterLeftReg = "R9";
-					String filterRightReg = "R10";
+					String str1 = "R1";
+					String str2 = "R2";
+					String str3 = "R0";
+					String size1 = "R3";
+					String size2 = "R4";
+					String size3 = "R5";
+					String character = "R6"; // Code ASCII du caractère courant
+					String inputPointer = "R7"; // Adresse du caractère d'entrée courant
+					String outputPointer = "HP"; // Là où on va écrire le prochain caractère
+					String word = "R8"; // 0 si on en est au premier mot, 1 sinon
+                    String rest = "R9"; // Reste dans les divisions
+                    String two = "R10";
+
 
 					// On empile dans le tas la taille du nouveau string
-					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1reg));
-					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2reg));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1reg));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2reg));
-					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1reg, size2reg, size3reg));
-					this.writer.writeHeader(String.format("STW %s, (HP)+", size3reg));
+					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
+					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2));
+					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
+					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
-					// On écrit les filtres droits et gauches
-					this.writer.writeHeader(String.format(""));
+					// Constantes
+                    this.writer.writeHeader(String.format("LDW %s, #2", two));
 
-					// Extraire le caractère courant
-					this.writer.writeHeader(String.format("LDW %s, (%s)", charReg, pairPointerReg));
-					this.writer.writeHeader(String.format("TST %s", pairPointerReg, pairPointerReg));
-					this.writer.writeHeader(String.format("BNE 6"));
+                    // Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
+                    this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
 
-					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterLeftReg, charReg));
-					this.writer.writeHeader(String.format("BMP 4"));
-					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterRightReg, charReg));
-					this.writer.writeHeader(String.format("")); //TODO : mettre à jour pairPointerReg et pairPointerReg
+					// (1) Extraction d'un caractère
+					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, inputPointer));
+					this.writer.writeHeader(String.format("BMP 8")); // Saute en (3b)
 
-					// Empiler le caractère courant
-						// Si le caractère courant vaut \0
-							// Si on est au deuxième string, empiler \0
-								// TODO
-							// Sinon, passer au deuxième string
-								// TODO
-						// Sinon, empiler
+					// (2) Empile le caractère courant
+					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, outputPointer));
+					this.writer.writeHeader(String.format("BMP 2")); // Saute en (3a)
 
-					// Empiler \0
-						// TODO
+					// (3a) Empiler un mot (sauf le \0)
+					this.writer.writeHeader(String.format("BMP -8")); // Saute en (1)
+					// (3b)
+					this.writer.writeHeader(String.format("TST %s", character));
+					this.writer.writeHeader(String.format("BEQ ?", character)); // Si character = 0 : saute en (4a)
+					this.writer.writeHeader(String.format("BMP -10")); // Saute en (2)
+
+					// (4a) Passer au mot suivant ou terminer
+                    this.writer.writeHeader(String.format("TST %s", word));
+                    this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
+                    // (4b) word = 1, il faut empiler \0
+                    this.writer.writeHeader(String.format("LDQ 0, %s", character));
+                    this.writer.writeHeader(String.format("LDB %s, (%s)+", character, outputPointer));
+                    this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
+                    this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
+                    this.writer.writeHeader(String.format("TST %s", rest));
+                    this.writer.writeHeader(String.format("BNE -10")); // Saute en (4b)
+                    this.writer.writeHeader(String.format("RTS"));
+                    // (4c) word = 0
+                    this.writer.writeHeader(String.format("ADQ 1, %s", word));
+                    this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
+                    this.writer.writeHeader(String.format("BMP -30")); // Saute en (3a)
 
 					break;
 				}
