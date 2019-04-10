@@ -180,6 +180,16 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS");
 					break;
 				}
+				case "ord": {
+					this.writer.writeHeader(label, "LDW R1, (SP)2");
+					this.writer.writeHeader("LDW R2, (R1)-2");
+					this.writer.writeHeader("BNE 4");
+					this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
+					this.writer.writeHeader("RTS");
+					this.writer.writeHeader("LDB R0, (R1)");
+					this.writer.writeHeader("RTS");
+					break;
+				}
 				default: {
 					this.writer.writeHeader(label, "RTS"); // TODO
 					break;
