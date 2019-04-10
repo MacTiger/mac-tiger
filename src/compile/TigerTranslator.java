@@ -208,48 +208,47 @@ public class TigerTranslator {
 
 	}
 
-	public Type translate(Tree tree, int registerIndex) {
+	private void translate(Tree tree, int registerIndex) {
 		switch (tree.getType ()) {
-			case SEQ: return this.translateSEQ(tree, registerIndex);
-			case ARR: return this.translateARR(tree, registerIndex);
-			case REC: return this.translateREC(tree, registerIndex);
-			case CALL: return this.translateCALL(tree, registerIndex);
-			case ITEM: return this.translateITEM(tree, registerIndex);
-			case FIELD: return this.translateFIELD(tree, registerIndex);
-			case ID: return this.translateID(tree, registerIndex);
-			case STR: return this.translateSTR(tree, registerIndex);
-			case INT: return this.translateINT(tree, registerIndex);
+			case SEQ: this.translateSEQ(tree, registerIndex); return;
+			case ARR: this.translateARR(tree, registerIndex); return;
+			case REC: this.translateREC(tree, registerIndex); return;
+			case CALL: this.translateCALL(tree, registerIndex); return;
+			case ITEM: this.translateITEM(tree, registerIndex); return;
+			case FIELD: this.translateFIELD(tree, registerIndex); return;
+			case ID: this.translateID(tree, registerIndex); return;
+			case STR: this.translateSTR(tree, registerIndex); return;
+			case INT: this.translateINT(tree, registerIndex); return;
 		}
 		switch (tree.toString()) {
-			case ":=": return this.translateAssignment(tree, registerIndex);
-			case "=": return this.translateEqual(tree, registerIndex);
-			case "<>": return this.translateNotEqual(tree, registerIndex);
-			case ">": return this.translateStrictGreaterThan(tree, registerIndex);
-			case "<": return this.translateStrictLessThan(tree, registerIndex);
-			case ">=": return this.translateGreaterOrEqualThan(tree, registerIndex);
-			case "<=": return this.translateLessOrEqualThan(tree, registerIndex);
-			case "|": return this.translateOrOperator(tree, registerIndex);
-			case "&": return this.translateAndOperator(tree, registerIndex);
-			case "+": return this.translateAddOperator(tree, registerIndex);
-			case "-": return this.translateSubOperator(tree, registerIndex);
-			case "*": return this.translateMulOperator(tree, registerIndex);
-			case "/": return this.translateDivOperator(tree, registerIndex);
-			case "if": return this.translateIf(tree, registerIndex);
-			case "while": return this.translateWhile(tree, registerIndex);
-			case "for": return this.translateFor(tree, registerIndex);
-			case "let": return this.translateLet(tree, registerIndex);
-			case "nil": return this.translateNil(tree, registerIndex);
-			case "break": return this.translateBreak(tree, registerIndex);
+			case ":=": this.translateAssignment(tree, registerIndex); return;
+			case "=": this.translateEqual(tree, registerIndex); return;
+			case "<>": this.translateNotEqual(tree, registerIndex); return;
+			case ">": this.translateStrictGreaterThan(tree, registerIndex); return;
+			case "<": this.translateStrictLessThan(tree, registerIndex); return;
+			case ">=": this.translateGreaterOrEqualThan(tree, registerIndex); return;
+			case "<=": this.translateLessOrEqualThan(tree, registerIndex); return;
+			case "|": this.translateOrOperator(tree, registerIndex); return;
+			case "&": this.translateAndOperator(tree, registerIndex); return;
+			case "+": this.translateAddOperator(tree, registerIndex); return;
+			case "-": this.translateSubOperator(tree, registerIndex); return;
+			case "*": this.translateMulOperator(tree, registerIndex); return;
+			case "/": this.translateDivOperator(tree, registerIndex); return;
+			case "if": this.translateIf(tree, registerIndex); return;
+			case "while": this.translateWhile(tree, registerIndex); return;
+			case "for": this.translateFor(tree, registerIndex); return;
+			case "let": this.translateLet(tree, registerIndex); return;
+			case "nil": this.translateNil(tree, registerIndex); return;
+			case "break": this.translateBreak(tree, registerIndex); return;
 			default: {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.translate(tree.getChild(i), registerIndex);
 				}
-				return null;
 			}
 		}
 	}
 
-	private Type translateStrictGreaterThan(Tree tree, int registerIndex) {
+	private void translateStrictGreaterThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -263,14 +262,12 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			return null;
 		} else {
 			// TODO: code translateStrictGreaterThan lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateStrictLessThan(Tree tree, int registerIndex) {
+	private void translateStrictLessThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -358,10 +355,9 @@ public class TigerTranslator {
 		}
 
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateGreaterOrEqualThan(Tree tree, int registerIndex) {
+	private void translateGreaterOrEqualThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -375,14 +371,12 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			return null;
 		} else {
 			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateLessOrEqualThan(Tree tree, int registerIndex) {
+	private void translateLessOrEqualThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -474,10 +468,9 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateEqual(Tree tree, int registerIndex) {
+	private void translateEqual(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -492,14 +485,12 @@ public class TigerTranslator {
 
 			registerManager.freeRegister();
 
-			return null;
 		} else {
 			// TODO: code translateEqual lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateNotEqual(Tree tree, int registerIndex) {
+	private void translateNotEqual(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -516,14 +507,12 @@ public class TigerTranslator {
 
 			registerManager.freeRegister();
 
-			return null;
 		} else {
 			// TODO: code translateNotEqual lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateAndOperator(Tree tree, int registerIndex) {
+	private void translateAndOperator(Tree tree, int registerIndex) {
 
 		String endLabel = this.labelGenerator.getLabel(tree, "end");
 
@@ -536,10 +525,9 @@ public class TigerTranslator {
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
-		return null;
 	}
 
-	private Type translateOrOperator(Tree tree, int registerIndex) {
+	private void translateOrOperator(Tree tree, int registerIndex) {
 
 		String endLabel = this.labelGenerator.getLabel(tree, "end");
 
@@ -552,10 +540,9 @@ public class TigerTranslator {
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
-		return null;
 	}
 
-	private Type translateAddOperator(Tree tree, int registerIndex) {
+	private void translateAddOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
@@ -563,10 +550,9 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateSubOperator(Tree tree, int registerIndex) {
+	private void translateSubOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		if (tree.getChildCount() == 1) {
 			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
@@ -576,10 +562,9 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerIndex, register, registerIndex));
 			registerManager.freeRegister();
 		}
-		return null;
 	}
 
-	private Type translateMulOperator(Tree tree, int registerIndex) {
+	private void translateMulOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
@@ -587,11 +572,10 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
 	// A/B
-	private Type translateDivOperator(Tree tree, int registerIndex) {
+	private void translateDivOperator(Tree tree, int registerIndex) {
 
 		//registerIndex contient A
 		int registerA = registerManager.provideRegister();
@@ -615,10 +599,9 @@ public class TigerTranslator {
 		*/
 		registerManager.freeRegister();//Libère registerB
 		registerManager.freeRegister();//Libère registerA
-		return null;
 	}
 
-	private Type translateCALL(Tree tree, int registerIndex) {
+	private void translateCALL(Tree tree, int registerIndex) {
 		/* Appel d'une fonction
 		 *
 		 */
@@ -652,12 +635,9 @@ public class TigerTranslator {
 		if (function.getType() != null) {
 			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
 		}
-		returnType = function.getType();
-
-		return returnType;
 	}
 
-	private Type translateREC(Tree tree, int registerIndex) {
+	private void translateREC(Tree tree, int registerIndex) {
 		/* Déclaration d'une structure
 		 * (1) Vérification de l'existence du type de structure
 		 * (2) Vérification du nombre de champs
@@ -696,10 +676,9 @@ public class TigerTranslator {
 		for (; i < l; i += 2) {
 			this.translate(tree.getChild(i + 1), registerIndex);
 		}*/
-		return returnType;
 	}
 
-	private Type translateARR(Tree tree, int registerIndex) {
+	private void translateARR(Tree tree, int registerIndex) {
 		/* Déclaration d'un tableau
 		 * (1) Vérification de l'existence du type de tableau
 		 * (2) Vérification du type de la taille du tableau
@@ -720,10 +699,9 @@ public class TigerTranslator {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
 		}*/
-		return returnType;
 	}
 
-	private Type translateAssignment(Tree tree, int registerIndex) {
+	private void translateAssignment(Tree tree, int registerIndex) {
 		Tree lValue = tree.getChild(0);
 		Tree expToAssign = tree.getChild(1);
 		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
@@ -737,19 +715,16 @@ public class TigerTranslator {
 			default:
 				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
-		return null;
 	}
 
-	private Type translateSEQ(Tree tree, int registerIndex) {
-		Type returnType = null;
+	private void translateSEQ(Tree tree, int registerIndex) {
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
 			//TODO : gérer les registres :
-			returnType = this.translate(tree.getChild(i), registerIndex);
+			this.translate(tree.getChild(i), registerIndex);
 		}
-		return returnType;
 	}
 
-	private Type translateSTR(Tree tree, int registerIndex) {
+	private void translateSTR(Tree tree, int registerIndex) {
 		List<Integer> ordinals = new ArrayList<Integer>();
 		String inputString = tree.toString();
 		String commentString = "";
@@ -839,7 +814,6 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
 			this.heapBase += ordinals.size();
 		}
-		return this.currentTDS.stringType;
 	}
 
 	/**
@@ -848,7 +822,7 @@ public class TigerTranslator {
 	 * @param registerIndex
 	 * @return
 	 */
-	private Type translateID(Tree tree, int registerIndex) {
+	private void translateID(Tree tree, int registerIndex) {
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findVariable(name);
 
@@ -883,12 +857,11 @@ public class TigerTranslator {
 		}
 		this.writer.writeFunction(String.format("ADQ %d, R%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", deplacementVariable, registerIndex,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
 
-		return null;
 	}
 
-	private Type translateITEM(Tree tree, int registerIndex) {
+	private void translateITEM(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
+		this.translate(exp, registerIndex);
 		//TODO : générer le code pour récupérer l'index entier représenté par le fils droit
 		//TODO : générer le code pour accèder à l'ITEM
 		Type returnType = null;
@@ -899,12 +872,11 @@ public class TigerTranslator {
 			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
 		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier*/
-		return returnType;
 	}
 
-	private Type translateFIELD(Tree tree, int registerIndex) {
+	private void translateFIELD(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
+		this.translate(exp, registerIndex);
 		//TODO : générer le code pour récupérer le FIELD
 /*		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
 			notifier.semanticError(exp, "%s is not a record", exp.toString());
@@ -917,15 +889,13 @@ public class TigerTranslator {
 				return fields.get(tree.getChild(1).toString()).getType();
 			}
 		}*/
-		return null;
 	}
 
-	private Type translateINT(Tree tree, int registerIndex) {
+	private void translateINT(Tree tree, int registerIndex) {
 		this.writer.writeFunction(String.format("LDW R%d, #%s", registerIndex, tree.toString()));
-		return this.currentTDS.intType;
 	}
 
-	private Type translateIf(Tree tree, int registerIndex) {
+	private void translateIf(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(0), registerIndex);
 		boolean hasElse = (tree.getChildCount() == 3);
 
@@ -946,7 +916,6 @@ public class TigerTranslator {
 			// Étiquette endif
 			this.writer.writeFunction(endifLabel, "NOP");
 
-			return null;
 		} else {
 			// Labels
 			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
@@ -958,19 +927,17 @@ public class TigerTranslator {
 			// Étiquette endif
 			this.writer.writeFunction(endifLabel, "NOP");
 
-			return null;
 		}
 	}
 
-	private Type translateWhile(Tree tree, int registerIndex) {
+	private void translateWhile(Tree tree, int registerIndex) {
 		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
 		labelGenerator.getLabel(tree, "start");   // Création des labels de cette boucle while
 		this.translate(tree.getChild(0),registerIndex);
 		this.translate(tree.getChild(1),registerIndex);
-		return null;
 	}
 
-	private Type translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
+	private void translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
 		labelGenerator.getLabel(tree, "test");    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)
 
 		Variable index = currentTDS.findVariable(tree.getChild(0).toString());  // Récupère la variable de boucle
@@ -981,7 +948,6 @@ public class TigerTranslator {
 		this.descend(); // Met à jour this.currentTDS avec la bonne TDS fille
 		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
 		this.ascend();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
-		return null;
 	}
 
 	/**
@@ -990,7 +956,7 @@ public class TigerTranslator {
 	 * @param registerIndex
 	 * @return
 	 */
-	private Type translateLet(Tree tree, int registerIndex) {
+	private void translateLet(Tree tree, int registerIndex) {
 		SymbolTable table = this.currentTDS;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
@@ -1055,22 +1021,20 @@ public class TigerTranslator {
 				}
 			}
 		}
-		Type result = translate(seq, registerIndex);
+		translate(seq, registerIndex);
 		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
 			this.ascend();
 		}
-		return result;
 	}
 
-	private Type translateNil(Tree tree, int registerIndex) {
-		return this.currentTDS.nilPseudoType;
+	private void translateNil(Tree tree, int registerIndex) {
+		this.writer.writeFunction(String.format("LDW R%d, #NIL", registerIndex));
 	}
 
-	private Type translateBreak(Tree tree, int registerIndex) {
+	private void translateBreak(Tree tree, int registerIndex) {
 		Tree parent = tree;
 		Tree child = tree;
 		//TODO : générer code pour Break
-		return null;
 	}
 
 	public String toString() {
