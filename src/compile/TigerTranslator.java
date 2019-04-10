@@ -957,12 +957,19 @@ public class TigerTranslator {
 		Tree expToAssign = tree.getChild(1);
 		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
 			case ID: Variable variable = this.currentTDS.findVariable(lValue.toString());
-			//TODO : Générer code d'assignement avec un ID
+				//TODO : Générer code d'assignement avec un ID
+				translateID(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
+				int registerExp = this.registerManager.provideRegister();
+				translate(expToAssign, registerExp);
+				this.writer.writeFunction(String.format("STW R%d, (R%d)  // Affectation dans un identifiant", registerExp, registerIndex));
+				this.registerManager.freeRegister();
 				break;
 			case ITEM:
 				//TODO : Générer code d'assignement avec un ITEM
+				break;
 			case FIELD:
 				//TODO : Générer code d'assignement avec un FIELD
+				break;
 			default:
 				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
