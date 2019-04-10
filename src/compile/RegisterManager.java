@@ -26,12 +26,17 @@ public class RegisterManager {
         peak = availableRegisters.pop();
     }
 
-    public void saveAll() {
+    /**
+     * Sauvegarde les registres utilisés dans la pile
+     * @return le nombre de registres sauvegardés
+     */
+    public int saveAll() {
         int registersToSave = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
 
         for (int i = 1; i <= registersToSave; i++) {
             save(i);
         }
+        return registersToSave;
     }
 
     public void restoreAll() {

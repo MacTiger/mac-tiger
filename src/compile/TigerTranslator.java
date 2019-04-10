@@ -1,18 +1,15 @@
 package compile;
 
-import misc.Notifier;
+import misc.Constants;
 import org.antlr.runtime.tree.Tree;
 import semantic.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 
-import static syntactic.TigerParser.ARRTYPE;
-import static syntactic.TigerParser.RECTYPE;
 import static syntactic.TigerParser.SEQ;
 import static syntactic.TigerParser.ARR;
 import static syntactic.TigerParser.REC;
@@ -226,6 +223,21 @@ public class TigerTranslator {
 		return this.currentTDS.getChild(indexOfNextChild);
 	}
 
+	/**
+	 * @return Somme des tailles des variables locales à cette TDS
+	 */
+	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
+		Variable var = null;
+		int sizeOfVars = 0;
+		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
+			if (functionOrVariable.getValue() instanceof Variable){
+				var = (Variable) functionOrVariable.getValue();
+				sizeOfVars += var.getType().getSize();
+			}
+		}
+		return sizeOfVars;
+	}
+
 	private void descend() {
 		// Met à jour this.currentTDS pour y mettre la TDS fille de la currentTDS de bon index, met à jour childrenIndexStack
 		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1); // Récupère l'index de la TDS fille à prendre
@@ -240,11 +252,16 @@ public class TigerTranslator {
 		this.writer.writeFunction("LDW BP, SP  // Mise à jour du Base pointer");
 		//Empilage du chaînage statique
 		this.writer.writeFunction("STW R0, -(SP) // Empilage du chaînage statique");
+		// Empilage des variables locales s'il y en a :
+		int sizeOfVars = getSizeOfVars(this.currentTDS.getFunctionsAndVariables());
+		if (sizeOfVars > 0){
+			this.writer.writeFunction(String.format("ADI SP, SP, #-%d // Empilage des variables locales", sizeOfVars));
+		}
 	}
 
 	private void ascend() {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
-		this.writer.writeFunction("ADQ 2, SP  // Dépilage du chaînage statique");
+		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépilage du chaînage statique et des variables locales s'il y en a", getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat));
 		this.writer.writeFunction("LDW BP, (SP)+ // Restauration du base pointer avec le chaînage dynamique"); // Partie UNLINK
 		this.writer.writeFunction("RTS");
 		this.writer.ascend(); // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)
@@ -855,7 +872,7 @@ public class TigerTranslator {
 			translate(child, registerIndex2);
 			sizeOfArg = SymbolTable.treeTypeHashMap.get(child).getSize();
 			sizeOfArgs += sizeOfArg;
-			this.writer.writeFunction(String.format("ADQ -%d,SP  //Empile l'argument numéro %d/%d", sizeOfArg, i, l-1));    // Il faut tenir compte de la taille de l'argument qu'on empile
+			this.writer.writeFunction(String.format("ADI SP, SP, #-%d  //Empile l'argument numéro %d/%d", sizeOfArg, i, l-1));    // Il faut tenir compte de la taille de l'argument qu'on empile
 			this.writer.writeFunction("STW R"+registerIndex2+", (SP)");
 		}//Tous les arguments sont empilés
 
@@ -863,7 +880,7 @@ public class TigerTranslator {
 
 		writeEntryFunction(table, name);    // Génération du code d'appel à la fonction et calcul de son chaînage statique
 
-		this.writer.writeFunction(String.format("ADQ %d,SP  // Dépile les arguments de la fonction", sizeOfArgs));  // Dépile les arguments
+		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", sizeOfArgs));  // Dépile les arguments
 
 		registerManager.restoreAll();
 		if (function.getType() != null) {
@@ -909,12 +926,19 @@ public class TigerTranslator {
 		Tree expToAssign = tree.getChild(1);
 		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
 			case ID: Variable variable = this.currentTDS.findVariable(lValue.toString());
-			//TODO : Générer code d'assignement avec un ID
+				//TODO : Générer code d'assignement avec un ID
+				translateID(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
+				int registerExp = this.registerManager.provideRegister();
+				translate(expToAssign, registerExp);
+				this.writer.writeFunction(String.format("STW R%d, (R%d)  // Affectation dans un identifiant", registerExp, registerIndex));
+				this.registerManager.freeRegister();
 				break;
 			case ITEM:
 				//TODO : Générer code d'assignement avec un ITEM
+				break;
 			case FIELD:
 				//TODO : Générer code d'assignement avec un FIELD
+				break;
 			default:
 				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
@@ -1029,11 +1053,10 @@ public class TigerTranslator {
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findVariable(name);
 
-		int depl_stat = -2;  // Taille de zone de liaison : chaînage dynamique et chaînage statique // TODO : Vérifier la bonne valeur du déplacement statique
 		int deplacementVariable = variable.getOffset();
 		String typeOfVar;
 		if (deplacementVariable < 0){   // Si variable est une variable locale
-			deplacementVariable += depl_stat;   // On doit compter le déplacement statique
+			deplacementVariable += Constants.deplStat;   // On doit compter le déplacement statique
 			typeOfVar = "variable locale";
 		} else {    // variable est un argument de fonction
 			deplacementVariable += 4;   // Taille de l'adresse de retour
@@ -1042,7 +1065,7 @@ public class TigerTranslator {
 
 		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
 
-		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
+		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
 		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
 			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
 
@@ -1051,14 +1074,14 @@ public class TigerTranslator {
 
 			this.writer.writeFunction(String.format("LDQ %d, R%d  // Début de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre" ,countStaticChain, loopRegister, typeOfVar, name));
 			// Début de boucle :
-			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, depl_stat));
+			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, Constants.deplStat));
 			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
 			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -6, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
 			// Fin de boucle
 
 			this.registerManager.freeRegister();
 		}
-		this.writer.writeFunction(String.format("ADQ %d, R%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", deplacementVariable, registerIndex,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
+		this.writer.writeFunction(String.format("ANI R%d, R%d, #%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
 
 	}
 
@@ -1203,24 +1226,43 @@ public class TigerTranslator {
 				case "var": { // dans le cas de la déclaration d'une variable
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
+					Variable variable = null;   // Variable qui va être déclarée
 					// TODO : choisir dans quel registre registerLet mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
-					translate(exp, registerLet);  //TODO : est-ce avant de descendre dans la TDS qu'il faut évaluer ?
-					if (this.currentTDS == table) {
-						this.registerManager.saveAll();
+					translate(exp, registerLet);
+					if (this.currentTDS == table) { // Première variable à être déclarée
+
+						int totalOffset = - this.registerManager.saveAll() * 2 ;   // On récupère la taille prise par la sauvegarde des registres
+						// Empile la variable à la bonne place : ici il faut l'empiler avant d'empiler l'environnement de la fonction assembleur où se trouvera notre variable
+						SymbolTable nextTable = this.next();
+						variable = nextTable.findVariable(name);  // On cherche la variable que l'on va déclarer dans la prochaine TDS dans laquelle on ira à l'appel de descend()
+						totalOffset += Constants.deplStat - getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat - 2 - variable.getOffset();  // Calcul l'offset total pour accéder à l'emplacement dans la pile où se trouvera la variable
+						writeVariableAssignment(registerLet, totalOffset, name);
+						// La valeur initiale de la variable est maintenant au bon endroit dans la pile
+
 						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 						this.descend();
 					} else {
 						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
-						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
-							this.registerManager.saveAll();
+						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) { // Redéclare la variable
+
+							int totalOffset = - this.registerManager.saveAll() * 2 ;   // On récupère la taille prise par la sauvegarde des registres
+							// Empile la variable à la bonne place : ici il faut l'empiler avant d'empiler l'environnement de la fonction assembleur où se trouvera notre variable
+							SymbolTable nextTable = this.next();
+							variable = nextTable.findVariable(name);  // On cherche la variable que l'on va déclarer dans la prochaine TDS dans laquelle on ira à l'appel de descend()
+							totalOffset += Constants.deplStat - getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat - 2 - variable.getOffset();  // Calcul l'offset total pour accéder à l'emplacement dans la pile où se trouvera la variable
+							writeVariableAssignment(registerLet, totalOffset, name);
+							// La valeur initiale de la variable est maintenant au bon endroit dans la pile
+
 							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 							this.descend();
+						} else{ // Déclaration comprise dans une suite de déclarations, ne redéclare pas la variable
+							// Met l'initialisation de la variable à la bonne place (avec l'offset par rapport au BP)
+							variable = this.currentTDS.findVariable(name);
+							writeVariableAssignment(registerLet, variable.getOffset(), name);
 						}
 					}
-					Variable variable = this.currentTDS.findVariable(name); // Récupération de la variable déclarée
 					variable.translate(true);
 					//TODO : générer le code de la déclaration de variable
-					// TODO : empiler la variable
 					break;
 				}
 			}
@@ -1232,6 +1274,18 @@ public class TigerTranslator {
 		if (SymbolTable.treeTypeHashMap.get(tree) != null) {
 			this.writer.writeFunction(String.format("LDW R%s, R%s", registerIndex, registerLet));
 		}
+	}
+
+	/**
+	 * Ecrit le code pour mettre le contenu du registre registerLet dans la pile à l'adresse BP + offset
+	 * @param registerLet
+	 * @param offset
+	 */
+	private void writeVariableAssignment(int registerLet, int offset, String nameOfVar){
+		this.writer.writeFunction(String.format("LDW WR, #%d  // ASSIGNMENT_BEGIN : affectation de la variable \"%s\"", offset, nameOfVar));
+		this.writer.writeFunction("ADD BP, WR, WR");
+		this.writer.writeFunction(String.format("STW R%d, (WR)  // ASSIGNMENT_END : affectation de la variable \"%s\"", registerLet, nameOfVar));
+
 	}
 
 	private void translateNil(Tree tree, int registerIndex) {
@@ -1278,7 +1332,6 @@ public class TigerTranslator {
 		if (TDSDest.getDepth() <= 1){   // On ne calcule pas le chaînage statique si on appelle une fonction built-in   //TODO : vérifier que c'est la bonne profondeur
 			return ;
 		}
-		int depl_stat = -2; // TODO:  Vérifier la bonne valeur du déplacement statique
 		int count_stat = this.currentTDS.getDepth()-TDSDest.getDepth() + 1;
 
 
@@ -1291,7 +1344,7 @@ public class TigerTranslator {
 		int loopRegister = this.registerManager.provideRegister();
 		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
 		// Début de boucle :
-		this.writer.writeFunction(String.format("LDW R0, (R0)%d", depl_stat));
+		this.writer.writeFunction(String.format("LDW R0, (R0)%d", Constants.deplStat));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
 		this.writer.writeFunction(String.format("BNE %d  // STATIC_LINK_END : Fin du calcul du chaînage statique", -8)); // Jump à 2 +1 instructions (il faut compter celle là) plus tôt
 		// Fin de boucle

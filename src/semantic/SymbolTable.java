@@ -983,5 +983,4 @@ public class SymbolTable {
 		graph += "\"]";
 		return new ArrayList<>(Arrays.asList(graph, graphChildren, graphLinks, allTypes));
 	}
-
 }
