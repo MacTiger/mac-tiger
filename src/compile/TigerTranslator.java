@@ -78,9 +78,8 @@ public class TigerTranslator {
 					String inputPointer = "R7"; // Adresse du caractère d'entrée courant
 					String outputPointer = "HP"; // Là où on va écrire le prochain caractère
 					String word = "R8"; // 0 si on en est au premier mot, 1 sinon
-                    String rest = "R9"; // Reste dans les divisions
-                    String two = "R10";
-
+		                  String rest = "R9"; // Reste dans les divisions
+		                  String two = "R10";
 
 					// On empile dans le tas la taille du nouveau string
 					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
@@ -91,10 +90,10 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
 					// Constantes
-                    this.writer.writeHeader(String.format("LDW %s, #2", two));
+					this.writer.writeHeader(String.format("LDW %s, #2", two));
 
-                    // Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
-                    this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
+					// Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
+					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
 
 					// (1) Extraction d'un caractère
 					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, inputPointer));
@@ -108,24 +107,24 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("BMP -8")); // Saute en (1)
 					// (3b)
 					this.writer.writeHeader(String.format("TST %s", character));
-					this.writer.writeHeader(String.format("BEQ ?", character)); // Si character = 0 : saute en (4a)
+					this.writer.writeHeader(String.format("BEQ 4", character)); // Si character = 0 : saute en (4a)
 					this.writer.writeHeader(String.format("BMP -10")); // Saute en (2)
 
 					// (4a) Passer au mot suivant ou terminer
-                    this.writer.writeHeader(String.format("TST %s", word));
-                    this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
-                    // (4b) word = 1, il faut empiler \0
-                    this.writer.writeHeader(String.format("LDQ 0, %s", character));
-                    this.writer.writeHeader(String.format("LDB %s, (%s)+", character, outputPointer));
-                    this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
-                    this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
-                    this.writer.writeHeader(String.format("TST %s", rest));
-                    this.writer.writeHeader(String.format("BNE -10")); // Saute en (4b)
-                    this.writer.writeHeader(String.format("RTS"));
-                    // (4c) word = 0
-                    this.writer.writeHeader(String.format("ADQ 1, %s", word));
-                    this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
-                    this.writer.writeHeader(String.format("BMP -30")); // Saute en (3a)
+					this.writer.writeHeader(String.format("TST %s", word));
+					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
+					// (4b) word = 1, il faut empiler \0
+					this.writer.writeHeader(String.format("LDQ 0, %s", character));
+					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, outputPointer));
+					this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
+					this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
+					this.writer.writeHeader(String.format("TST %s", rest));
+					this.writer.writeHeader(String.format("BNE -10")); // Saute en (4b)
+					this.writer.writeHeader(String.format("RTS"));
+					// (4c) word = 0
+					this.writer.writeHeader(String.format("ADQ 1, %s", word));
+					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
+					this.writer.writeHeader(String.format("BMP -30")); // Saute en (3a)
 
 					break;
 				}
