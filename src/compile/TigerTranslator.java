@@ -872,67 +872,36 @@ public class TigerTranslator {
 	}
 
 	private void translateREC(Tree tree, int registerIndex) {
-		/* Déclaration d'une structure
-		 * (1) Vérification de l'existence du type de structure
-		 * (2) Vérification du nombre de champs
-		 * (3) Vérification des noms des champs
-		 * (4) Vérification des types des champs
-		 */
-		String name = tree.getChild(0).toString();
-		Type returnType = null;
-		//TODO : Générer le code d'intanciation d'une structure
-		/*Type returnType = this.findType(name);
-		int i = 1;
-		int l = tree.getChildCount();
-		if (returnType == null) { // Test sémantique (1)
-			notifier.semanticError(tree, "type %s is not defined", name);
-		} else if (!(returnType instanceof Record)) { // Test sémantique (1)
-			notifier.semanticError(tree, "type %s is not a record type", name);
-			returnType = null;
-		} else {
-			Record record = (Record) returnType;
-			Namespace<Variable> namespace = record.getNamespace();
-			for (Map.Entry<String, Variable> entry: namespace) {
-				if (i >= l) { // Test sémantique (2)
-					notifier.semanticError(tree, "%s requires more fields", name);
-					break;
-				}
-				if (!tree.getChild(i).toString().equals(entry.getKey())) { // Test sémantique (3)
-					notifier.semanticError(tree, "field name %s was expected but field name %s was found", entry.getKey(), tree.getChild(i).toString());
-				}
-				this.checkType(tree.getChild(i + 1), notifier, entry.getValue().getType()); // Test sémantique (4)
-				i += 2;
-			}
-			if (i < l) { // Test sémantique (2)
-				notifier.semanticError(tree, "%s requires fewer fields", name);
-			}
+		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
+		int register1 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+		this.writer.writeFunction(String.format("ADI HP, HP, #%d", tree.getChildCount() / 2));
+		int register2 = this.registerManager.provideRegister();
+		for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
+			this.translate(tree.getChild(i + 1), register2);
+			this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
 		}
-		for (; i < l; i += 2) {
-			this.translate(tree.getChild(i + 1), registerIndex);
-		}*/
+		this.registerManager.freeRegister();
+		this.registerManager.freeRegister();
 	}
 
 	private void translateARR(Tree tree, int registerIndex) {
-		/* Déclaration d'un tableau
-		 * (1) Vérification de l'existence du type de tableau
-		 * (2) Vérification du type de la taille du tableau
-		 * (3) Vérification du type des éléments du tableau
-		 */
-		String name = tree.getChild(0).toString();
-		Type returnType = null;
-//		Type returnType = this.findType(name);
-		//TODO : générer le code d'instanciation d'un tableau
-		/*if (returnType == null) { // Test sémantique (1)
-			notifier.semanticError(tree, "type %s is not defined", name);
-		} else if (!(returnType instanceof Array)) { // Test sémantique (1)
-			notifier.semanticError(tree, "type %s is not an array type", name);
-			returnType = null;
-		}
-		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // Test sémantique (2)
-		if (returnType != null) {
-			Array array = (Array) returnType;
-			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
-		}*/
+		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
+		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
+		this.writer.writeFunction(String.format("ADD R%d, HP, HP", registerIndex));
+		int register1 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+		int register2 = this.registerManager.provideRegister();
+		this.translate(tree.getChild(2), register2);
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
+		this.writer.writeFunction("BEQ 6");
+		this.writer.writeFunction(String.format("STW R%d, -(R%d)", register2, register1));
+		this.writer.writeFunction(String.format("ADQ -2, R%d", registerIndex));
+		this.writer.writeFunction("BNE -4");
+		this.registerManager.freeRegister();
+		this.writer.writeFunction(String.format("LDW R%d, R%d", registerIndex, register1));
+		this.registerManager.freeRegister();
 	}
 
 	private void translateAssignment(Tree tree, int registerIndex) {
@@ -1259,6 +1228,9 @@ public class TigerTranslator {
 		translate(seq, registerLet);  // Evalue le IN
 		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
 			this.ascend();
+		}
+		if (SymbolTable.treeTypeHashMap.get(tree) != null) {
+			this.writer.writeFunction(String.format("LDW R%s, R%s", registerIndex, registerLet));
 		}
 	}
 
