@@ -67,6 +67,11 @@ public class TigerTranslator {
 			String name = entry.getKey();
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
+				case "exit": {
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("TRP #EXIT_EXC");
+					break;
+				}
 				case "concat": {
 					String str1 = "R1";
 					String str2 = "R2";
@@ -134,6 +139,16 @@ public class TigerTranslator {
 
 					break;
 				}
+				case "ord": {
+					this.writer.writeHeader(label, "LDW R1, (SP)2");
+					this.writer.writeHeader("LDW R0, (R1)-2");
+					this.writer.writeHeader("BNE 4");
+					this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
+					this.writer.writeHeader("RTS");
+					this.writer.writeHeader("LDB R0, (R1)");
+					this.writer.writeHeader("RTS");
+					break;
+				}
 				case "print": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R1, #WRITE_EXC");
@@ -177,16 +192,6 @@ public class TigerTranslator {
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "ord": {
-					this.writer.writeHeader(label, "LDW R1, (SP)2");
-					this.writer.writeHeader("LDW R2, (R1)-2");
-					this.writer.writeHeader("BNE 4");
-					this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
-					this.writer.writeHeader("RTS");
-					this.writer.writeHeader("LDB R0, (R1)");
 					this.writer.writeHeader("RTS");
 					break;
 				}
