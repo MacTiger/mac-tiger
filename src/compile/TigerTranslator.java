@@ -201,6 +201,21 @@ public class TigerTranslator {
 		return this.currentTDS.getChild(indexOfNextChild);
 	}
 
+	/**
+	 * @return Somme des tailles des variables locales à cette TDS
+	 */
+	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
+		Variable var = null;
+		int sizeOfVars = 0;
+		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
+			if (functionOrVariable.getValue() instanceof Variable){
+				var = (Variable) functionOrVariable.getValue();
+				sizeOfVars += var.getType().getSize();
+			}
+		}
+		return sizeOfVars;
+	}
+
 	private void descend() {
 		// Met à jour this.currentTDS pour y mettre la TDS fille de la currentTDS de bon index, met à jour childrenIndexStack
 		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1); // Récupère l'index de la TDS fille à prendre
@@ -216,15 +231,15 @@ public class TigerTranslator {
 		//Empilage du chaînage statique
 		this.writer.writeFunction("STW R0, -(SP) // Empilage du chaînage statique");
 		// Empilage des variables locales s'il y en a :
-		int sizeOfVars = this.currentTDS.getSizeOfVars();
+		int sizeOfVars = getSizeOfVars(this.currentTDS.getFunctionsAndVariables());
 		if (sizeOfVars > 0){
-			this.writer.writeFunction(String.format("ADI SP, SP, #-%d // Empilage des variables locales", this.currentTDS.getSizeOfVars()));
+			this.writer.writeFunction(String.format("ADI SP, SP, #-%d // Empilage des variables locales", sizeOfVars));
 		}
 	}
 
 	private void ascend() {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
-		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépilage du chaînage statique et des variables locales s'il y en a", this.currentTDS.getSizeOfVars() - Constants.deplStat));
+		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépilage du chaînage statique et des variables locales s'il y en a", getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat));
 		this.writer.writeFunction("LDW BP, (SP)+ // Restauration du base pointer avec le chaînage dynamique"); // Partie UNLINK
 		this.writer.writeFunction("RTS");
 		this.writer.ascend(); // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)

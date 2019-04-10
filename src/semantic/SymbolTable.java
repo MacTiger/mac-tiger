@@ -971,20 +971,4 @@ public class SymbolTable {
 		graph += "\"]";
 		return new ArrayList<>(Arrays.asList(graph, graphChildren, graphLinks, allTypes));
 	}
-
-	/**
-	 * @return Somme des tailles des variables locales à cette TDS
-	 */
-	public int getSizeOfVars(){
-		Variable var = null;
-		int sizeOfVars = 0;
-		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
-			if (functionOrVariable.getValue() instanceof Variable){
-				var = (Variable) functionOrVariable.getValue();
-				sizeOfVars += var.getType().getSize();
-			}
-		}
-		return sizeOfVars;
-	}
-
 }
