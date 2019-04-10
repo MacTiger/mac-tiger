@@ -68,49 +68,69 @@ public class TigerTranslator {
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
 				case "concat": {
-					String str3reg = "R0";
-					String str1reg = "R1";
-					String str2reg = "R2";
-					String size1reg = "R3";
-					String size2reg = "R4";
-					String size3reg = "R5";
-					String charReg = "R6"; // Code ASCII du caractère courant
-					String pairPointerReg = "R7"; // Adresse de la paire de caractères courante
-					String parityReg = "R8"; // 0 ou 1
-					String filterLeftReg = "R9";
-					String filterRightReg = "R10";
+					String str1 = "R1";
+					String str2 = "R2";
+					String str3 = "R0";
+					String size1 = "R3";
+					String size2 = "R4";
+					String size3 = "R5";
+					String character = "R6"; // Code ASCII du caractère courant
+					String inputPointer = "R7"; // Adresse du caractère d'entrée courant
+					String outputPointer = "HP"; // Là où on va écrire le prochain caractère
+					String word = "R8"; // 0 si on en est au premier mot, 1 sinon
+		            String rest = "R9"; // Reste dans les divisions
+		            String two = "R10";
 
 					// On empile dans le tas la taille du nouveau string
-					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1reg));
-					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2reg));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1reg));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2reg));
-					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1reg, size2reg, size3reg));
-					this.writer.writeHeader(String.format("STW %s, (HP)+", size3reg));
+					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
+					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1));
+					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2));
+					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
+					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
-					// On écrit les filtres droits et gauches
-					this.writer.writeHeader(String.format(""));
+					// Constantes
+					this.writer.writeHeader(String.format("LDW %s, #2", two));
 
-					// Extraire le caractère courant
-					this.writer.writeHeader(String.format("LDW %s, (%s)", charReg, pairPointerReg));
-					this.writer.writeHeader(String.format("TST %s", pairPointerReg, pairPointerReg));
-					this.writer.writeHeader(String.format("BNE 6"));
+					// Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
+					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
 
-					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterLeftReg, charReg));
-					this.writer.writeHeader(String.format("BMP 4"));
-					this.writer.writeHeader(String.format("AND %s, %s, %s", charReg, filterRightReg, charReg));
-					this.writer.writeHeader(String.format("")); //TODO : mettre à jour pairPointerReg et pairPointerReg
+					// Initialisation du inputPointer
+					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
 
-					// Empiler le caractère courant
-						// Si le caractère courant vaut \0
-							// Si on est au deuxième string, empiler \0
-								// TODO
-							// Sinon, passer au deuxième string
-								// TODO
-						// Sinon, empiler
+					// Saute en (3a)
+					this.writer.writeHeader(String.format("BMP 8"));
 
-					// Empiler \0
-						// TODO
+					// (1) Extraction d'un caractère
+					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, inputPointer));
+					this.writer.writeHeader(String.format("BMP 6")); // Saute en (3b)
+
+					// (2) Empile le caractère courant
+					this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
+					this.writer.writeHeader(String.format("BMP 0")); // Saute en (3a)
+
+					// (3a) Empiler un mot (sauf le \0)
+					this.writer.writeHeader(String.format("BMP -10")); // Saute en (1)
+					// (3b)
+					this.writer.writeHeader(String.format("TST %s", character));
+					this.writer.writeHeader(String.format("BEQ 2", character)); // Si character = 0 : saute en (4a)
+					this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
+
+					// (4a) Passer au mot suivant ou terminer
+					this.writer.writeHeader(String.format("TST %s", word));
+					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
+					// (4b) word = 1, il faut empiler \0
+					this.writer.writeHeader(String.format("LDQ 0, %s", character));
+					this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
+					this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
+					this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
+					this.writer.writeHeader(String.format("TST %s", rest));
+					this.writer.writeHeader(String.format("BNE -12")); // Saute en (4b)
+					this.writer.writeHeader(String.format("RTS"));
+					// (4c) word = 0
+					this.writer.writeHeader(String.format("ADQ 1, %s", word));
+					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
+					this.writer.writeHeader(String.format("BMP -32")); // Saute en (3a)
 
 					break;
 				}
@@ -157,6 +177,16 @@ public class TigerTranslator {
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
+					this.writer.writeHeader("RTS");
+					break;
+				}
+				case "ord": {
+					this.writer.writeHeader(label, "LDW R1, (SP)2");
+					this.writer.writeHeader("LDW R2, (R1)-2");
+					this.writer.writeHeader("BNE 4");
+					this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
+					this.writer.writeHeader("RTS");
+					this.writer.writeHeader("LDB R0, (R1)");
 					this.writer.writeHeader("RTS");
 					break;
 				}
@@ -208,48 +238,47 @@ public class TigerTranslator {
 
 	}
 
-	public Type translate(Tree tree, int registerIndex) {
+	private void translate(Tree tree, int registerIndex) {
 		switch (tree.getType ()) {
-			case SEQ: return this.translateSEQ(tree, registerIndex);
-			case ARR: return this.translateARR(tree, registerIndex);
-			case REC: return this.translateREC(tree, registerIndex);
-			case CALL: return this.translateCALL(tree, registerIndex);
-			case ITEM: return this.translateITEM(tree, registerIndex);
-			case FIELD: return this.translateFIELD(tree, registerIndex);
-			case ID: return this.translateID(tree, registerIndex);
-			case STR: return this.translateSTR(tree, registerIndex);
-			case INT: return this.translateINT(tree, registerIndex);
+			case SEQ: this.translateSEQ(tree, registerIndex); return;
+			case ARR: this.translateARR(tree, registerIndex); return;
+			case REC: this.translateREC(tree, registerIndex); return;
+			case CALL: this.translateCALL(tree, registerIndex); return;
+			case ITEM: this.translateITEM(tree, registerIndex); return;
+			case FIELD: this.translateFIELD(tree, registerIndex); return;
+			case ID: this.translateID(tree, registerIndex); return;
+			case STR: this.translateSTR(tree, registerIndex); return;
+			case INT: this.translateINT(tree, registerIndex); return;
 		}
 		switch (tree.toString()) {
-			case ":=": return this.translateAssignment(tree, registerIndex);
-			case "=": return this.translateEqual(tree, registerIndex);
-			case "<>": return this.translateNotEqual(tree, registerIndex);
-			case ">": return this.translateStrictGreaterThan(tree, registerIndex);
-			case "<": return this.translateStrictLessThan(tree, registerIndex);
-			case ">=": return this.translateGreaterOrEqualThan(tree, registerIndex);
-			case "<=": return this.translateLessOrEqualThan(tree, registerIndex);
-			case "|": return this.translateOrOperator(tree, registerIndex);
-			case "&": return this.translateAndOperator(tree, registerIndex);
-			case "+": return this.translateAddOperator(tree, registerIndex);
-			case "-": return this.translateSubOperator(tree, registerIndex);
-			case "*": return this.translateMulOperator(tree, registerIndex);
-			case "/": return this.translateDivOperator(tree, registerIndex);
-			case "if": return this.translateIf(tree, registerIndex);
-			case "while": return this.translateWhile(tree, registerIndex);
-			case "for": return this.translateFor(tree, registerIndex);
-			case "let": return this.translateLet(tree, registerIndex);
-			case "nil": return this.translateNil(tree, registerIndex);
-			case "break": return this.translateBreak(tree, registerIndex);
+			case ":=": this.translateAssignment(tree, registerIndex); return;
+			case "=": this.translateEqual(tree, registerIndex); return;
+			case "<>": this.translateNotEqual(tree, registerIndex); return;
+			case ">": this.translateStrictGreaterThan(tree, registerIndex); return;
+			case "<": this.translateStrictLessThan(tree, registerIndex); return;
+			case ">=": this.translateGreaterOrEqualThan(tree, registerIndex); return;
+			case "<=": this.translateLessOrEqualThan(tree, registerIndex); return;
+			case "|": this.translateOrOperator(tree, registerIndex); return;
+			case "&": this.translateAndOperator(tree, registerIndex); return;
+			case "+": this.translateAddOperator(tree, registerIndex); return;
+			case "-": this.translateSubOperator(tree, registerIndex); return;
+			case "*": this.translateMulOperator(tree, registerIndex); return;
+			case "/": this.translateDivOperator(tree, registerIndex); return;
+			case "if": this.translateIf(tree, registerIndex); return;
+			case "while": this.translateWhile(tree, registerIndex); return;
+			case "for": this.translateFor(tree, registerIndex); return;
+			case "let": this.translateLet(tree, registerIndex); return;
+			case "nil": this.translateNil(tree, registerIndex); return;
+			case "break": this.translateBreak(tree, registerIndex); return;
 			default: {
 				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
 					this.translate(tree.getChild(i), registerIndex);
 				}
-				return null;
 			}
 		}
 	}
 
-	private Type translateStrictGreaterThan(Tree tree, int registerIndex) {
+	private void translateStrictGreaterThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -263,14 +292,12 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			return null;
 		} else {
 			// TODO: code translateStrictGreaterThan lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateStrictLessThan(Tree tree, int registerIndex) {
+	private void translateStrictLessThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -358,10 +385,9 @@ public class TigerTranslator {
 		}
 
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateGreaterOrEqualThan(Tree tree, int registerIndex) {
+	private void translateGreaterOrEqualThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -375,14 +401,12 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			return null;
 		} else {
 			// TODO: code translateGreaterOrEqualThan lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateLessOrEqualThan(Tree tree, int registerIndex) {
+	private void translateLessOrEqualThan(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -474,10 +498,9 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateEqual(Tree tree, int registerIndex) {
+	private void translateEqual(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -492,30 +515,29 @@ public class TigerTranslator {
 		} else {
 			//adresse str1
 			int addOne;
-			addOne=registerManager.provideRegister();
+			addOne = registerManager.provideRegister();
 			//adresse str2
 			int addTwo;
-			addTwo=registerManager.provideRegister();
+			addTwo = registerManager.provideRegister();
 			//Pour appliquer les masques, diverses opérations
 			int regOp;
-			regOp=registerManager.provideRegister();
-
+			regOp = registerManager.provideRegister();
 
 
 			// I
 			//Vérifier la taille : avant dans le tas. Taille dans addOne resp two.
-			writer.writeFunction(String.format("LDW R"+addOne+", R"+registerLeft));
-			writer.writeFunction(String.format("LDW R"+addTwo+", R"+registerRight));
+			writer.writeFunction(String.format("LDW R" + addOne + ", R" + registerLeft));
+			writer.writeFunction(String.format("LDW R" + addTwo + ", R" + registerRight));
 			//Enleve deux à adresse = adresse taille
-			writer.writeFunction(String.format("ADQ -2, R"+addOne));
-			writer.writeFunction(String.format("ADQ -2, R"+addTwo));
+			writer.writeFunction(String.format("ADQ -2, R" + addOne));
+			writer.writeFunction(String.format("ADQ -2, R" + addTwo));
 			//Déréférencement : addOne et two contiennent les longueurs
-			writer.writeFunction(String.format("LDW R"+addOne+", (R"+addOne+")"));
-			writer.writeFunction(String.format("LDW R"+addTwo+", (R"+addTwo+")"));
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d",addOne,addTwo,regOp));
-			writer.writeFunction(String.format("BEQ 6" ));
+			writer.writeFunction(String.format("LDW R" + addOne + ", (R" + addOne + ")"));
+			writer.writeFunction(String.format("LDW R" + addTwo + ", (R" + addTwo + ")"));
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", addOne, addTwo, regOp));
+			writer.writeFunction(String.format("BEQ 6"));
 			//Tailles différentes : FALSE
-			writer.writeFunction(String.format("LDW R%d, #0",registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 70"));// A REFLECHIR : go fin programme FIN
 			// 70 OK
 
@@ -523,54 +545,54 @@ public class TigerTranslator {
 			// II
 			//Premier test fait : size est identique
 			//stocker les adresses respectives
-			writer.writeFunction(String.format("STW R%d, R%d",registerLeft,addOne));
-			writer.writeFunction(String.format("STW R%d, R%d",registerRight,addTwo));
+			writer.writeFunction(String.format("STW R%d, R%d", registerLeft, addOne));
+			writer.writeFunction(String.format("STW R%d, R%d", registerRight, addTwo));
 
 			//On doit boucler à cet endroit
 			//Met les bonnes adresses (décalées) dans regLeft et regRight
-			writer.writeFunction(String.format("STW R%d, R%d",addOne,registerLeft));
-			writer.writeFunction(String.format("STW R%d, R%d",addTwo,registerRight));
+			writer.writeFunction(String.format("STW R%d, R%d", addOne, registerLeft));
+			writer.writeFunction(String.format("STW R%d, R%d", addTwo, registerRight));
 			//Charge les deux premiers caracteres regl et regr
-			writer.writeFunction(String.format("LDW R%d, (R%d)",registerLeft,registerLeft));
-			writer.writeFunction(String.format("LDW R%d, (R%d)",registerRight,registerRight));
+			writer.writeFunction(String.format("LDW R%d, (R%d)", registerLeft, registerLeft));
+			writer.writeFunction(String.format("LDW R%d, (R%d)", registerRight, registerRight));
 
 			//Masque
-			writer.writeFunction(String.format("LDW R%d, #65280",regOp));
-			writer.writeFunction(String.format("AND R%d, R%d, R%d",registerLeft,regOp,regOp));
+			writer.writeFunction(String.format("LDW R%d, #65280", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerLeft, regOp, regOp));
 			writer.writeFunction(String.format("BNE 20"));//A voir => (A)
 			//Premier caractere str1 vaut nul
-			writer.writeFunction(String.format("LDW R%d, #65280",regOp));
-			writer.writeFunction(String.format("AND R%d, R%d, R%d",registerRight,regOp,regOp));
+			writer.writeFunction(String.format("LDW R%d, #65280", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerRight, regOp, regOp));
 			writer.writeFunction(String.format("BNE 6"));//A voir
 			//Premier caractere str2 vaut nul : égalité true
-			writer.writeFunction(String.format("LDW R%d, #1",registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 			writer.writeFunction(String.format("BMP 36"));//FIN : TRUE
 			//A tester : temp
 
 			//Premier caractere str2 différent de nul : égalité false
-			writer.writeFunction(String.format("LDW R%d, #0",registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 28"));//FIN : FALSE
 			//A tester : temp
 
 
 			//Premier caractere str1 différent de nul (A)
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d",registerLeft,registerRight,regOp));
+			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, regOp));
 			writer.writeFunction(String.format("BEQ 6"));//A voir
 			// Ici str1-str2 != 0
-			writer.writeFunction(String.format("LDW R%d, #0",registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 20"));//FIN : FALSE
 			// Ici str1-str2 = 0
-			writer.writeFunction(String.format("LDW R%d, #255",regOp));
-			writer.writeFunction(String.format("AND R%d, R%d, R%d",registerLeft,regOp,regOp));
+			writer.writeFunction(String.format("LDW R%d, #255", regOp));
+			writer.writeFunction(String.format("AND R%d, R%d, R%d", registerLeft, regOp, regOp));
 			writer.writeFunction(String.format("BNE 6"));
 			// Ici deuxieme caractere str1 vaut nul
-			writer.writeFunction(String.format("LDW R%d, #1",registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 			writer.writeFunction(String.format("BMP 8"));//FIN : TRUE
 
 			// Ici deuxieme caractère str1 != nul : continuer
 			//Décalage dans le tas
-			writer.writeFunction(String.format("ADQ 2,R%d",addOne));
-			writer.writeFunction(String.format("ADQ 2,R%d",addTwo));
+			writer.writeFunction(String.format("ADQ 2,R%d", addOne));
+			writer.writeFunction(String.format("ADQ 2,R%d", addTwo));
 			//On boucle !
 			writer.writeFunction(String.format("BMP -66"));//A voir
 			//A tester : temp
@@ -579,15 +601,14 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 			registerManager.freeRegister();
 			registerManager.freeRegister();
-			// TODO: code translateEqual lorsque les fils sont des strings
 
 		}
 
+
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateNotEqual(Tree tree, int registerIndex) {
+	private void translateNotEqual(Tree tree, int registerIndex) {
 		int registerLeft = registerIndex;
 		translate(tree.getChild(0), registerLeft);
 		int registerRight = registerManager.provideRegister();
@@ -604,14 +625,12 @@ public class TigerTranslator {
 
 			registerManager.freeRegister();
 
-			return null;
 		} else {
 			// TODO: code translateNotEqual lorsque les fils sont des strings
-			return null;
 		}
 	}
 
-	private Type translateAndOperator(Tree tree, int registerIndex) {
+	private void translateAndOperator(Tree tree, int registerIndex) {
 
 		String endLabel = this.labelGenerator.getLabel(tree, "end");
 
@@ -624,10 +643,9 @@ public class TigerTranslator {
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
-		return null;
 	}
 
-	private Type translateOrOperator(Tree tree, int registerIndex) {
+	private void translateOrOperator(Tree tree, int registerIndex) {
 
 		String endLabel = this.labelGenerator.getLabel(tree, "end");
 
@@ -640,10 +658,9 @@ public class TigerTranslator {
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
-		return null;
 	}
 
-	private Type translateAddOperator(Tree tree, int registerIndex) {
+	private void translateAddOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
@@ -651,10 +668,9 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
-	private Type translateSubOperator(Tree tree, int registerIndex) {
+	private void translateSubOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		if (tree.getChildCount() == 1) {
 			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
@@ -664,10 +680,9 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerIndex, register, registerIndex));
 			registerManager.freeRegister();
 		}
-		return null;
 	}
 
-	private Type translateMulOperator(Tree tree, int registerIndex) {
+	private void translateMulOperator(Tree tree, int registerIndex) {
 		translate(tree.getChild(0), registerIndex);
 		int register = registerManager.provideRegister();
 		for (int i = 1; i < tree.getChildCount(); i++) {
@@ -675,11 +690,10 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", registerIndex, register, registerIndex));
 		}
 		registerManager.freeRegister();
-		return null;
 	}
 
 	// A/B
-	private Type translateDivOperator(Tree tree, int registerIndex) {
+	private void translateDivOperator(Tree tree, int registerIndex) {
 
 		//registerIndex contient A
 		int registerA = registerManager.provideRegister();
@@ -703,10 +717,9 @@ public class TigerTranslator {
 		*/
 		registerManager.freeRegister();//Libère registerB
 		registerManager.freeRegister();//Libère registerA
-		return null;
 	}
 
-	private Type translateCALL(Tree tree, int registerIndex) {
+	private void translateCALL(Tree tree, int registerIndex) {
 		/* Appel d'une fonction
 		 *
 		 */
@@ -720,17 +733,21 @@ public class TigerTranslator {
 		// Sauvegarde les registres de l'environnement appelant
 		registerManager.saveAll();
 
+		int registerIndex2 = registerManager.provideRegister(); // Réserve un registre pour empiler les arguments
+
 		int sizeOfArgs = 0;
 		int sizeOfArg = 0;
 		Tree child;
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			child = tree.getChild(i);
-			translate(child, registerIndex);
+			translate(child, registerIndex2);
 			sizeOfArg = SymbolTable.treeTypeHashMap.get(child).getSize();
 			sizeOfArgs += sizeOfArg;
 			this.writer.writeFunction(String.format("ADQ -%d,SP  //Empile l'argument numéro %d/%d", sizeOfArg, i, l-1));    // Il faut tenir compte de la taille de l'argument qu'on empile
-			this.writer.writeFunction("STW R"+registerIndex+", (SP)");
+			this.writer.writeFunction("STW R"+registerIndex2+", (SP)");
 		}//Tous les arguments sont empilés
+
+		registerManager.freeRegister();
 
 		writeEntryFunction(table, name);    // Génération du code d'appel à la fonction et calcul de son chaînage statique
 
@@ -740,12 +757,9 @@ public class TigerTranslator {
 		if (function.getType() != null) {
 			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
 		}
-		returnType = function.getType();
-
-		return returnType;
 	}
 
-	private Type translateREC(Tree tree, int registerIndex) {
+	private void translateREC(Tree tree, int registerIndex) {
 		/* Déclaration d'une structure
 		 * (1) Vérification de l'existence du type de structure
 		 * (2) Vérification du nombre de champs
@@ -784,10 +798,9 @@ public class TigerTranslator {
 		for (; i < l; i += 2) {
 			this.translate(tree.getChild(i + 1), registerIndex);
 		}*/
-		return returnType;
 	}
 
-	private Type translateARR(Tree tree, int registerIndex) {
+	private void translateARR(Tree tree, int registerIndex) {
 		/* Déclaration d'un tableau
 		 * (1) Vérification de l'existence du type de tableau
 		 * (2) Vérification du type de la taille du tableau
@@ -808,10 +821,9 @@ public class TigerTranslator {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
 		}*/
-		return returnType;
 	}
 
-	private Type translateAssignment(Tree tree, int registerIndex) {
+	private void translateAssignment(Tree tree, int registerIndex) {
 		Tree lValue = tree.getChild(0);
 		Tree expToAssign = tree.getChild(1);
 		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
@@ -825,19 +837,16 @@ public class TigerTranslator {
 			default:
 				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
-		return null;
 	}
 
-	private Type translateSEQ(Tree tree, int registerIndex) {
-		Type returnType = null;
+	private void translateSEQ(Tree tree, int registerIndex) {
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
 			//TODO : gérer les registres :
-			returnType = this.translate(tree.getChild(i), registerIndex);
+			this.translate(tree.getChild(i), registerIndex);
 		}
-		return returnType;
 	}
 
-	private Type translateSTR(Tree tree, int registerIndex) {
+	private void translateSTR(Tree tree, int registerIndex) {
 		List<Integer> ordinals = new ArrayList<Integer>();
 		String inputString = tree.toString();
 		String commentString = "";
@@ -927,7 +936,6 @@ public class TigerTranslator {
 			this.writer.writeFunction(String.format("LDW R%d, #%d", registerIndex, this.heapBase));
 			this.heapBase += ordinals.size();
 		}
-		return this.currentTDS.stringType;
 	}
 
 	/**
@@ -936,7 +944,7 @@ public class TigerTranslator {
 	 * @param registerIndex
 	 * @return
 	 */
-	private Type translateID(Tree tree, int registerIndex) {
+	private void translateID(Tree tree, int registerIndex) {
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findVariable(name);
 
@@ -971,12 +979,11 @@ public class TigerTranslator {
 		}
 		this.writer.writeFunction(String.format("ADQ %d, R%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", deplacementVariable, registerIndex,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
 
-		return null;
 	}
 
-	private Type translateITEM(Tree tree, int registerIndex) {
+	private void translateITEM(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
+		this.translate(exp, registerIndex);
 		//TODO : générer le code pour récupérer l'index entier représenté par le fils droit
 		//TODO : générer le code pour accèder à l'ITEM
 		Type returnType = null;
@@ -987,12 +994,11 @@ public class TigerTranslator {
 			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
 		}
 		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier*/
-		return returnType;
 	}
 
-	private Type translateFIELD(Tree tree, int registerIndex) {
+	private void translateFIELD(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		Type expType = this.translate(exp, registerIndex);
+		this.translate(exp, registerIndex);
 		//TODO : générer le code pour récupérer le FIELD
 /*		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
 			notifier.semanticError(exp, "%s is not a record", exp.toString());
@@ -1005,15 +1011,13 @@ public class TigerTranslator {
 				return fields.get(tree.getChild(1).toString()).getType();
 			}
 		}*/
-		return null;
 	}
 
-	private Type translateINT(Tree tree, int registerIndex) {
+	private void translateINT(Tree tree, int registerIndex) {
 		this.writer.writeFunction(String.format("LDW R%d, #%s", registerIndex, tree.toString()));
-		return this.currentTDS.intType;
 	}
 
-	private Type translateIf(Tree tree, int registerIndex) {
+	private void translateIf(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(0), registerIndex);
 		boolean hasElse = (tree.getChildCount() == 3);
 
@@ -1034,7 +1038,6 @@ public class TigerTranslator {
 			// Étiquette endif
 			this.writer.writeFunction(endifLabel, "NOP");
 
-			return null;
 		} else {
 			// Labels
 			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
@@ -1046,19 +1049,17 @@ public class TigerTranslator {
 			// Étiquette endif
 			this.writer.writeFunction(endifLabel, "NOP");
 
-			return null;
 		}
 	}
 
-	private Type translateWhile(Tree tree, int registerIndex) {
+	private void translateWhile(Tree tree, int registerIndex) {
 		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
 		labelGenerator.getLabel(tree, "start");   // Création des labels de cette boucle while
 		this.translate(tree.getChild(0),registerIndex);
 		this.translate(tree.getChild(1),registerIndex);
-		return null;
 	}
 
-	private Type translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
+	private void translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
 		labelGenerator.getLabel(tree, "test");    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)
 
 		Variable index = currentTDS.findVariable(tree.getChild(0).toString());  // Récupère la variable de boucle
@@ -1069,7 +1070,6 @@ public class TigerTranslator {
 		this.descend(); // Met à jour this.currentTDS avec la bonne TDS fille
 		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
 		this.ascend();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
-		return null;
 	}
 
 	/**
@@ -1078,16 +1078,17 @@ public class TigerTranslator {
 	 * @param registerIndex
 	 * @return
 	 */
-	private Type translateLet(Tree tree, int registerIndex) {
+	private void translateLet(Tree tree, int registerIndex) {
 		SymbolTable table = this.currentTDS;
 		Tree dec = tree.getChild(0);
 		Tree seq = tree.getChild(1);
+		int registerLet = 0;     // On utilise R0 pour les valeurs de retour dans ce let
 		for (int i = 0, li = dec.getChildCount(); i < li; ++i) {
 			Tree symbol = dec.getChild(i);
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next()));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "type"));
 					this.descend(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 
 					int lj = i;
@@ -1099,7 +1100,7 @@ public class TigerTranslator {
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next()));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(),"function"));
 					this.descend();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					do {
@@ -1110,7 +1111,7 @@ public class TigerTranslator {
 						labelGenerator.getLabel(function.getSymbolTable(), name); // Création du label de la fonction
 						this.descend();   // Descente dans la TDS de la fonction
 						// TODO : choisir dans quel registre registerIndex mettre le résultat du corps de la fonction : probablement toujours R0
-						translate(body, registerIndex); // Génère code pour le corps de la fonction
+						translate(body, registerLet); // Génère code pour le corps de la fonction
 						this.ascend();
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
 
@@ -1121,17 +1122,17 @@ public class TigerTranslator {
 				case "var": { // dans le cas de la déclaration d'une variable
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
-					// TODO : choisir dans quel registre registerIndex mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
-					translate(exp, registerIndex);  //TODO : est-ce avant de descendre dans la TDS qu'il faut évaluer ?
+					// TODO : choisir dans quel registre registerLet mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
+					translate(exp, registerLet);  //TODO : est-ce avant de descendre dans la TDS qu'il faut évaluer ?
 					if (this.currentTDS == table) {
 						this.registerManager.saveAll();
-						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next()));
+						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 						this.descend();
 					} else {
 						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
 						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
 							this.registerManager.saveAll();
-							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next()));
+							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 							this.descend();
 						}
 					}
@@ -1143,22 +1144,20 @@ public class TigerTranslator {
 				}
 			}
 		}
-		Type result = translate(seq, registerIndex);
+		translate(seq, registerLet);  // Evalue le IN
 		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
 			this.ascend();
 		}
-		return result;
 	}
 
-	private Type translateNil(Tree tree, int registerIndex) {
-		return this.currentTDS.nilPseudoType;
+	private void translateNil(Tree tree, int registerIndex) {
+		this.writer.writeFunction(String.format("LDW R%d, #NIL", registerIndex));
 	}
 
-	private Type translateBreak(Tree tree, int registerIndex) {
+	private void translateBreak(Tree tree, int registerIndex) {
 		Tree parent = tree;
 		Tree child = tree;
 		//TODO : générer code pour Break
-		return null;
 	}
 
 	public String toString() {
@@ -1192,15 +1191,21 @@ public class TigerTranslator {
 	 * @param TDSDest TDS de la fonction dont on calcule le chaînage statique
 	 */
 	public void writeStaticLinking(SymbolTable TDSDest){
-		if (TDSDest.getDepth() == 1){   // On ne calcule pas le chaînage statique si on appelle une fonction built-in   //TODO : vérifier que c'est la bonne profondeur
+		if (TDSDest.getDepth() <= 1){   // On ne calcule pas le chaînage statique si on appelle une fonction built-in   //TODO : vérifier que c'est la bonne profondeur
 			return ;
 		}
 		int depl_stat = -2; // TODO:  Vérifier la bonne valeur du déplacement statique
+		int count_stat = this.currentTDS.getDepth()-TDSDest.getDepth() + 1;
+
+
+		if (count_stat == 0){
+			this.writer.writeFunction("LDW R0, BP  // STATIC_LINK : Calcul du chaînage statique");
+			return;
+		}
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
-
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", this.currentTDS.getDepth()-TDSDest.getDepth() + 2, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
+		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", depl_stat));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));

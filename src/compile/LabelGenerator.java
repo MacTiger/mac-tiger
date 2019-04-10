@@ -70,7 +70,6 @@ public class LabelGenerator {
 	/**
 	 * Renvoie l'étiquette unique associée à la table des symboles, si elle existe déjà
 	 * Sinon, génère une étiquette unique et la renvoie
-	 * @param table une table des symboles
 	 * @return l'étiquette unique de la table
 	 */
 	public String getLabel(SymbolTable symbolTable) {
@@ -95,7 +94,8 @@ public class LabelGenerator {
 			labels = new HashMap<String, String>();
 			this.treeLabels.put(tree, labels);
 		}
-		String label = this.trimLabel("B" + this.treeLabels.size() + tree.toString() + "_" + key);
+
+		String label = this.trimLabel("B" + this.treeLabels.size() + "_" + key);
 		labels.put(key, label);
 		return label;
 	}
