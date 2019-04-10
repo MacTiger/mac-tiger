@@ -1,19 +1,15 @@
 package compile;
 
 import misc.Constants;
-import misc.Notifier;
 import org.antlr.runtime.tree.Tree;
 import semantic.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 
-import static syntactic.TigerParser.ARRTYPE;
-import static syntactic.TigerParser.RECTYPE;
 import static syntactic.TigerParser.SEQ;
 import static syntactic.TigerParser.ARR;
 import static syntactic.TigerParser.REC;
@@ -1093,7 +1089,7 @@ public class TigerTranslator {
 
 		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
 
-		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
+		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
 		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
 			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
 
@@ -1254,21 +1250,41 @@ public class TigerTranslator {
 				case "var": { // dans le cas de la déclaration d'une variable
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
+					Variable variable = null;   // Variable qui va être déclarée
 					// TODO : choisir dans quel registre registerLet mettre le résultat de l'initialisation de la variable ; attention la déclaration de la variable et son initialisation ne sont pas forcément dans le même environnement
 					translate(exp, registerLet);
-					if (this.currentTDS == table) {
-						this.registerManager.saveAll();
+					if (this.currentTDS == table) { // Première variable à être déclarée
+
+						int totalOffset = - this.registerManager.saveAll() * 2 ;   // On récupère la taille prise par la sauvegarde des registres
+						// Empile la variable à la bonne place : ici il faut l'empiler avant d'empiler l'environnement de la fonction assembleur où se trouvera notre variable
+						SymbolTable nextTable = this.next();
+						variable = nextTable.findVariable(name);  // On cherche la variable que l'on va déclarer dans la prochaine TDS dans laquelle on ira à l'appel de descend()
+						totalOffset += Constants.deplStat - getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat - 2 - variable.getOffset();  // Calcul l'offset total pour accéder à l'emplacement dans la pile où se trouvera la variable
+						writeVariableAssignment(registerLet, totalOffset, name);
+						// La valeur initiale de la variable est maintenant au bon endroit dans la pile
+
 						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 						this.descend();
 					} else {
 						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
-						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
-							this.registerManager.saveAll();
+						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) { // Redéclare la variable
+
+							int totalOffset = - this.registerManager.saveAll() * 2 ;   // On récupère la taille prise par la sauvegarde des registres
+							// Empile la variable à la bonne place : ici il faut l'empiler avant d'empiler l'environnement de la fonction assembleur où se trouvera notre variable
+							SymbolTable nextTable = this.next();
+							variable = nextTable.findVariable(name);  // On cherche la variable que l'on va déclarer dans la prochaine TDS dans laquelle on ira à l'appel de descend()
+							totalOffset += Constants.deplStat - getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) - Constants.deplStat - 2 - variable.getOffset();  // Calcul l'offset total pour accéder à l'emplacement dans la pile où se trouvera la variable
+							writeVariableAssignment(registerLet, totalOffset, name);
+							// La valeur initiale de la variable est maintenant au bon endroit dans la pile
+
 							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 							this.descend();
+						} else{ // Déclaration comprise dans une suite de déclarations, ne redéclare pas la variable
+							// Met l'initialisation de la variable à la bonne place (avec l'offset par rapport au BP)
+							variable = this.currentTDS.findVariable(name);
+							writeVariableAssignment(registerLet, variable.getOffset(), name);
 						}
 					}
-					Variable variable = this.currentTDS.findVariable(name); // Récupération de la variable déclarée
 					variable.translate(true);
 					//TODO : générer le code de la déclaration de variable
 					break;
@@ -1279,6 +1295,18 @@ public class TigerTranslator {
 		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
 			this.ascend();
 		}
+	}
+
+	/**
+	 * Ecrit le code pour mettre le contenu du registre registerLet dans la pile à l'adresse BP + offset
+	 * @param registerLet
+	 * @param offset
+	 */
+	private void writeVariableAssignment(int registerLet, int offset, String nameOfVar){
+		this.writer.writeFunction(String.format("LDW WR, #%d  // ASSIGNMENT_BEGIN : affectation de la variable \"%s\"", offset, nameOfVar));
+		this.writer.writeFunction("ADD BP, WR, WR");
+		this.writer.writeFunction(String.format("STW R%d, (WR)  // ASSIGNMENT_END : affectation de la variable \"%s\"", registerLet, nameOfVar));
+
 	}
 
 	private void translateNil(Tree tree, int registerIndex) {
