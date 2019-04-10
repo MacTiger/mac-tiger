@@ -45,11 +45,12 @@ test() {
 						then
 							status="5"
 						fi
+					else
+						status="0"
 					fi
 					if [[ $err != "" ]]
 					then
 						echo $err >> $stderr
-						status="0"
 					fi
 				fi
 			else

@@ -1,6 +1,4 @@
 #!/bin/bash
-stdout=""
-prgm=""
 java -cp bin:lib/* Main --src > prompt.src
 status=$?
 if [[ $status == 0 ]]
@@ -10,8 +8,13 @@ then
 	if [[ $err == "" ]]
 	then
 		java -jar lib/microPIUPK.jar -batch prompt.iup | sed '$d' | sed '$d' | sed '$s/\(.\+\)Simulation terminée ----------------------------------$/\1\n/' | sed '$d'
+		status=$?
+		if [[ $status != "0" ]]
+		then
+			$status=$(($status + 4))
+		fi
 	else
-		status="5"
+		status="1"
 	fi
 fi
 exit $status

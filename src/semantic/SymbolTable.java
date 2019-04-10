@@ -315,7 +315,12 @@ public class SymbolTable {
 					notifier.semanticError(tree, "%s requires more arguments", name);
 					break;
 				}
-				this.checkType(tree.getChild(i), notifier, ((Variable) entry.getValue()).getType()); // Test sémantique (3)
+				Type type = ((Variable) entry.getValue()).getType();
+				if (type == null) {
+					this.fillWith(tree.getChild(i), notifier);
+				} else {
+					this.checkType(tree.getChild(i), notifier, type); // Test sémantique (3)
+				}
 				++i;
 			}
 			if (i < l) { // Test sémantique (2)
@@ -357,7 +362,12 @@ public class SymbolTable {
 				if (!tree.getChild(i).toString().equals(entry.getKey())) { // Test sémantique (3)
 					notifier.semanticError(tree, "field name %s was expected but field name %s was found", entry.getKey(), tree.getChild(i).toString());
 				}
-				this.checkType(tree.getChild(i + 1), notifier, entry.getValue().getType()); // Test sémantique (4)
+				Type type = ((Variable) entry.getValue()).getType();
+				if (type == null) {
+					this.fillWith(tree.getChild(i + 1), notifier);
+				} else {
+					this.checkType(tree.getChild(i + 1), notifier, type); // Test sémantique (4)
+				}
 				i += 2;
 			}
 			if (i < l) { // Test sémantique (2)
@@ -386,7 +396,9 @@ public class SymbolTable {
 			returnType = null;
 		}
 		this.checkType(tree.getChild(1), notifier, SymbolTable.intType); // Test sémantique (2)
-		if (returnType != null) {
+		if (returnType == null) {
+			this.fillWith(tree.getChild(2), notifier);
+		} else {
 			Array array = (Array) returnType;
 			this.checkType(tree.getChild(2), notifier, array.getType()); // Test sémantique (3)
 		}
