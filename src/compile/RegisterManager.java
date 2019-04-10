@@ -5,7 +5,7 @@ import java.util.Stack;
 public class RegisterManager {
 
     //R1 à R10
-    private final int REGMAX = 10;//nb max de registres R1->R10
+    private final int REGMAX = 12;//nb max de registres R1->R12
 
     private Writer writer;
     private Stack<Integer> availableRegisters;
@@ -45,13 +45,11 @@ public class RegisterManager {
 
     //Met le registre req dans la pile
     private void save(int reg) {
-        writer.writeFunction("ADQ -2, SP");
-        writer.writeFunction(String.format("STW R%d, (SP)", reg));
+        writer.writeFunction(String.format("STW R%d, -(SP)", reg));
     }
 
     private void restore(int reg) {
-        writer.writeFunction(String.format("LDW R%d, (SP)", reg));
-        writer.writeFunction("ADQ 2, SP");
+        writer.writeFunction(String.format("LDW R%d, (SP)+", reg));
     }
 
     //Renvoie l'indice d'un registre disponible
