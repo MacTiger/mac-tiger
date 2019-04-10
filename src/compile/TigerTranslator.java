@@ -67,6 +67,17 @@ public class TigerTranslator {
 			String name = entry.getKey();
 			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
 			switch (name) {
+				case "chr": {
+					// TODO: débugger cette fonction
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("BLW 8");
+					this.writer.writeHeader("LDQ 127, R1");
+					this.writer.writeHeader("SUB R1, R0, R1");
+					this.writer.writeHeader("BLW 2");
+					this.writer.writeHeader("RTS");
+					this.writer.writeHeader("TRP #EXIT_EXC");
+					break;
+				}
 				case "exit": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("TRP #EXIT_EXC");
