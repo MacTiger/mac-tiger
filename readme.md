@@ -88,7 +88,7 @@ $ make prompt < <file>
 
 Si le programme est invalide, des messages d'erreurs seront affichés sur la sortie d'erreur ; sinon le code sera exécuté.
 
-### Options du compilateur:
+### Options du compilateur
 
 Le compilateur *Java* dispose de plusieurs options permettant de contrôler sa sortie.
 
