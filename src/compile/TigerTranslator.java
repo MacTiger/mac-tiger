@@ -71,12 +71,25 @@ public class TigerTranslator {
 			switch (name) {
 				case "chr": {
 					// TODO: débugger cette fonction
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("BLW 8");
+					this.writer.writeHeader(label, "LDW R2, (SP)2");
+
+					// Si on donne un nombre strictement négatif, sauter en (*)
+					this.writer.writeHeader("BLW 20");
 					this.writer.writeHeader("LDQ 127, R1");
-					this.writer.writeHeader("SUB R1, R0, R1");
-					this.writer.writeHeader("BLW 2");
+					this.writer.writeHeader("SUB R1, R2, R1");
+
+					// Si on donne un nombre plus grand ou égal à 128, sauter en (*)
+					this.writer.writeHeader("BLW 14");
+
+					// Si le nombre est valide, on ajoute la chaîne de (un seul) caractère dans le tas
+					this.writer.writeHeader("LDW R1, #1");
+					this.writer.writeHeader("STW R1, (HP)+");
+					this.writer.writeHeader("LDW R0, HP");
+					this.writer.writeHeader("SWB R2, R2");
+					this.writer.writeHeader("STW R2, (HP)+");
 					this.writer.writeHeader("RTS");
+
+					// (1) Termine le programme
 					this.writer.writeHeader("TRP #EXIT_EXC");
 					break;
 				}
