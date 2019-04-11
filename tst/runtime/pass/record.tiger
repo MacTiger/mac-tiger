@@ -1,0 +1,14 @@
+let
+	type vector = {x : int, y : int}
+	type data = {v : vector, to_add : int}
+	var d1 := data {v = vector {x = 3, y = 5}, to_add = 7}
+in
+	printi (d1.v.x);
+	print ("\n");
+	printi (d1.to_add);
+	print ("\n");
+	d1.v.x := 11;
+	printi (d1.v.x);
+	print ("\n");
+	printi (d1.to_add)
+end

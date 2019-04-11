@@ -4,6 +4,9 @@ init:
 build:
 	bash build.sh
 
+graph:
+	bash graph.sh
+
 prompt:
 	bash prompt.sh
 
@@ -19,10 +22,7 @@ clean:
 antlrworks:
 	java -jar lib/antlrworks-1.5.1.jar
 
-microPIUP:
+micropiup:
 	java -jar lib/microPIUPK.jar -sim
 
-graphviz:
-	tar -xvf lib/graphviz.tar.gz -C lib/
-
-.PHONY: init build prompt test torture clean antlrworks microPIUP graphviz
+.PHONY: init build graph prompt test torture clean antlrworks micropiup
