@@ -5,8 +5,8 @@ in
 		var b := a
 		var a := a
 	in
-		printi(b);
-		print("\n");
-		printi(a)
+		printi (b);
+		print ("\n");
+		printi (a)
 	end
 end
