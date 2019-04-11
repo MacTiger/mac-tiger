@@ -336,10 +336,10 @@ public class TigerTranslator {
 
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BGT 6"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 4"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			writer.writeFunction(String.format("BGT 4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {
 			StrStrictLessThan(registerRight,registerLeft,registerIndex);
 		}
@@ -427,9 +427,9 @@ public class TigerTranslator {
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
 			writer.writeFunction(String.format("BLW 6"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {
 			StrStrictLessThan(registerLeft,registerRight,registerIndex);
 		}
@@ -448,9 +448,9 @@ public class TigerTranslator {
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
 			writer.writeFunction(String.format("BGE 6"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {
 			// a<=b <=> b>=a
 			StrLessOrEqualTh(registerRight,registerLeft,registerIndex);
@@ -547,9 +547,9 @@ public class TigerTranslator {
 		if (!isString) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
 			writer.writeFunction(String.format("BLE 6"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {//inf.src
 			StrLessOrEqualTh(registerLeft,registerRight,registerIndex);
 		}
@@ -566,8 +566,10 @@ public class TigerTranslator {
 
 		if (!isStringComparison) {
 			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BEQ 4"));
+			writer.writeFunction(String.format("BNE 6"));
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 		} else {
 			//adresse str1
 			int addOne;
@@ -841,11 +843,11 @@ public class TigerTranslator {
 
 		//registerIndex contient A
 		int registerA = registerManager.provideRegister();
-		translate(tree.getChild(0), registerIndex);
+		translate(tree.getChild(0), registerA);
 
 		//Met B dans registerB
 		int registerB=registerManager.provideRegister();
-		translate(tree.getChild(1),registerB);
+		translate(tree.getChild(1), registerB);
 
 		/*
 		//Met A dans registerAsave : dernier registre réservé
