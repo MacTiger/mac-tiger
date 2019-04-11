@@ -93,11 +93,6 @@ public class TigerTranslator {
 					this.writer.writeHeader("TRP #EXIT_EXC");
 					break;
 				}
-				case "exit": {
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("TRP #EXIT_EXC");
-					break;
-				}
 				case "concat": {
 					String str1 = "R1";
 					String str2 = "R2";
@@ -163,6 +158,20 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
 					this.writer.writeHeader(String.format("BMP -32")); // Saute en (3a)
 
+					break;
+				}
+				case "exit": {
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("TRP #EXIT_EXC");
+					break;
+				}
+				case "not": {
+					this.writer.writeHeader(label, "LDW R0, (SP)2");
+					this.writer.writeHeader("BEQ 6");
+					this.writer.writeHeader("LDW R0, #0");
+					this.writer.writeHeader("BMP 4");
+					this.writer.writeHeader("LDW R0, #1");
+					this.writer.writeHeader("RTS");
 					break;
 				}
 				case "ord": {
