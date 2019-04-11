@@ -904,7 +904,7 @@ public class TigerTranslator {
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
 			child = tree.getChild(i);
 			translate(child, registerIndex2);
-			this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex2));
+			this.writer.writeFunction(String.format("STW R%d, -(SP) // Empile l'argument numéro %d/%d de la fonction \"%s\"",registerIndex2, i, l-1, name));
 		}//Tous les arguments sont empilés
 
 		registerManager.freeRegister();
@@ -980,7 +980,6 @@ public class TigerTranslator {
 
 	private void translateSEQ(Tree tree, int registerIndex) {
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
-			//TODO : gérer les registres :
 			this.translate(tree.getChild(i), registerIndex);
 		}
 	}
@@ -1084,6 +1083,7 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private void translateID(Tree tree, int registerIndex) {
+		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1099,9 +1099,9 @@ public class TigerTranslator {
 
 		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
 
-		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
+		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat
 		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
-			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
+			int addressRegister = 0;
 
 
 			int loopRegister = this.registerManager.provideRegister();
@@ -1110,12 +1110,12 @@ public class TigerTranslator {
 			// Début de boucle :
 			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, -wordSize));
 			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
-			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -6, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
+			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -8, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
 			// Fin de boucle
 
 			this.registerManager.freeRegister();
 		}
-		this.writer.writeFunction(String.format("ANI R%d, R%d, #%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
 
 	}
 

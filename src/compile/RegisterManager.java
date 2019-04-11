@@ -33,8 +33,8 @@ public class RegisterManager {
     public int saveAll() {
         int registersToSave = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
 
-        for (int i = 1; i <= registersToSave; i++) {
-            save(i);
+        for (int i = 0; i < registersToSave; i++) {
+            save(REGMAX-i);
         }
         return registersToSave;
     }
@@ -42,19 +42,19 @@ public class RegisterManager {
     public void restoreAll() {
         int registersToRestore = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
 
-        for (int i = registersToRestore; i >= 1; i--) {
-            restore(i);
+        for (int i = registersToRestore - 1; i >= 0; i--) {
+            restore(REGMAX - i);
         }
     }
 
 
     //Met le registre req dans la pile
     private void save(int reg) {
-        writer.writeFunction(String.format("STW R%d, -(SP)", reg));
+        writer.writeFunction(String.format("STW R%d, -(SP) // Empile un registre", reg));
     }
 
     private void restore(int reg) {
-        writer.writeFunction(String.format("LDW R%d, (SP)+", reg));
+        writer.writeFunction(String.format("LDW R%d, (SP)+  // Dépile un registre", reg));
     }
 
     //Renvoie l'indice d'un registre disponible
