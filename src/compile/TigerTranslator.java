@@ -224,6 +224,15 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS");
 					break;
 				}
+				case "getchar": {
+					this.writer.writeHeader("LDQ 1, R0");
+					this.writer.writeHeader("STW R0, (HP)+"); // La chaîne est forcément de taille 1
+					this.writer.writeHeader("LDW R0, HP");
+					this.writer.writeHeader("TRP #READ_EXC");
+					this.writer.writeHeader("ADQ 2, HP");
+					this.writer.writeHeader("RTS");
+					break;
+				}
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
