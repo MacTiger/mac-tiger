@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.antlr.runtime.tree.Tree;
 
-import misc.Constants;
+import static misc.Constants.wordSize;
 import misc.Notifier;
 
 import static syntactic.TigerParser.ARRTYPE;
@@ -29,8 +29,8 @@ public class SymbolTable {
 
 	static {
 		Type nilPseudoType = new Record();
-		Type intType = new Primitive(Constants.intSize);
-		Type stringType = new Primitive(Constants.pointerSize);
+		Type intType = new Primitive();
+		Type stringType = new Primitive();
 		Variable intVariable = new Variable();
 		intVariable.setType(intType);
 		Variable stringVariable = new Variable();
@@ -217,26 +217,6 @@ public class SymbolTable {
 		}
 	}
 
-	/**
-	 * Compte le nombre de chaînages statiques à remonter pour accèder à la variable nameOfVariable
-	 * @param nameOfVariable
-	 * @return : nombre de chaînages statiques à remonter
-	 */
-	public int countStaticChainToVariable(String nameOfVariable){
-		SymbolTable symbolTable = this;
-		int staticChainCount = 0;
-		while (! symbolTable.functionsAndVariables.has(nameOfVariable)){
-			staticChainCount++;
-			if (symbolTable.parent != null){
-				symbolTable = symbolTable.parent;
-			}
-			else{
-				return -1; // Cas d'erreur : la variable n'est pas trouvable
-			}
-		}
-		return staticChainCount;
-	}
-
 	public Variable findVariable(String name) {
 		// recherche la variable indiquée dans les tables des symboles supérieures et retourne celle-ci si trouvée ou 'null' sinon
 		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
@@ -251,6 +231,37 @@ public class SymbolTable {
 		} else {
 			return null;
 		}
+	}
+
+	public Variable findTranslatedVariable(String name) {
+		Variable variable = (Variable) this.functionsAndVariables.get(name);
+		if (variable != null && variable.isTranslated()) {
+			return variable;
+		} else if (this.parent != null) {
+			return this.parent.findTranslatedVariable(name);
+		} else {
+			throw new RuntimeException(String.format("La variable %s n'a pas été trouvée", name));
+		}
+	}
+
+	/**
+	 * Compte le nombre de chaînages statiques à remonter pour accèder à la variable name
+	 * @param name
+	 * @return : nombre de chaînages statiques à remonter
+	 */
+	public int countStaticChainToVariable(String name){
+		SymbolTable symbolTable = this;
+		int staticChainCount = 0;
+		Variable variable;
+		while ((variable = (Variable) symbolTable.functionsAndVariables.get(name)) == null || !variable.isTranslated()) {
+			staticChainCount++;
+			if (symbolTable.parent != null) {
+				symbolTable = symbolTable.parent;
+			} else {
+				throw new RuntimeException(String.format("La variable %s n'a pas été trouvée", name));
+			}
+		}
+		return staticChainCount;
 	}
 
 	public Type fillWith(Tree tree, Notifier notifier) {
@@ -705,7 +716,7 @@ public class SymbolTable {
 									}
 									field.setOffset(fieldOffset);
 									if (fieldType != null) {
-										fieldOffset += fieldType.getSize();
+										fieldOffset += wordSize;
 									}
 									namespace.set(fieldName, field);
 								}
@@ -748,7 +759,7 @@ public class SymbolTable {
 								argument.setType(argumentType);
 							}
 							if (argumentType != null) {
-								argumentOffset += argumentType.getSize();
+								argumentOffset += wordSize;
 							}
 							argument.setOffset(argumentOffset);
 							subTable.functionsAndVariables.set(argumentName, argument);
@@ -813,7 +824,7 @@ public class SymbolTable {
 						variableOffset = 0;
 					}
 					if (returnType != null) {
-						variableOffset -= returnType.getSize();
+						variableOffset -= wordSize;
 					}
 					variable.setOffset(variableOffset);
 					table.functionsAndVariables.set(name, variable);

@@ -23,7 +23,6 @@ public class Writer {
 			"SP EQU R15 // Adresse du haut de la pile\n" +
 			"HP EQU R14 // Adresse du bas du tas\n" +
 			"BP EQU R13 // Adresse de la base de l'environnement courant\n" +
-			"WR EQU R12 // Registre de travail\n" +
 			"\n" +
 			"ORG LOAD_ADDR // Chargement du programme\n" +
 			"START MAIN // Lancement du programme\n" +

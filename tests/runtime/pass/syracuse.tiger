@@ -14,6 +14,7 @@ let
 in
 	resultat := syracuse (1, 11);
 	printi (resultat);
+	print ("\n");
 	resultat := syracuse (10, 13);
 	printi (resultat)
 end

@@ -24,5 +24,6 @@ let
 		end
 in
 	printi (fibonacci (12));
+	print ("\n");
 	printi (factorielle_recursive (5))
 end

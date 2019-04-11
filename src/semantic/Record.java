@@ -1,7 +1,5 @@
 package semantic;
 
-import misc.Constants;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -15,10 +13,6 @@ public class Record extends Type {
 
 	public Record() {
 		this.namespace = new Namespace<Variable>();
-	}
-
-	public int getSize() {
-		return Constants.pointerSize;
 	}
 
 	@Override
@@ -45,6 +39,10 @@ public class Record extends Type {
 
 	public Namespace<Variable> getNamespace() {
 		return this.namespace;
+	}
+
+	public boolean isPointer() {
+		return true;
 	}
 
 }

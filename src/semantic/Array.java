@@ -1,7 +1,5 @@
 package semantic;
 
-import misc.Constants;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -14,10 +12,6 @@ public class Array extends Type {
 
 	public Array() {
 		this.type = null;
-	}
-
-	public int getSize() {
-		return Constants.pointerSize;
 	}
 
 	@Override
@@ -38,6 +32,10 @@ public class Array extends Type {
 
 	public Type getType() {
 		return this.type;
+	}
+
+	public boolean isPointer() {
+		return true;
 	}
 
 }

@@ -21,5 +21,6 @@ in
 	l [3] := d4;
 	add_vectors (l, 4, result);
 	printi (result.x);
+	print ("\n");
 	printi (result.y)
 end

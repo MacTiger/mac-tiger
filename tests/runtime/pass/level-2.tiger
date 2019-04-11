@@ -33,6 +33,7 @@ let
 		end
 in
 	printi (puissance (3, 3));
+	print ("\n");
 	factorielle (5);
 	printi (resultat)
 end
