@@ -1,0 +1,7 @@
+let
+	type recordType = {recordField : int}
+	var recordVariable : recordType := nil
+in
+	recordVariable.recordField := 0;
+	print ("fail")
+end

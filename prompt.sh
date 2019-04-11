@@ -11,7 +11,7 @@ then
 		status=$?
 		if [[ $status != "0" ]]
 		then
-			$status=$(($status + 4))
+			status=$(($status + 4))
 		fi
 	else
 		status="1"

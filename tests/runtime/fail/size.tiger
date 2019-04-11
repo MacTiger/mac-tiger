@@ -1,0 +1,6 @@
+let
+	type arrayType = array of int
+	var arrayVariable := arrayType [-1] of 0
+in
+	print ("fail")
+end

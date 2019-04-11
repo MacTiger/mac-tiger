@@ -376,17 +376,16 @@ public class TigerTranslator {
 	 * @return Somme des tailles des variables locales à cette TDS
 	 */
 	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
-		Variable var = null;
-		int sizeOfVars = 0;
+		int size = 0;
 		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
 			if (functionOrVariable.getValue() instanceof Variable){
-				var = (Variable) functionOrVariable.getValue();
-				if (var.getOffset() > 0) {
-					sizeOfVars += wordSize;
+				Variable var = (Variable) functionOrVariable.getValue();
+				if (var.getOffset() < 0) {
+					size += wordSize;
 				}
 			}
 		}
-		return sizeOfVars;
+		return size;
 	}
 
 	private void descend() {
@@ -1011,20 +1010,18 @@ public class TigerTranslator {
 
 		int registerIndex2 = registerManager.provideRegister(); // Réserve un registre pour empiler les arguments
 
-		int sizeOfArgs = 0;
-		int sizeOfArg = 0;
-		Tree child;
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
-			child = tree.getChild(i);
-			translate(child, registerIndex2);
+			translate(tree.getChild(i), registerIndex2);
 			this.writer.writeFunction(String.format("STW R%d, -(SP) // Empile l'argument numéro %d/%d de la fonction \"%s\"",registerIndex2, i, l-1, name));
 		}//Tous les arguments sont empilés
 
 		registerManager.freeRegister();
 
 		writeEntryFunction(table, name);    // Génération du code d'appel à la fonction et calcul de son chaînage statique
-
-		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", sizeOfArgs));  // Dépile les arguments
+		int size = (tree.getChildCount() - 1) * wordSize;
+		if (size != 0) {
+			this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", size));  // Dépile les arguments
+		}
 
 		registerManager.restoreAll();
 		if (function.getType() != null) {
@@ -1036,7 +1033,7 @@ public class TigerTranslator {
 		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
 		int register1 = this.registerManager.provideRegister();
 		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-		this.writer.writeFunction(String.format("ADI HP, HP, #%d", tree.getChildCount() / 2));
+		this.writer.writeFunction(String.format("ADI HP, HP, #%d", (tree.getChildCount() / 2) * wordSize));
 		int register2 = this.registerManager.provideRegister();
 		for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
 			this.translate(tree.getChild(i + 1), register2);
@@ -1048,6 +1045,8 @@ public class TigerTranslator {
 
 	private void translateARR(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction("BGE 2");
+		this.writer.writeFunction("TRP #EXIT_EXC");
 		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
 		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
 		this.writer.writeFunction(String.format("ADD R%d, HP, HP", registerIndex));
