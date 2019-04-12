@@ -1026,17 +1026,21 @@ public class TigerTranslator {
 	}
 
 	private void translateREC(Tree tree, int registerIndex) {
+		this.writer.writeFunction("ADQ 2, HP");
 		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
-		int register1 = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-		this.writer.writeFunction(String.format("ADI HP, HP, #%d", (tree.getChildCount() / 2) * wordSize));
-		int register2 = this.registerManager.provideRegister();
-		for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
-			this.translate(tree.getChild(i + 1), register2);
-			this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
+		int size = (tree.getChildCount() / 2) * wordSize;
+		if (size > 0) {
+			int register1 = this.registerManager.provideRegister();
+			this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+			this.writer.writeFunction(String.format("ADI HP, HP, #%d", size));
+			int register2 = this.registerManager.provideRegister();
+			for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
+				this.translate(tree.getChild(i + 1), register2);
+				this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
+			}
+			this.registerManager.freeRegister();
+			this.registerManager.freeRegister();
 		}
-		this.registerManager.freeRegister();
-		this.registerManager.freeRegister();
 	}
 
 	private void translateARR(Tree tree, int registerIndex) {
