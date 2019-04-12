@@ -138,6 +138,7 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
 
 					// (4a) Passer au mot suivant ou terminer
+					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
 					this.writer.writeHeader(String.format("TST %s", word));
 					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
 					// (4b) word = 1, il faut empiler \0
@@ -1349,11 +1350,27 @@ public class TigerTranslator {
 	}
 
 	private void translateWhile(Tree tree, int registerIndex) {
-		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
-		int register = this.registerManager.provideRegister();
-		labelGenerator.getLabel(tree, "start");   // Création des labels de cette boucle while
-		this.translate(tree.getChild(0),registerIndex);
-		this.translate(tree.getChild(1),registerIndex);
+		// TODO : Génerer code de while (penser à réserver les registres nécessaires)
+		int testRegister = this.registerManager.provideRegister();
+		int loopRegister = registerIndex;
+
+		// Création des labels de cette boucle while
+		String testLabel = labelGenerator.getLabel(tree, "test");
+		String endLabel = labelGenerator.getLabel(tree, "end");
+
+		this.writer.writeFunction(testLabel, "NOP");
+		this.translate(tree.getChild(0), testRegister);
+		this.writer.writeFunction(String.format("TST R%d", testRegister));
+		this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+
+		// Corps de la boucle
+		this.translate(tree.getChild(1), loopRegister);
+		this.writer.writeFunction(String.format("BMP %s-$-2", testLabel));
+
+		// Fin de la boucle
+		this.writer.writeFunction(endLabel, "NOP");
+
+		this.registerManager.freeRegister();
 	}
 
 	private void translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
