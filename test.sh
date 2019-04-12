@@ -17,19 +17,19 @@ test() {
 		mkdir -p "asm/$dir"
 	fi
 	mkdir -p "log/$dir"
-	for file in $(ls -A tests/$dir)
+	for file in $(ls -A tst/$dir)
 	do
 		if [[ $file =~ \.tiger$ ]]
 		then
-			local stdin="tests/$dir/$file"
+			local stdin="tst/$dir/$file"
 			local stdout
 			local stderr="log/$dir/$file.log"
 			local status
 			if [[ (($refstatus == 4)) ]]
 			then
 				stdout="asm/$dir/$file.src"
-				local refin="tests/$dir/$file.in"
-				local refout="tests/$dir/$file.out"
+				local refin="tst/$dir/$file.in"
+				local refout="tst/$dir/$file.out"
 				touch $refin
 				touch $refout
 				java -cp bin:lib/* Main --no-color --src 2> $stderr 1> $stdout < $stdin
@@ -85,7 +85,7 @@ test() {
 		fi
 	done
 }
-for dir in $(ls tests)
+for dir in $(ls tst)
 do
 	if [[ $dir == "lexical" ]]
 	then
@@ -102,7 +102,7 @@ do
 	else
 		continue
 	fi
-	for subdir in $(ls tests/$dir)
+	for subdir in $(ls tst/$dir)
 	do
 		if [[ $subdir == "fail" ]]
 		then

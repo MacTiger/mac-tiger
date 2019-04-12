@@ -1,0 +1,21 @@
+ (
+	print (concat ("ab", "cd"));
+	print ("\n");
+	print (concat ("ab", "cde"));
+	print ("\n");
+	print (concat ("abc", "de"));
+	print ("\n");
+	print (concat ("abc", "def"));
+	print ("\n");
+	print (concat ("", "a"));
+	print ("\n");
+	print (concat ("a", ""));
+	print ("\n");
+	print (concat ("", ""));
+	print ("\n");
+	print (concat (concat ("ab", "cd"),  "ef"));
+	print ("\n");
+	print (concat ("ab",  concat ("cd", "ef")));
+	print ("\n");
+	print (concat (concat ("ab", "cd"),  concat ("ef", "gh")))
+)

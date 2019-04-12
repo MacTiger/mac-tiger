@@ -1,5 +1,5 @@
 #!/bin/bash
-dir="tests/semantic/fail"
+dir="tst/semantic/fail"
 stdin="torture.tiger"
 > $stdin
 for file in $(ls $dir)

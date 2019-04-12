@@ -19,12 +19,7 @@ import static syntactic.TigerParser.ID;
 import static syntactic.TigerParser.STR;
 import static syntactic.TigerParser.INT;
 
-import semantic.Function;
-import semantic.FunctionOrVariable;
-import semantic.Namespace;
-import semantic.SymbolTable;
-import semantic.Type;
-import semantic.Variable;
+import semantic.*;
 
 public class TigerTranslator {
 
@@ -248,6 +243,124 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS");
 					break;
 				}
+				//On suppose i >= 0 et n>=0
+				case "substring":{
+
+					//Adresse str
+					this.writer.writeHeader(label,"LDW R1,(SP)6");
+					//Numéro de la lettre i
+					this.writer.writeHeader("LDW R3,(SP)4");
+					//Lg demandée m
+					this.writer.writeHeader("LDW R4,(SP)2");
+
+
+					//Test préliminaire i et n
+					this.writer.writeHeader("TST R3");
+					this.writer.writeHeader("BGE 12");//Go fin prog i<0
+					this.writer.writeHeader("LDW R5, #0 ");
+					this.writer.writeHeader("STW R5, (HP)+ ");
+					this.writer.writeHeader("LDW R0, HP" );
+					this.writer.writeHeader("STW R5, (HP)+");
+					this.writer.writeHeader("RTS");//FIN
+
+					this.writer.writeHeader("TST R4");
+					this.writer.writeHeader("BGE 12");//Go fin prog n<0
+					this.writer.writeHeader("LDW R5, #0 ");
+					this.writer.writeHeader("STW R5, (HP)+");
+					this.writer.writeHeader("LDW R0, HP");
+					this.writer.writeHeader("STW R5, (HP)+");
+					this.writer.writeHeader("RTS");//FIN
+
+
+					//Check les longueurs
+					this.writer.writeHeader("ADQ -2,R1");
+					this.writer.writeHeader("LDW R2,(R1)");
+					this.writer.writeHeader("ADQ 2,R1");
+					this.writer.writeHeader("ADD R3,R4,R5");
+					this.writer.writeHeader("SUB R2,R5,R2");
+					this.writer.writeHeader("BGE 12");//FIN
+					this.writer.writeHeader("LDW R5, #0");
+					this.writer.writeHeader("STW R5, (HP)+");
+					this.writer.writeHeader("LDW R0, HP");
+					this.writer.writeHeader("STW R5, (HP)+");
+					this.writer.writeHeader("RTS");//FIN
+					//Si n-(i+m) < 0 STOP
+
+
+					//Fait i %2 => qutotient : nombre de mots à "sauter"
+					//Reste = nb d'octet à sauter (0 ou 1)
+					this.writer.writeHeader("LDW R2,#2");
+					this.writer.writeHeader("DIV R3,R2,R2");
+					this.writer.writeHeader("LDW R5, #2");
+					this.writer.writeHeader("MUL R2,R5,R2");
+					this.writer.writeHeader("ADD R2,R1,R1");
+					//Ajoute quotient*2 à adresse str
+
+
+					//Met lg en HP puis incrémente HP
+					// R0 a @ du premier caractere
+					this.writer.writeHeader("STW R4,(HP)");
+					this.writer.writeHeader("ADQ 2,HP");
+					this.writer.writeHeader("LDW R0,HP");
+
+
+					this.writer.writeHeader("TST R3");
+					this.writer.writeHeader("BEQ 14");
+					//SI R3=1, on décalle de 1 octet pour écrire le suivant
+					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("LDB R5,(R1)");
+					this.writer.writeHeader("STB R5,(HP)");
+					this.writer.writeHeader("ADQ 1,HP");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+					this.writer.writeHeader("ADQ 1,R1");
+
+					//Ici R3=0
+					// Fait R4 % 2 => quotient : nombre de mots à écrire
+					// Reste = nombre d'octets à écrire
+					// nombre d octets
+					this.writer.writeHeader("LDW R2,#2");
+					this.writer.writeHeader("DIV R4,R2,R2");
+					this.writer.writeHeader("TST R2");
+					this.writer.writeHeader("BEQ 14");
+					//Si quotient != 0 >=1 mot à écrire
+					this.writer.writeHeader("LDW R5,(R1)");
+					this.writer.writeHeader("STW R5,(HP)");
+					this.writer.writeHeader("ADQ 2,HP");
+					this.writer.writeHeader("ADQ 2,R1");
+					this.writer.writeHeader("ADQ -1,R2");//-1 mot à recopier
+					this.writer.writeHeader("BNE -10");//Si R2 > 0 on boucle
+
+
+					//Ici plus aucun mot à écrire regarde si reste un octet
+					this.writer.writeHeader("TST R4");
+					this.writer.writeHeader("BEQ 8");
+					//Le reste est non nul, on écrit un octet
+					this.writer.writeHeader("LDB R5,(R1)");
+					this.writer.writeHeader("STB R5,(HP)");
+					this.writer.writeHeader("ADQ 1,HP");
+
+
+					//On a tout écrit : test HP : pair ou impair ?
+					this.writer.writeHeader("LDW R2,#2");
+					this.writer.writeHeader("LDW R3,HP");
+					this.writer.writeHeader("DIV HP,R2,R2");
+					this.writer.writeHeader("TST HP");
+					this.writer.writeHeader("BEQ 10");
+					//Taille de Hp est impaire
+					this.writer.writeHeader("LDW HP,R3");
+					this.writer.writeHeader("LDB R3,#0");
+					this.writer.writeHeader("STB R3,(HP)");
+					this.writer.writeHeader("ADQ 1,HP");
+
+					//Taille de Hp est paire
+					this.writer.writeHeader("LDW HP,R3");
+					this.writer.writeHeader("LDW R3,#0");
+					this.writer.writeHeader("STW R3,(HP)");
+					this.writer.writeHeader("ADQ 2,HP");
+					this.writer.writeHeader("RTS");
+					break;
+
+				}
 				default: {
 					this.writer.writeHeader(label, "RTS"); // TODO
 					break;
@@ -272,17 +385,16 @@ public class TigerTranslator {
 	 * @return Somme des tailles des variables locales à cette TDS
 	 */
 	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
-		Variable var = null;
-		int sizeOfVars = 0;
+		int size = 0;
 		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
 			if (functionOrVariable.getValue() instanceof Variable){
-				var = (Variable) functionOrVariable.getValue();
-				if (var.getOffset() > 0) {
-					sizeOfVars += wordSize;
+				Variable var = (Variable) functionOrVariable.getValue();
+				if (var.getOffset() < 0) {
+					size += wordSize;
 				}
 			}
 		}
-		return sizeOfVars;
+		return size;
 	}
 
 	private void descend() {
@@ -906,20 +1018,18 @@ public class TigerTranslator {
 
 		int registerIndex2 = registerManager.provideRegister(); // Réserve un registre pour empiler les arguments
 
-		int sizeOfArgs = 0;
-		int sizeOfArg = 0;
-		Tree child;
 		for (int i = 1, l = tree.getChildCount(); i < l; ++i) {   //Parcours des arguments de la fonction
-			child = tree.getChild(i);
-			translate(child, registerIndex2);
-			this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex2));
+			translate(tree.getChild(i), registerIndex2);
+			this.writer.writeFunction(String.format("STW R%d, -(SP) // Empile l'argument numéro %d/%d de la fonction \"%s\"",registerIndex2, i, l-1, name));
 		}//Tous les arguments sont empilés
 
 		registerManager.freeRegister();
 
 		writeEntryFunction(table, name);    // Génération du code d'appel à la fonction et calcul de son chaînage statique
-
-		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", sizeOfArgs));  // Dépile les arguments
+		int size = (tree.getChildCount() - 1) * wordSize;
+		if (size != 0) {
+			this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", size));  // Dépile les arguments
+		}
 
 		registerManager.restoreAll();
 		if (function.getType() != null) {
@@ -931,7 +1041,7 @@ public class TigerTranslator {
 		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
 		int register1 = this.registerManager.provideRegister();
 		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-		this.writer.writeFunction(String.format("ADI HP, HP, #%d", tree.getChildCount() / 2));
+		this.writer.writeFunction(String.format("ADI HP, HP, #%d", (tree.getChildCount() / 2) * wordSize));
 		int register2 = this.registerManager.provideRegister();
 		for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
 			this.translate(tree.getChild(i + 1), register2);
@@ -943,6 +1053,8 @@ public class TigerTranslator {
 
 	private void translateARR(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction("BGE 2");
+		this.writer.writeFunction("TRP #EXIT_EXC");
 		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
 		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
 		this.writer.writeFunction(String.format("ADD R%d, HP, HP", registerIndex));
@@ -954,7 +1066,7 @@ public class TigerTranslator {
 		this.writer.writeFunction("BEQ 6");
 		this.writer.writeFunction(String.format("STW R%d, -(R%d)", register2, register1));
 		this.writer.writeFunction(String.format("ADQ -2, R%d", registerIndex));
-		this.writer.writeFunction("BNE -4");
+		this.writer.writeFunction("BNE -6");
 		this.registerManager.freeRegister();
 		this.writer.writeFunction(String.format("LDW R%d, R%d", registerIndex, register1));
 		this.registerManager.freeRegister();
@@ -964,31 +1076,27 @@ public class TigerTranslator {
 		Tree lValue = tree.getChild(0);
 		Tree expToAssign = tree.getChild(1);
 		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
-			case ID: Variable variable = this.currentTDS.findTranslatedVariable(lValue.toString());
-				//TODO : Générer code d'assignement avec un ID
-				//TODO: ne pas utiliser translateID !
-				translateID(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
-				int registerExp = this.registerManager.provideRegister();
-				translate(expToAssign, registerExp);
-				this.writer.writeFunction(String.format("STW R%d, (R%d)  // Affectation dans un identifiant", registerExp, registerIndex));
-				this.registerManager.freeRegister();
+			case ID:
+				translateIDAdress(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
 				break;
 			case ITEM:
-				//TODO : Générer code d'assignement avec un ITEM
-				//TODO: ne pas utiliser translateITEM !
+				translateITEMAdress(lValue, registerIndex);
 				break;
 			case FIELD:
-				//TODO : Générer code d'assignement avec un FIELD
-				//TODO: ne pas utiliser translateFIELD !
+				translateFIELDAdress(lValue, registerIndex);
 				break;
 			default:
 				// On ne doit pas arriver là si les tests sémantiques sont passés
 		}
+		// Calcule la partie droite du :=, l'assigne à la lValue
+		int registerExp = this.registerManager.provideRegister();
+		translate(expToAssign, registerExp);
+		this.writer.writeFunction(String.format("STW R%d, (R%d)  // Affectation", registerExp, registerIndex));
+		this.registerManager.freeRegister();
 	}
 
 	private void translateSEQ(Tree tree, int registerIndex) {
 		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
-			//TODO : gérer les registres :
 			this.translate(tree.getChild(i), registerIndex);
 		}
 	}
@@ -1091,7 +1199,8 @@ public class TigerTranslator {
 	 * @param registerIndex
 	 * @return
 	 */
-	private void translateID(Tree tree, int registerIndex) {
+	private void translateIDAdress(Tree tree, int registerIndex) {
+		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1107,9 +1216,9 @@ public class TigerTranslator {
 
 		int countStaticChain = this.currentTDS.countStaticChainToVariable(tree.toString());
 
-		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat  // TODO : à sortir de la boucle
+		this.writer.writeFunction(String.format("LDW R%d, BP  // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat
 		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
-			int addressRegister = 0;    //TODO : réserver un registre pour la remontée de chaînage statique
+			int addressRegister = 0;
 
 
 			int loopRegister = this.registerManager.provideRegister();
@@ -1118,45 +1227,83 @@ public class TigerTranslator {
 			// Début de boucle :
 			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, -wordSize));
 			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
-			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -6, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
+			this.writer.writeFunction(String.format("BNE %d  // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", -8, typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
 			// Fin de boucle
 
 			this.registerManager.freeRegister();
 		}
-		this.writer.writeFunction(String.format("ANI R%d, R%d, #%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
-
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d  // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable,  typeOfVar, name));   // L'adresse de la variable recherchée est maintenant dans registre voulu
 	}
 
+	/**
+	 * Ecrit le code pour mettre la valeur de l'identifiant dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 * @return
+	 */
+	private void translateID(Tree tree, int registerIndex){
+		String name = tree.toString();
+		translateIDAdress(tree, registerIndex);   // Charge l'adresse de ID dans le registre
+		this.writer.writeFunction(String.format("LDW R%d , (R%d) // Chargement de la valeur de \"%s\" dans un registre", registerIndex, registerIndex, name ));
+	}
+
+	/**
+	 * Ecrit le code pour mettre l'adresse d'un élément de tableau (ARRAY) dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateITEMAdress(Tree tree, int registerIndex) {
+		Tree exp = tree.getChild(0);
+		this.translate(exp, registerIndex); // register Index contient maintenant l'adresse du tableau
+
+		int registerIndexOfArray = this.registerManager.provideRegister();
+		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
+
+		this.writer.writeFunction(String.format("SHL R%d, R%s  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		this.writer.writeFunction(String.format("ADD R%d, R%s, R%s  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
+
+		this.registerManager.freeRegister();
+	}
+
+	/**
+	 * Ecrit le code pour mettre la valeur d'un élément de tableau (ARRAY) dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
 	private void translateITEM(Tree tree, int registerIndex) {
-		Tree exp = tree.getChild(0);
-		this.translate(exp, registerIndex);
-		//TODO : générer le code pour récupérer l'index entier représenté par le fils droit
-		//TODO : générer le code pour accèder à l'ITEM
-		Type returnType = null;
-		/*if (!(expType instanceof Array)) { // on regarde si le fils gauche est bien un tableau
-			notifier.semanticError(exp, "%s is not an array", exp.toString());
-		} else { // on sait qu'on a bien un tableau
-			Array array = (Array) expType;
-			returnType = array.getType(); // on retourne le type des éléments stockés dans le tableau
-		}
-		this.checkType(tree.getChild(1), notifier, semantic.SymbolTable.intType); // on regarde si le fils droit est bien un entier*/
+		translateITEMAdress(tree, registerIndex);
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)  // ITEM : La valeur de l'élémént du tableau dans un registre", registerIndex, registerIndex));
 	}
 
-	private void translateFIELD(Tree tree, int registerIndex) {
+	/**
+	 * Ecrit le code pour mettre l'adresse d'un champ dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateFIELDAdress(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
-		this.translate(exp, registerIndex);
-		//TODO : générer le code pour récupérer le FIELD
-/*		if(!(expType instanceof Record)) { // on regarde si le fils gauche est bien une structure
-			notifier.semanticError(exp, "%s is not a record", exp.toString());
-		} else { // on sait qu'on a bien une structure
-			Record record = (Record) expType;
-			Namespace<Variable> fields = record.getNamespace();
-			if (fields.get(tree.getChild(1).toString()) == null) { // on regarde si le champ existe
-				notifier.semanticError(tree, "field %s is not defined", tree.getChild(1).toString());
-			} else { // sinon c'est bon
-				return fields.get(tree.getChild(1).toString()).getType();
-			}
-		}*/
+		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
+
+		Record record = (Record) SymbolTable.treeTypeHashMap.get(exp);   // Récupère le type de exp
+		Namespace<Variable> fields = record.getNamespace();
+		String nameOfField = tree.getChild(1).toString();   // Récupère le nom du field
+
+		this.writer.writeFunction(String.format("ADI R%d, R%s, #%d  // FIELD : Calcul de l'adresse du champ \"%s\"", registerIndex, registerIndex, fields.get(nameOfField).getOffset(), nameOfField));
+	}
+
+	/**
+	 * Ecrit le code pour mettre la valeur d'un champ dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateFIELD(Tree tree, int registerIndex) {
+		translateFIELDAdress(tree, registerIndex);
+
+		Record record = (Record) SymbolTable.treeTypeHashMap.get(tree.getChild(0));   // Récupère le type de exp
+		Namespace<Variable> fields = record.getNamespace();
+		String nameOfField = tree.getChild(1).toString();   // Récupère le nom du field
+
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)  // FIELD : La valeur du champ \"%s\" est mise dans un registre", registerIndex, registerIndex, nameOfField));
 	}
 
 	private void translateINT(Tree tree, int registerIndex) {
@@ -1307,18 +1454,6 @@ public class TigerTranslator {
 		if (SymbolTable.treeTypeHashMap.get(tree) != null) {
 			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
 		}
-	}
-
-	/**
-	 * Ecrit le code pour mettre le contenu du registre registerLet dans la pile à l'adresse BP + offset
-	 * @param registerLet
-	 * @param offset
-	 */
-	private void writeVariableAssignment(int registerLet, int offset, String nameOfVar){
-		this.writer.writeFunction(String.format("LDW WR, #%d  // ASSIGNMENT_BEGIN : affectation de la variable \"%s\"", offset, nameOfVar));
-		this.writer.writeFunction("ADD BP, WR, WR");
-		this.writer.writeFunction(String.format("STW R%d, (WR)  // ASSIGNMENT_END : affectation de la variable \"%s\"", registerLet, nameOfVar));
-
 	}
 
 	private void translateNil(Tree tree, int registerIndex) {
