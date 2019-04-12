@@ -225,12 +225,21 @@ public class TigerTranslator {
 					break;
 				}
 				case "getchar": {
-					this.writer.writeHeader("LDQ 1, R0");
-					this.writer.writeHeader("STW R0, (HP)+"); // La chaîne est forcément de taille 1
+					this.writer.writeHeader(label, "LDQ 1, R0");
+					this.writer.writeHeader("STW R0, (HP)+");
 					this.writer.writeHeader("LDW R0, HP");
 					this.writer.writeHeader("TRP #READ_EXC");
+					this.writer.writeHeader("LDW R0, (HP)");
+					this.writer.writeHeader("LDW R1, #0xFF00");
+					this.writer.writeHeader("AND R1, R0, R0");
+					this.writer.writeHeader("BEQ 0"); // Saute en (*) si R1 vaut zéro
+					this.writer.writeHeader("STW R0, (HP)");
+					this.writer.writeHeader("LDW R0, HP");
 					this.writer.writeHeader("ADQ 2, HP");
-					this.writer.writeHeader("RTS");
+					this.writer.writeHeader("BMP 0"); // Saute en (**)
+					this.writer.writeHeader("STW R1, (HP)");
+					this.writer.writeHeader("ADQ -2, (HP");
+					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
 				case "size": {
@@ -790,7 +799,6 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 			registerManager.freeRegister();
 			registerManager.freeRegister();
-			// TODO: code translateNotEqual lorsque les fils sont des strings
 		}
 	}
 
@@ -1192,6 +1200,7 @@ public class TigerTranslator {
 
 	private void translateWhile(Tree tree, int registerIndex) {
 		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
+		int register = this.registerManager.provideRegister();
 		labelGenerator.getLabel(tree, "start");   // Création des labels de cette boucle while
 		this.translate(tree.getChild(0),registerIndex);
 		this.translate(tree.getChild(1),registerIndex);
