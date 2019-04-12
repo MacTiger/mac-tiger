@@ -1356,11 +1356,12 @@ public class TigerTranslator {
 		this.writer.writeFunction(testLabel, "NOP");
 		this.translate(tree.getChild(0), testRegister);
 		this.writer.writeFunction(String.format("TST R%d", testRegister));
-		this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+		this.writer.writeFunction(String.format("BNE 2"));
+		this.writer.writeFunction(String.format("JEA @%s", endLabel));
 
 		// Corps de la boucle
 		this.translate(tree.getChild(1), loopRegister);
-		this.writer.writeFunction(String.format("BMP %s-$-2", testLabel));
+		this.writer.writeFunction(String.format("JEA @%s", testLabel));
 
 		// Fin de la boucle
 		this.writer.writeFunction(endLabel, "NOP");
