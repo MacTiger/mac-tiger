@@ -911,7 +911,8 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat est nul, on peut sauter à la fin du *and*
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
@@ -926,7 +927,8 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
-			this.writer.writeFunction(String.format("BNE %s-$-2", endLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
@@ -1311,11 +1313,12 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
 
 			// On saute au `else` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BEQ %s-$-2", elseLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", elseLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// On saute à la fin
-			this.writer.writeFunction(String.format("BMP %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le l'étiquette et le code de else
 			this.writer.writeFunction(elseLabel, "NOP");
 			this.translate(tree.getChild(2), registerIndex);
@@ -1327,7 +1330,8 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
 
 			// On saute au `endif` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// Étiquette endif
