@@ -105,18 +105,15 @@ public class TigerTranslator {
 					// On empile dans le tas la taille du nouveau string
 					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
 					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size1, str1));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size2, str2));
 					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
 					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
-					// Constantes
+					// Initialisation des registres
+		            this.writer.writeHeader(String.format("LDW %s, #0", word));
 					this.writer.writeHeader(String.format("LDW %s, #2", two));
-
-					// Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
 					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
-
-					// Initialisation du inputPointer
 					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
 
 					// Saute en (3a)
@@ -1190,7 +1187,6 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private void translateIDAdress(Tree tree, int registerIndex) {
-		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1336,11 +1332,26 @@ public class TigerTranslator {
 	}
 
 	private void translateWhile(Tree tree, int registerIndex) {
-		//TODO : Génerer code de while (penser à réserver les registres nécessaires)
-		int register = this.registerManager.provideRegister();
-		labelGenerator.getLabel(tree, "start");   // Création des labels de cette boucle while
-		this.translate(tree.getChild(0),registerIndex);
-		this.translate(tree.getChild(1),registerIndex);
+		int testRegister = this.registerManager.provideRegister();
+		int loopRegister = registerIndex;
+
+		// Création des labels de cette boucle while
+		String testLabel = labelGenerator.getLabel(tree, "test");
+		String endLabel = labelGenerator.getLabel(tree, "end");
+
+		this.writer.writeFunction(testLabel, "NOP");
+		this.translate(tree.getChild(0), testRegister);
+		this.writer.writeFunction(String.format("TST R%d", testRegister));
+		this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+
+		// Corps de la boucle
+		this.translate(tree.getChild(1), loopRegister);
+		this.writer.writeFunction(String.format("BMP %s-$-2", testLabel));
+
+		// Fin de la boucle
+		this.writer.writeFunction(endLabel, "NOP");
+
+		this.registerManager.freeRegister();
 	}
 
 	private void translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
@@ -1500,7 +1511,7 @@ public class TigerTranslator {
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
+		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", -wordSize));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
