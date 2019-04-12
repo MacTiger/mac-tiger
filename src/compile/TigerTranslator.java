@@ -237,6 +237,36 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
+				case "read": {
+					/*R0 : adresse du prochain byte lu
+					* R1 : résultat (entier)
+					* R2 : working registory
+					* */
+					this.writer.writeHeader(label, "LDW R0, HP");  // La lecture sera mise dans le tas, mais pas réservée (pourra être écrasée après cette fonction)
+					this.writer.writeHeader("TRP #READ_EXC");
+
+					this.writer.writeHeader("LDQ 0, R1");   // Initialise le registre de résultat
+
+					// Parcours des charactères lus jusqu'à trouver un \0 (NULL, 0 en ASCII)
+					this.writer.writeHeader("LDB R2, (R0)+  // Récupère un caractère");
+					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro   //TODO : calculer le jump
+
+					// TODO : gérer le cas où le premier caractère est un signe moins
+					/*this.writer.writeHeader("ADQ -45, R2  // Vérifie si le premier caractère est un signe moins");
+					this.writer.writeHeader("BNE 8");   // saute en (PAS MOINS) si le premier caractère n'est pas un signe moins    //TODO : calculer le jump
+					*/
+					this.writer.writeHeader("ADQ -48, R2  // Passe du code ASCII à un entier"); // Début boucle parcours
+					this.writer.writeHeader("BLW 8  // Teste la borne inférieure"); // Saute en fin de fonction
+					this.writer.writeHeader("ADI R2, R3, #-9");
+					this.writer.writeHeader("BGE 8  // Teste la borne supérieure"); // Saute en fin de fonction
+
+
+					this.writer.writeHeader("LDQ 10, R3   // Décalage des unités");
+					this.writer.writeHeader("MUL R1, R3, R1   // Décalage des unités");
+					this.writer.writeHeader("ADD R2, R1, R1   // Masque de lecture pour la deuxième moitié de mot");
+					//TODO : boucler
+					break;
+				}
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
@@ -1000,6 +1030,8 @@ public class TigerTranslator {
 		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findFunction(name);
+		//TODO : isNative ?
+		//TODO : => Ajoute le code de la fonction dans le header (writeHeader) (une seule fois !)
 		SymbolTable table = function.getSymbolTable();
 
 
