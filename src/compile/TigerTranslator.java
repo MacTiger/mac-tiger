@@ -105,18 +105,15 @@ public class TigerTranslator {
 					// On empile dans le tas la taille du nouveau string
 					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
 					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size1, str1));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size2, str2));
 					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
 					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
-					// Constantes
+					// Initialisation des registres
+		            this.writer.writeHeader(String.format("LDW %s, #0", word));
 					this.writer.writeHeader(String.format("LDW %s, #2", two));
-
-					// Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
 					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
-
-					// Initialisation du inputPointer
 					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
 
 					// Saute en (3a)
@@ -138,7 +135,6 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
 
 					// (4a) Passer au mot suivant ou terminer
-					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
 					this.writer.writeHeader(String.format("TST %s", word));
 					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
 					// (4b) word = 1, il faut empiler \0
@@ -1349,7 +1345,6 @@ public class TigerTranslator {
 	}
 
 	private void translateWhile(Tree tree, int registerIndex) {
-		// TODO : Génerer code de while (penser à réserver les registres nécessaires)
 		int testRegister = this.registerManager.provideRegister();
 		int loopRegister = registerIndex;
 
