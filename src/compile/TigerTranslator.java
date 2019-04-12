@@ -1204,7 +1204,6 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private void translateIDAdress(Tree tree, int registerIndex) {
-		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1530,7 +1529,7 @@ public class TigerTranslator {
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
+		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", -wordSize));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
