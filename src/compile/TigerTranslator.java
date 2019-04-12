@@ -227,13 +227,16 @@ public class TigerTranslator {
 					this.writer.writeHeader("LDW R0, (HP)");
 					this.writer.writeHeader("LDW R1, #0xFF00");
 					this.writer.writeHeader("AND R1, R0, R0");
-					this.writer.writeHeader("BEQ 0"); // Saute en (*) si R1 vaut zéro
+					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
 					this.writer.writeHeader("STW R0, (HP)");
 					this.writer.writeHeader("LDW R0, HP");
 					this.writer.writeHeader("ADQ 2, HP");
-					this.writer.writeHeader("BMP 0"); // Saute en (**)
+					this.writer.writeHeader("BMP 10"); // Saute en (**)
+					this.writer.writeHeader("LDW R0, HP"); // (*)
+					this.writer.writeHeader("ADQ -2, HP");
+					this.writer.writeHeader("LDQ 0, R1");
 					this.writer.writeHeader("STW R1, (HP)");
-					this.writer.writeHeader("ADQ -2, (HP");
+					this.writer.writeHeader("ADQ 4, HP");
 					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
