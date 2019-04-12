@@ -237,6 +237,36 @@ public class TigerTranslator {
 					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
+				case "read": {
+					/*R0 : adresse du prochain byte lu
+					* R1 : résultat (entier)
+					* R2 : working registory
+					* */
+					this.writer.writeHeader(label, "LDW R0, HP");  // La lecture sera mise dans le tas, mais pas réservée (pourra être écrasée après cette fonction)
+					this.writer.writeHeader("TRP #READ_EXC");
+
+					this.writer.writeHeader("LDQ 0, R1");   // Initialise le registre de résultat
+
+					// Parcours des charactères lus jusqu'à trouver un \0 (NULL, 0 en ASCII)
+					this.writer.writeHeader("LDB R2, (R0)+  // Récupère un caractère");
+					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro   //TODO : calculer le jump
+
+					// TODO : gérer le cas où le premier caractère est un signe moins
+					/*this.writer.writeHeader("ADQ -45, R2  // Vérifie si le premier caractère est un signe moins");
+					this.writer.writeHeader("BNE 8");   // saute en (PAS MOINS) si le premier caractère n'est pas un signe moins    //TODO : calculer le jump
+					*/
+					this.writer.writeHeader("ADQ -48, R2  // Passe du code ASCII à un entier"); // Début boucle parcours
+					this.writer.writeHeader("BLW 8  // Teste la borne inférieure"); // Saute en fin de fonction
+					this.writer.writeHeader("ADI R2, R3, #-9");
+					this.writer.writeHeader("BGE 8  // Teste la borne supérieure"); // Saute en fin de fonction
+
+
+					this.writer.writeHeader("LDQ 10, R3   // Décalage des unités");
+					this.writer.writeHeader("MUL R1, R3, R1   // Décalage des unités");
+					this.writer.writeHeader("ADD R2, R1, R1   // Masque de lecture pour la deuxième moitié de mot");
+					//TODO : boucler
+					break;
+				}
 				case "size": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("LDW R0, (R0)-2");
@@ -453,6 +483,7 @@ public class TigerTranslator {
 		} else {
 			StrStrictLessThan(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 	private void StrStrictLessThan(int registerLeft,int registerRight,int registerIndex){
@@ -515,7 +546,7 @@ public class TigerTranslator {
 		writer.writeFunction(String.format("AND R"+registerLeft+", R"+registerOp+",R"+registerOp));
 		writer.writeFunction(String.format("BNE 6"));
 		//caractere 2 vaut 0 Egalité : false
-		writer.writeFunction(String.format("LDW R"+registerLeft+",#0"));
+		writer.writeFunction(String.format("LDW R"+registerIndex+",#0"));
 		writer.writeFunction(String.format("BMP 4"));
 		writer.writeFunction(String.format("ADQ 2, R"+registerDep));
 		writer.writeFunction(String.format("BMP -76"));
@@ -565,6 +596,7 @@ public class TigerTranslator {
 			// a<=b <=> b>=a
 			StrLessOrEqualTh(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 
@@ -791,8 +823,6 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 
-			registerManager.freeRegister();
-
 		} else {
 			//adresse str1
 			int addOne;
@@ -883,6 +913,7 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 			registerManager.freeRegister();
 		}
+		registerManager.freeRegister();
 	}
 
 	private void translateAndOperator(Tree tree, int registerIndex) {
@@ -894,7 +925,8 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat est nul, on peut sauter à la fin du *and*
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
@@ -909,7 +941,8 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
-			this.writer.writeFunction(String.format("BNE %s-$-2", endLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
 		this.writer.writeFunction(endLabel, "NOP");
@@ -981,6 +1014,8 @@ public class TigerTranslator {
 		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findFunction(name);
+		//TODO : isNative ?
+		//TODO : => Ajoute le code de la fonction dans le header (writeHeader) (une seule fois !)
 		SymbolTable table = function.getSymbolTable();
 
 
@@ -1290,11 +1325,12 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `else` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BEQ %s-$-2", elseLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", elseLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// On saute à la fin
-			this.writer.writeFunction(String.format("BMP %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le l'étiquette et le code de else
 			this.writer.writeFunction(elseLabel, "NOP");
 			this.translate(tree.getChild(2), registerIndex);
@@ -1306,7 +1342,8 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `endif` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
+			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
 			// Étiquette endif
@@ -1326,11 +1363,12 @@ public class TigerTranslator {
 		this.writer.writeFunction(testLabel, "NOP");
 		this.translate(tree.getChild(0), testRegister);
 		this.writer.writeFunction(String.format("TST R%d", testRegister));
-		this.writer.writeFunction(String.format("BEQ %s-$-2", endLabel));
+		this.writer.writeFunction(String.format("BNE 2"));
+		this.writer.writeFunction(String.format("JEA @%s", endLabel));
 
 		// Corps de la boucle
 		this.translate(tree.getChild(1), loopRegister);
-		this.writer.writeFunction(String.format("BMP %s-$-2", testLabel));
+		this.writer.writeFunction(String.format("JEA @%s", testLabel));
 
 		// Fin de la boucle
 		this.writer.writeFunction(endLabel, "NOP");
