@@ -469,6 +469,7 @@ public class TigerTranslator {
 		} else {
 			StrStrictLessThan(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 	private void StrStrictLessThan(int registerLeft,int registerRight,int registerIndex){
@@ -531,7 +532,7 @@ public class TigerTranslator {
 		writer.writeFunction(String.format("AND R"+registerLeft+", R"+registerOp+",R"+registerOp));
 		writer.writeFunction(String.format("BNE 6"));
 		//caractere 2 vaut 0 Egalité : false
-		writer.writeFunction(String.format("LDW R"+registerLeft+",#0"));
+		writer.writeFunction(String.format("LDW R"+registerIndex+",#0"));
 		writer.writeFunction(String.format("BMP 4"));
 		writer.writeFunction(String.format("ADQ 2, R"+registerDep));
 		writer.writeFunction(String.format("BMP -76"));
@@ -581,6 +582,7 @@ public class TigerTranslator {
 			// a<=b <=> b>=a
 			StrLessOrEqualTh(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 
@@ -807,8 +809,6 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 
-			registerManager.freeRegister();
-
 		} else {
 			//adresse str1
 			int addOne;
@@ -899,6 +899,7 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 			registerManager.freeRegister();
 		}
+		registerManager.freeRegister();
 	}
 
 	private void translateAndOperator(Tree tree, int registerIndex) {
