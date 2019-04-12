@@ -1,0 +1,48 @@
+let
+	type vector = {x : int, y : int}
+	type data = {v : vector, to_add : int}
+	type dataArray = array of data
+	var d1 := data {v = vector {x = 0, y = 0}, to_add = 1}
+	var d2 := data {v = vector {x = 1, y = 1}, to_add = 1}
+	var d3 := data {v = vector {x = 2, y = 2}, to_add = 0}
+	var d4 := data {v = vector {x = 3, y = 4}, to_add = 1}
+in
+  printi(d1.v.x);
+  print("\n");
+  printi(d2.v.y);
+  print("\n");
+
+	d1.v.x := d2.v.y;
+
+  printi(d1.v.x);
+  print("\n");
+  printi(d2.v.y);
+  print("\n");
+
+
+  printi(d3.v.x);
+  print("\n");
+  printi(d3.v.y);
+  print("\n");
+
+  d3.v := d2.v;
+
+  printi(d3.v.x);
+  print("\n");
+  printi(d3.v.y);
+  print("\n");
+
+  printi(d2.v.y);
+  print("\n");
+  printi(d4.to_add);
+  print("\n");
+
+  d4.to_add := d4.to_add + d3.v.x + d2.v.y;
+
+  printi(d3.v.x);
+  print("\n");
+  printi(d2.v.y);
+  print("\n");
+  printi(d4.to_add);
+  print("\n")
+end

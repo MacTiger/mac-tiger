@@ -105,18 +105,15 @@ public class TigerTranslator {
 					// On empile dans le tas la taille du nouveau string
 					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
 					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-2", size1));
-					this.writer.writeHeader(String.format("LDW %s, (R0)-4", size2));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size1, str1));
+					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size2, str2));
 					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
 					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
 
-					// Constantes
+					// Initialisation des registres
+		            this.writer.writeHeader(String.format("LDW %s, #0", word));
 					this.writer.writeHeader(String.format("LDW %s, #2", two));
-
-					// Le nouveau string sera stocké là où l'on va commencer à écrire (sans la taille)
 					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
-
-					// Initialisation du inputPointer
 					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
 
 					// Saute en (3a)
@@ -138,7 +135,6 @@ public class TigerTranslator {
 					this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
 
 					// (4a) Passer au mot suivant ou terminer
-					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
 					this.writer.writeHeader(String.format("TST %s", word));
 					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
 					// (4b) word = 1, il faut empiler \0
@@ -291,7 +287,7 @@ public class TigerTranslator {
 					//Si n-(i+m) < 0 STOP
 
 
-					//Fait i %2 => qutotient : nombre de mots à "sauter"
+					//Fait i %2 => quotient : nombre de mots à "sauter"
 					//Reste = nb d'octet à sauter (0 ou 1)
 					this.writer.writeHeader("LDW R2,#2");
 					this.writer.writeHeader("DIV R3,R2,R2");
@@ -315,33 +311,20 @@ public class TigerTranslator {
 					this.writer.writeHeader("LDB R5,(R1)");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
-					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
 					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+
 
 					//Ici R3=0
-					// Fait R4 % 2 => quotient : nombre de mots à écrire
-					// Reste = nombre d'octets à écrire
-					// nombre d octets
-					this.writer.writeHeader("LDW R2,#2");
-					this.writer.writeHeader("DIV R4,R2,R2");
-					this.writer.writeHeader("TST R2");
-					this.writer.writeHeader("BEQ 14");
-					//Si quotient != 0 >=1 mot à écrire
-					this.writer.writeHeader("LDW R5,(R1)");
-					this.writer.writeHeader("STW R5,(HP)");
-					this.writer.writeHeader("ADQ 2,HP");
-					this.writer.writeHeader("ADQ 2,R1");
-					this.writer.writeHeader("ADQ -1,R2");//-1 mot à recopier
-					this.writer.writeHeader("BNE -10");//Si R2 > 0 on boucle
-
-
-					//Ici plus aucun mot à écrire regarde si reste un octet
-					this.writer.writeHeader("TST R4");
-					this.writer.writeHeader("BEQ 8");
-					//Le reste est non nul, on écrit un octet
-					this.writer.writeHeader("LDB R5,(R1)");
+					//R4 nb de carac à recopier
+					this.writer.writeHeader("BEQ 14 ");
+					this.writer.writeHeader("LDB R5,(R1) ");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
+					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+					this.writer.writeHeader("BNE -12");
+
 
 
 					//On a tout écrit : test HP : pair ou impair ?
@@ -1208,7 +1191,6 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private void translateIDAdress(Tree tree, int registerIndex) {
-		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1354,7 +1336,6 @@ public class TigerTranslator {
 	}
 
 	private void translateWhile(Tree tree, int registerIndex) {
-		// TODO : Génerer code de while (penser à réserver les registres nécessaires)
 		int testRegister = this.registerManager.provideRegister();
 		int loopRegister = registerIndex;
 
@@ -1534,7 +1515,7 @@ public class TigerTranslator {
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
+		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", -wordSize));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
