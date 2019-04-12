@@ -287,7 +287,7 @@ public class TigerTranslator {
 					//Si n-(i+m) < 0 STOP
 
 
-					//Fait i %2 => qutotient : nombre de mots à "sauter"
+					//Fait i %2 => quotient : nombre de mots à "sauter"
 					//Reste = nb d'octet à sauter (0 ou 1)
 					this.writer.writeHeader("LDW R2,#2");
 					this.writer.writeHeader("DIV R3,R2,R2");
@@ -311,33 +311,20 @@ public class TigerTranslator {
 					this.writer.writeHeader("LDB R5,(R1)");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
-					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
 					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+
 
 					//Ici R3=0
-					// Fait R4 % 2 => quotient : nombre de mots à écrire
-					// Reste = nombre d'octets à écrire
-					// nombre d octets
-					this.writer.writeHeader("LDW R2,#2");
-					this.writer.writeHeader("DIV R4,R2,R2");
-					this.writer.writeHeader("TST R2");
-					this.writer.writeHeader("BEQ 14");
-					//Si quotient != 0 >=1 mot à écrire
-					this.writer.writeHeader("LDW R5,(R1)");
-					this.writer.writeHeader("STW R5,(HP)");
-					this.writer.writeHeader("ADQ 2,HP");
-					this.writer.writeHeader("ADQ 2,R1");
-					this.writer.writeHeader("ADQ -1,R2");//-1 mot à recopier
-					this.writer.writeHeader("BNE -10");//Si R2 > 0 on boucle
-
-
-					//Ici plus aucun mot à écrire regarde si reste un octet
-					this.writer.writeHeader("TST R4");
-					this.writer.writeHeader("BEQ 8");
-					//Le reste est non nul, on écrit un octet
-					this.writer.writeHeader("LDB R5,(R1)");
+					//R4 nb de carac à recopier
+					this.writer.writeHeader("BEQ 14 ");
+					this.writer.writeHeader("LDB R5,(R1) ");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
+					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+					this.writer.writeHeader("BNE -12");
+
 
 
 					//On a tout écrit : test HP : pair ou impair ?
@@ -482,6 +469,7 @@ public class TigerTranslator {
 		} else {
 			StrStrictLessThan(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 	private void StrStrictLessThan(int registerLeft,int registerRight,int registerIndex){
@@ -544,7 +532,7 @@ public class TigerTranslator {
 		writer.writeFunction(String.format("AND R"+registerLeft+", R"+registerOp+",R"+registerOp));
 		writer.writeFunction(String.format("BNE 6"));
 		//caractere 2 vaut 0 Egalité : false
-		writer.writeFunction(String.format("LDW R"+registerLeft+",#0"));
+		writer.writeFunction(String.format("LDW R"+registerIndex+",#0"));
 		writer.writeFunction(String.format("BMP 4"));
 		writer.writeFunction(String.format("ADQ 2, R"+registerDep));
 		writer.writeFunction(String.format("BMP -76"));
@@ -594,6 +582,7 @@ public class TigerTranslator {
 			// a<=b <=> b>=a
 			StrLessOrEqualTh(registerRight,registerLeft,registerIndex);
 		}
+		registerManager.freeRegister();
 	}
 
 
@@ -784,7 +773,7 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("BNE 6"));
 			// Ici deuxieme caractere str1 vaut nul
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP 8"));//FIN : TRUE
+			writer.writeFunction(String.format("BMP 6"));//FIN : TRUE
 
 			// Ici deuxieme caractère str1 != nul : continuer
 			//Décalage dans le tas
@@ -819,8 +808,6 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
-
-			registerManager.freeRegister();
 
 		} else {
 			//adresse str1
@@ -912,6 +899,7 @@ public class TigerTranslator {
 			registerManager.freeRegister();
 			registerManager.freeRegister();
 		}
+		registerManager.freeRegister();
 	}
 
 	private void translateAndOperator(Tree tree, int registerIndex) {
@@ -1038,17 +1026,21 @@ public class TigerTranslator {
 	}
 
 	private void translateREC(Tree tree, int registerIndex) {
+		this.writer.writeFunction("ADQ 2, HP");
 		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
-		int register1 = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-		this.writer.writeFunction(String.format("ADI HP, HP, #%d", (tree.getChildCount() / 2) * wordSize));
-		int register2 = this.registerManager.provideRegister();
-		for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
-			this.translate(tree.getChild(i + 1), register2);
-			this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
+		int size = (tree.getChildCount() / 2) * wordSize;
+		if (size > 0) {
+			int register1 = this.registerManager.provideRegister();
+			this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+			this.writer.writeFunction(String.format("ADI HP, HP, #%d", size));
+			int register2 = this.registerManager.provideRegister();
+			for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
+				this.translate(tree.getChild(i + 1), register2);
+				this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
+			}
+			this.registerManager.freeRegister();
+			this.registerManager.freeRegister();
 		}
-		this.registerManager.freeRegister();
-		this.registerManager.freeRegister();
 	}
 
 	private void translateARR(Tree tree, int registerIndex) {
@@ -1200,7 +1192,6 @@ public class TigerTranslator {
 	 * @return
 	 */
 	private void translateIDAdress(Tree tree, int registerIndex) {
-		//TODO : charger l'adresse ou la valeur dans registerIndex ? Rendre le choix entre les deux avec un paramètre ?
 		String name = tree.toString();
 		Variable variable = this.currentTDS.findTranslatedVariable(name);
 
@@ -1526,7 +1517,7 @@ public class TigerTranslator {
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));  // TODO : pourquoi currentTDS.getDepth()-TDSDest.getDepth() + 2 ne convient pas ?
+		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", -wordSize));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));

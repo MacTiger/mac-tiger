@@ -1,0 +1,72 @@
+let
+	type recordType = {}
+	var recordVariable1 := recordType {}
+	var recordVariable2 := recordType {}
+	var recordVariable3 : recordType := nil
+	var recordVariable4 : recordType := nil
+in
+	printi (recordVariable1 = recordVariable1);
+	print ("\n");
+	printi (recordVariable1 = recordVariable2);
+	print ("\n");
+	printi (recordVariable1 = recordVariable3);
+	print ("\n");
+	printi (recordVariable1 = recordVariable4);
+	print ("\n");
+	printi (recordVariable2 = recordVariable1);
+	print ("\n");
+	printi (recordVariable2 = recordVariable2);
+	print ("\n");
+	printi (recordVariable2 = recordVariable3);
+	print ("\n");
+	printi (recordVariable2 = recordVariable4);
+	print ("\n");
+	printi (recordVariable3 = recordVariable1);
+	print ("\n");
+	printi (recordVariable3 = recordVariable2);
+	print ("\n");
+	printi (recordVariable3 = recordVariable3);
+	print ("\n");
+	printi (recordVariable3 = recordVariable4);
+	print ("\n");
+	printi (recordVariable4 = recordVariable1);
+	print ("\n");
+	printi (recordVariable4 = recordVariable2);
+	print ("\n");
+	printi (recordVariable4 = recordVariable3);
+	print ("\n");
+	printi (recordVariable4 = recordVariable4);
+	print ("\n");
+	print ("\n");
+	printi (recordVariable1 <> recordVariable1);
+	print ("\n");
+	printi (recordVariable1 <> recordVariable2);
+	print ("\n");
+	printi (recordVariable1 <> recordVariable3);
+	print ("\n");
+	printi (recordVariable1 <> recordVariable4);
+	print ("\n");
+	printi (recordVariable2 <> recordVariable1);
+	print ("\n");
+	printi (recordVariable2 <> recordVariable2);
+	print ("\n");
+	printi (recordVariable2 <> recordVariable3);
+	print ("\n");
+	printi (recordVariable2 <> recordVariable4);
+	print ("\n");
+	printi (recordVariable3 <> recordVariable1);
+	print ("\n");
+	printi (recordVariable3 <> recordVariable2);
+	print ("\n");
+	printi (recordVariable3 <> recordVariable3);
+	print ("\n");
+	printi (recordVariable3 <> recordVariable4);
+	print ("\n");
+	printi (recordVariable4 <> recordVariable1);
+	print ("\n");
+	printi (recordVariable4 <> recordVariable2);
+	print ("\n");
+	printi (recordVariable4 <> recordVariable3);
+	print ("\n");
+	printi (recordVariable4 <> recordVariable4)
+end

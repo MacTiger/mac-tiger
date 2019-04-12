@@ -1,0 +1,22 @@
+let
+	type arrayType = array of int
+	var arrayVariable1 := arrayType [0] of 0
+	var arrayVariable2 := arrayType [0] of 0
+in
+	printi (arrayVariable1 = arrayVariable1);
+	print ("\n");
+	printi (arrayVariable1 = arrayVariable2);
+	print ("\n");
+	printi (arrayVariable2 = arrayVariable1);
+	print ("\n");
+	printi (arrayVariable2 = arrayVariable2);
+	print ("\n");
+	print ("\n");
+	printi (arrayVariable1 <> arrayVariable1);
+	print ("\n");
+	printi (arrayVariable1 <> arrayVariable2);
+	print ("\n");
+	printi (arrayVariable2 <> arrayVariable1);
+	print ("\n");
+	printi (arrayVariable2 <> arrayVariable2)
+end
