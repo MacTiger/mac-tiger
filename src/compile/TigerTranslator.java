@@ -368,22 +368,6 @@ public class TigerTranslator {
 		return this.currentTDS.getChild(indexOfNextChild);
 	}
 
-	/**
-	 * @return Somme des tailles des variables locales à cette TDS
-	 */
-	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
-		int size = 0;
-		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
-			if (functionOrVariable.getValue() instanceof Variable){
-				Variable var = (Variable) functionOrVariable.getValue();
-				if (var.getOffset() < 0) {
-					size += wordSize;
-				}
-			}
-		}
-		return size;
-	}
-
 	private void descend() {
 		// Met à jour this.currentTDS pour y mettre la TDS fille de la currentTDS de bon index, met à jour childrenIndexStack
 		int indexOfNextChild = childrenIndexStack.get(childrenIndexStack.size()-1); // Récupère l'index de la TDS fille à prendre
@@ -402,7 +386,7 @@ public class TigerTranslator {
 
 	private void ascend() {
 		// Met à jour this.currentTDS en remontant de TDS, met à jour childrenIndexStack
-		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépilage du chaînage statique et des variables locales s'il y en a", getSizeOfVars(this.currentTDS.getFunctionsAndVariables()) + wordSize));
+		this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépilage des variables locales, du chaînage statique et des arguments", (this.currentTDS.getFunctionsAndVariables().getSize() + 1) * wordSize));
 		this.writer.writeFunction("LDW BP, (SP)+ // Restauration du base pointer avec le chaînage dynamique"); // Partie UNLINK
 		this.writer.writeFunction("RTS");
 		this.writer.ascend(); // Remonte le writer : on a finit d'écrire le code de cette fonction (assembleur)
@@ -1013,14 +997,10 @@ public class TigerTranslator {
 		registerManager.freeRegister();
 
 		writeEntryFunction(table, name);    // Génération du code d'appel à la fonction et calcul de son chaînage statique
-		int size = (tree.getChildCount() - 1) * wordSize;
-		if (size != 0) {
-			this.writer.writeFunction(String.format("ADI SP, SP, #%d  // Dépile les arguments de la fonction", size));  // Dépile les arguments
-		}
 
 		registerManager.restoreAll();
 		if (function.getType() != null) {
-			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
+			this.writer.writeFunction(String.format("LDW R%d, R0", registerIndex));
 		}
 	}
 
@@ -1249,8 +1229,8 @@ public class TigerTranslator {
 		int registerIndexOfArray = this.registerManager.provideRegister();
 		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
 
-		this.writer.writeFunction(String.format("SHL R%d, R%s  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
-		this.writer.writeFunction(String.format("ADD R%d, R%s, R%s  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
+		this.writer.writeFunction(String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
 
 		this.registerManager.freeRegister();
 	}
@@ -1278,7 +1258,7 @@ public class TigerTranslator {
 		Namespace<Variable> fields = record.getNamespace();
 		String nameOfField = tree.getChild(1).toString();   // Récupère le nom du field
 
-		this.writer.writeFunction(String.format("ADI R%d, R%s, #%d  // FIELD : Calcul de l'adresse du champ \"%s\"", registerIndex, registerIndex, fields.get(nameOfField).getOffset(), nameOfField));
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d  // FIELD : Calcul de l'adresse du champ \"%s\"", registerIndex, registerIndex, fields.get(nameOfField).getOffset(), nameOfField));
 	}
 
 	/**
@@ -1307,7 +1287,7 @@ public class TigerTranslator {
 		if (hasElse) {
 			// Labels
 			String elseLabel = this.labelGenerator.getLabel(tree, "else");
-			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
+			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `else` si l'instruction évaluée est fausse
 			this.writer.writeFunction(String.format("BEQ %s-$-2", elseLabel));
@@ -1323,7 +1303,7 @@ public class TigerTranslator {
 
 		} else {
 			// Labels
-			String endifLabel = this.labelGenerator.getLabel(tree, "endif");
+			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `endif` si l'instruction évaluée est fausse
 			this.writer.writeFunction(String.format("BEQ %s-$-2", endifLabel));
@@ -1358,17 +1338,41 @@ public class TigerTranslator {
 		this.registerManager.freeRegister();
 	}
 
-	private void translateFor(Tree tree, int registerIndex) {   //TODO : générer le code de la boucle for
-		labelGenerator.getLabel(tree, "test");    // Création des labels de la fonction assembleur liée à ce for (label de la ligne du test, de fin de for)
-
-		Variable index = (Variable) this.next().getFunctionsAndVariables().get(tree.getChild(0).toString());  // Récupère la variable de boucle
-		//TODO : gérer les registres :
-		translate(tree.getChild(1), registerIndex);	// Génère le code pour la borne inférieure du for
-		translate(tree.getChild(2), registerIndex);	// Génère le code pour la borne supérieure du for
-		this.writer.writeFunction(String.format("JSR @%s", this.labelGenerator.getLabel(this.next())));
-		this.descend(); // Met à jour this.currentTDS avec la bonne TDS fille
-		translate(tree.getChild(3), registerIndex);	// Génère le code de la boucle for
-		this.ascend();    // Met à jour this.currentTDS avec la TDS père (revient à la currentTDS en entrée de cette fonction)
+	private void translateFor(Tree tree, int registerIndex) {
+		String testLabel = labelGenerator.getLabel(tree, "test");
+		String endLabel = labelGenerator.getLabel(tree, "end");
+		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex));
+		this.translate(tree.getChild(2), registerIndex);
+		this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex));
+		this.registerManager.saveAll();
+		SymbolTable table = this.next();
+		String label = this.labelGenerator.getLabel(table, "for");
+		this.writeEntryFunction(table, label);
+		this.descend();
+		int register1 = this.registerManager.provideRegister();
+		int register2 = this.registerManager.provideRegister();
+		int register3 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, (SP)8", register1));
+		this.writer.writeFunction(String.format("LDW R%d, (SP)6", register2));
+		for (Map.Entry<String, FunctionOrVariable> entry: table.getFunctionsAndVariables()) {
+			this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de l'indice de boucle \"%s\"", register1, entry.getKey()));
+			((Variable) entry.getValue()).translate(true);
+		}
+		this.writer.writeFunction(String.format(testLabel, "CMP R%d, R%d", register2, register1));
+		this.writer.writeFunction(String.format("BLE 2", register2, register1));
+		this.writer.writeFunction(String.format("JEA @%s", endLabel));
+		this.translate(tree.getChild(1), register3);
+		this.writer.writeFunction(String.format("ADQ 1, R%d", register1));
+		this.writer.writeFunction(String.format("LDW R%d, SP // Incrémentation de l'indice de boucle", register1));
+		this.writer.writeFunction(String.format("JEA @%s", testLabel));
+		this.writer.writeFunction(endLabel, "NOP");
+		this.registerManager.freeRegister();
+		this.registerManager.freeRegister();
+		this.registerManager.freeRegister();
+		this.ascend();
+		this.writer.writeFunction("ADQ 4, SP // Dépilage des bornes de la boucle");
+		this.registerManager.restoreAll();
 	}
 
 	/**
@@ -1386,7 +1390,7 @@ public class TigerTranslator {
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "type"));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_type"));
 					this.descend(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 
 					int lj = i;
@@ -1398,7 +1402,7 @@ public class TigerTranslator {
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(),"function"));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(),"_function"));
 					this.descend();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					do {
@@ -1414,7 +1418,7 @@ public class TigerTranslator {
 						}
 						int register = this.registerManager.provideRegister();
 						translate(body, register); // Génère code pour le corps de la fonction
-						this.writer.writeFunction(String.format("LDW R0, R%s", register));
+						this.writer.writeFunction(String.format("LDW R0, R%d", register));
 						this.registerManager.freeRegister();
 						this.ascend();
 					} while (++lj < li && (symbol = dec.getChild(lj)).toString().equals("function"));
@@ -1428,19 +1432,19 @@ public class TigerTranslator {
 					Tree exp = symbol.getChild(1);
 					if (this.currentTDS == table) {
 						this.registerManager.saveAll();
-						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
+						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_var"));
 						this.descend();
 					} else {
 						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
 						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
 							this.registerManager.saveAll();
-							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
+							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_var"));
 							this.descend();
 						}
 					}
 					int register = this.registerManager.provideRegister();
 					this.translate(exp, register);
-					this.writer.writeFunction(String.format("STW R%s, -(SP) // Empilage de la variable locale \"%s\"", register, name));
+					this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de la variable locale \"%s\"", register, name));
 					this.registerManager.freeRegister();
 					Variable variable = (Variable) this.currentTDS.getFunctionsAndVariables().get(name); // Récupération de la variable déclarée
 					variable.translate(true);
@@ -1450,14 +1454,14 @@ public class TigerTranslator {
 		}
 		int register = this.registerManager.provideRegister();
 		translate(seq, register);  // Evalue le IN
-		this.writer.writeFunction(String.format("LDW R0, R%s", register));
+		this.writer.writeFunction(String.format("LDW R0, R%d", register));
 		this.registerManager.freeRegister();
 		while (this.currentTDS != table) {    // On remonte les TDS pour revenir à la profondeur d'avant le LET
 			this.ascend();
 		}
 		this.registerManager.restoreAll(); // appeler une seule fois cette méthode suffit à restaurer les registres tels qu'avant le let
 		if (SymbolTable.treeTypeHashMap.get(tree) != null) {
-			this.writer.writeFunction(String.format("LDW R%s, R0", registerIndex));
+			this.writer.writeFunction(String.format("LDW R%d, R0", registerIndex));
 		}
 	}
 
@@ -1468,7 +1472,12 @@ public class TigerTranslator {
 	private void translateBreak(Tree tree, int registerIndex) {
 		Tree parent = tree;
 		Tree child = tree;
-		//TODO : générer code pour Break
+		while (!parent.toString().equals("while") && !(parent.toString().equals("for") && child == parent.getChild(3))) {
+			// TODO gérer l'allocation des registres pour le break
+			child = parent;
+		}
+		String label = this.labelGenerator.getLabel(parent, "end");
+		this.writer.writeFunction(String.format("JEA @%s", label));
 	}
 
 	public String toString() {
@@ -1485,15 +1494,6 @@ public class TigerTranslator {
 	public void writeEntryFunction(SymbolTable TDSDest, String name){
 		this.writeStaticLinking(TDSDest);
 		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(TDSDest,name)));
-	}
-
-	/**
-	 * Ecrit le code (coté appelant) d'appel de fonction ASSEMBLEUR (ne portant pas de nom)
-	 * @param TDSDest TDS de la fonction appelée
-	 */
-	public void writeEntryFunction(SymbolTable TDSDest){
-		this.writeStaticLinking(TDSDest);
-		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(TDSDest)));
 	}
 
 	/**
@@ -1515,7 +1515,7 @@ public class TigerTranslator {
 
 		this.writer.writeFunction("LDW R0, BP  // STATIC_LINK_BEGIN : Calcul du chaînage statique");
 		int loopRegister = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDQ %d, R%s ", count_stat, loopRegister));
+		this.writer.writeFunction(String.format("LDQ %d, R%d ", count_stat, loopRegister));
 		// Début de boucle :
 		this.writer.writeFunction(String.format("LDW R0, (R0)%d", -wordSize));
 		this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
