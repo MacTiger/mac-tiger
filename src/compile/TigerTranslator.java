@@ -771,7 +771,7 @@ public class TigerTranslator {
 			writer.writeFunction(String.format("BNE 6"));
 			// Ici deuxieme caractere str1 vaut nul
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP 8"));//FIN : TRUE
+			writer.writeFunction(String.format("BMP 6"));//FIN : TRUE
 
 			// Ici deuxieme caractère str1 != nul : continuer
 			//Décalage dans le tas
