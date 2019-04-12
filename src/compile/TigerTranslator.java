@@ -233,7 +233,7 @@ public class TigerTranslator {
 					this.writer.writeHeader("ADQ 2, HP");
 					this.writer.writeHeader("BMP 0"); // Saute en (**)
 					this.writer.writeHeader("STW R1, (HP)");
-					this.writer.writeHeader("ADQ -2, (HP");
+					this.writer.writeHeader("ADQ -2, (HP)");
 					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
