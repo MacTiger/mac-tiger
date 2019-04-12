@@ -14,10 +14,11 @@ in
 	d1.v.x := 11;
 	printi (d1.v.x);
 	print ("\n");
-	printi (d1.to_add)
-	printi (d1.v.x);
+	printi (d1.to_add);
 	print ("\n");
-	printi (d2.v.y);
+	printi (d2.v.x);
+	print ("\n");
+	printi (d3.v.y);
 	print ("\n");
   	d2.v.x := d3.v.y;
 	printi (d2.v.x);
@@ -42,5 +43,5 @@ in
 	print ("\n");
 	printi (d3.v.y);
 	print ("\n");
-	printi (d5.to_add);
+	printi (d5.to_add)
 end
