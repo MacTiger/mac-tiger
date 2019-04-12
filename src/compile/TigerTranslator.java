@@ -290,7 +290,7 @@ public class TigerTranslator {
 					//Si n-(i+m) < 0 STOP
 
 
-					//Fait i %2 => qutotient : nombre de mots à "sauter"
+					//Fait i %2 => quotient : nombre de mots à "sauter"
 					//Reste = nb d'octet à sauter (0 ou 1)
 					this.writer.writeHeader("LDW R2,#2");
 					this.writer.writeHeader("DIV R3,R2,R2");
@@ -314,33 +314,20 @@ public class TigerTranslator {
 					this.writer.writeHeader("LDB R5,(R1)");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
-					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
 					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+
 
 					//Ici R3=0
-					// Fait R4 % 2 => quotient : nombre de mots à écrire
-					// Reste = nombre d'octets à écrire
-					// nombre d octets
-					this.writer.writeHeader("LDW R2,#2");
-					this.writer.writeHeader("DIV R4,R2,R2");
-					this.writer.writeHeader("TST R2");
-					this.writer.writeHeader("BEQ 14");
-					//Si quotient != 0 >=1 mot à écrire
-					this.writer.writeHeader("LDW R5,(R1)");
-					this.writer.writeHeader("STW R5,(HP)");
-					this.writer.writeHeader("ADQ 2,HP");
-					this.writer.writeHeader("ADQ 2,R1");
-					this.writer.writeHeader("ADQ -1,R2");//-1 mot à recopier
-					this.writer.writeHeader("BNE -10");//Si R2 > 0 on boucle
-
-
-					//Ici plus aucun mot à écrire regarde si reste un octet
-					this.writer.writeHeader("TST R4");
-					this.writer.writeHeader("BEQ 8");
-					//Le reste est non nul, on écrit un octet
-					this.writer.writeHeader("LDB R5,(R1)");
+					//R4 nb de carac à recopier
+					this.writer.writeHeader("BEQ 14 ");
+					this.writer.writeHeader("LDB R5,(R1) ");
 					this.writer.writeHeader("STB R5,(HP)");
 					this.writer.writeHeader("ADQ 1,HP");
+					this.writer.writeHeader("ADQ 1,R1");
+					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+					this.writer.writeHeader("BNE -12");
+
 
 
 					//On a tout écrit : test HP : pair ou impair ?
