@@ -2,6 +2,10 @@ let
 	type vector = {x : int, y : int}
 	type data = {v : vector, to_add : int}
 	var d1 := data {v = vector {x = 3, y = 5}, to_add = 7}
+	var d2 := data {v = vector {x = 0, y = 0}, to_add = 1}
+	var d3 := data {v = vector {x = 1, y = 1}, to_add = 1}
+	var d4 := data {v = vector {x = 2, y = 2}, to_add = 0}
+	var d5 := data {v = vector {x = 3, y = 4}, to_add = 1}
 in
 	printi (d1.v.x);
 	print ("\n");
@@ -11,4 +15,32 @@ in
 	printi (d1.v.x);
 	print ("\n");
 	printi (d1.to_add)
+	printi (d1.v.x);
+	print ("\n");
+	printi (d2.v.y);
+	print ("\n");
+  	d2.v.x := d3.v.y;
+	printi (d2.v.x);
+	print ("\n");
+	printi (d3.v.y);
+	print ("\n");
+	printi (d4.v.x);
+	print ("\n");
+	printi (d4.v.y);
+	print ("\n");
+	d4.v := d3.v;
+	printi (d4.v.x);
+	print ("\n");
+	printi (d4.v.y);
+	print ("\n");
+	printi (d3.v.y);
+	print ("\n");
+	printi (d5.to_add);
+	print ("\n");
+	d5.to_add := d5.to_add + d4.v.x + d3.v.y;
+	printi (d4.v.x);
+	print ("\n");
+	printi (d3.v.y);
+	print ("\n");
+	printi (d5.to_add);
 end
