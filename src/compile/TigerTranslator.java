@@ -1051,7 +1051,7 @@ public class TigerTranslator {
 		 */
 		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
-		Function function = currentTDS.findFunction(name);
+		Function function = currentTDS.findTranslatedFunction(name);
 		//TODO : isNative ?
 		//TODO : => Ajoute le code de la fonction dans le header (writeHeader) (une seule fois !)
 		SymbolTable table = function.getSymbolTable();
@@ -1474,7 +1474,7 @@ public class TigerTranslator {
 			switch (symbol.toString()) {
 				case "type": { // dans le cas d'une suite de déclarations de types
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_type"));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "type"));
 					this.descend(); // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 
 					int lj = i;
@@ -1486,7 +1486,7 @@ public class TigerTranslator {
 				}
 				case "function": { // dans le cas d'une suite de déclarations de fonctions
 					this.registerManager.saveAll();
-					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(),"_function"));
+					writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(),"function"));
 					this.descend();   // On avait créé une nouvelle table avant la première déclaration, donc on y descend
 					int lj = i;
 					do {
@@ -1514,17 +1514,11 @@ public class TigerTranslator {
 				case "var": { // dans le cas de la déclaration d'une variable
 					String name = symbol.getChild(0).toString();
 					Tree exp = symbol.getChild(1);
-					if (this.currentTDS == table) {
+					FunctionOrVariable functionOrVariable;
+					if (this.currentTDS == table || (functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name)) instanceof Function || functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
 						this.registerManager.saveAll();
-						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_var"));
+						writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "var"));
 						this.descend();
-					} else {
-						FunctionOrVariable functionOrVariable = this.currentTDS.getFunctionsAndVariables().get(name);
-						if (functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
-							this.registerManager.saveAll();
-							writeEntryFunction(this.next(), this.labelGenerator.getLabel(this.next(), "_var"));
-							this.descend();
-						}
 					}
 					int register = this.registerManager.provideRegister();
 					this.translate(exp, register);

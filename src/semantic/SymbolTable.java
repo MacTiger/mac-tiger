@@ -83,13 +83,6 @@ public class SymbolTable {
 			Function function = new Function();
 			function.setType(intType);
 			SymbolTable table = new SymbolTable(root);
-			function.setSymbolTable(table);
-			root.functionsAndVariables.set("read", function);
-		}
-		{
-			Function function = new Function();
-			function.setType(intType);
-			SymbolTable table = new SymbolTable(root);
 			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
 			functionsAndVariables.set("i", intVariable);
 			function.setSymbolTable(table);
@@ -119,6 +112,13 @@ public class SymbolTable {
 			functionsAndVariables.set("i", intVariable);
 			function.setSymbolTable(table);
 			root.functionsAndVariables.set("printi", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(intType);
+			SymbolTable table = new SymbolTable(root);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("read", function);
 		}
 		{
 			Function function = new Function();
@@ -241,13 +241,20 @@ public class SymbolTable {
 	}
 
 	public Variable findTranslatedVariable(String name) {
-		Variable variable = (Variable) this.functionsAndVariables.get(name);
-		if (variable != null && variable.isTranslated()) {
-			return variable;
-		} else if (this.parent != null) {
-			return this.parent.findTranslatedVariable(name);
+		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
+		if (functionOrVariable != null && functionOrVariable instanceof Variable && ((Variable) functionOrVariable).isTranslated()) {
+			return (Variable) functionOrVariable;
 		} else {
-			throw new RuntimeException(String.format("La variable %s n'a pas été trouvée", name));
+			return this.parent.findTranslatedVariable(name);
+		}
+	}
+
+	public Function findTranslatedFunction(String name) {
+		FunctionOrVariable functionOrVariable = this.functionsAndVariables.get(name);
+		if (functionOrVariable != null && functionOrVariable instanceof Function) {
+			return (Function) functionOrVariable;
+		} else  {
+			return this.parent.findTranslatedFunction(name);
 		}
 	}
 
@@ -262,11 +269,7 @@ public class SymbolTable {
 		Variable variable;
 		while ((variable = (Variable) symbolTable.functionsAndVariables.get(name)) == null || !variable.isTranslated()) {
 			staticChainCount++;
-			if (symbolTable.parent != null) {
-				symbolTable = symbolTable.parent;
-			} else {
-				throw new RuntimeException(String.format("La variable %s n'a pas été trouvée", name));
-			}
+			symbolTable = symbolTable.parent;
 		}
 		return staticChainCount;
 	}
