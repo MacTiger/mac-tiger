@@ -157,6 +157,27 @@ public class TigerTranslator {
 					this.writer.writeHeader("TRP #EXIT_EXC");
 					break;
 				}
+				case "getchar": {
+					this.writer.writeHeader(label, "LDQ 1, R0");
+					this.writer.writeHeader("STW R0, (HP)+");
+					this.writer.writeHeader("LDW R0, HP");
+					this.writer.writeHeader("TRP #READ_EXC");
+					// this.writer.writeHeader("LDW R0, (HP)");
+					// this.writer.writeHeader("LDW R1, #0xFF00");
+					// this.writer.writeHeader("AND R1, R0, R0");
+					// this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
+					// this.writer.writeHeader("STW R0, (HP)");
+					// this.writer.writeHeader("LDW R0, HP");
+					// this.writer.writeHeader("ADQ 2, HP");
+					// this.writer.writeHeader("BMP 10"); // Saute en (**)
+					// this.writer.writeHeader("LDW R0, HP"); // (*)
+					// this.writer.writeHeader("ADQ -2, HP");
+					// this.writer.writeHeader("LDQ 0, R1");
+					// this.writer.writeHeader("STW R1, (HP)");
+					// this.writer.writeHeader("ADQ 4, HP");
+					this.writer.writeHeader("RTS"); // (**)
+					break;
+				}
 				case "not": {
 					this.writer.writeHeader(label, "LDW R0, (SP)2");
 					this.writer.writeHeader("BEQ 6");
@@ -214,27 +235,6 @@ public class TigerTranslator {
 					this.writer.writeHeader("TRP R2");
 					this.writer.writeHeader("LDW SP, R3");
 					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "getchar": {
-					this.writer.writeHeader(label, "LDQ 1, R0");
-					this.writer.writeHeader("STW R0, (HP)+");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("TRP #READ_EXC");
-					this.writer.writeHeader("LDW R0, (HP)");
-					this.writer.writeHeader("LDW R1, #0xFF00");
-					this.writer.writeHeader("AND R1, R0, R0");
-					this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
-					this.writer.writeHeader("STW R0, (HP)");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("ADQ 2, HP");
-					this.writer.writeHeader("BMP 10"); // Saute en (**)
-					this.writer.writeHeader("LDW R0, HP"); // (*)
-					this.writer.writeHeader("ADQ -2, HP");
-					this.writer.writeHeader("LDQ 0, R1");
-					this.writer.writeHeader("STW R1, (HP)");
-					this.writer.writeHeader("ADQ 4, HP");
-					this.writer.writeHeader("RTS"); // (**)
 					break;
 				}
 				case "read": {
@@ -1102,7 +1102,7 @@ public class TigerTranslator {
 
 	private void translateARR(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(1), registerIndex);
-		this.writer.writeFunction("BGE 2");
+		this.writer.writeFunction("BGE 4");
 		this.writer.writeFunction("TRP #EXIT_EXC");
 		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
 		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
@@ -1425,9 +1425,9 @@ public class TigerTranslator {
 		this.registerManager.saveAll();
 		registerIndex = this.registerManager.provideRegister();
 		this.translate(tree.getChild(1), registerIndex);
-		this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex));
+		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de la borne inférieure", registerIndex));
 		this.translate(tree.getChild(2), registerIndex);
-		this.writer.writeFunction(String.format("STW R%d, -(SP)", registerIndex));
+		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de la borne supérieure", registerIndex));
 		this.registerManager.freeRegister();
 		SymbolTable table = this.next();
 		String label = this.labelGenerator.getLabel(table, "for");
