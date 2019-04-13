@@ -22,8 +22,9 @@ let
 				coefficients [index] :=
 					if k = 0 | k = n then
 						1
-					else
+					else (
 						coefficient (coefficients, n - 1, k - 1) + coefficient (coefficients, n - 1, k)
+					)
 			);
 			coefficients [index]
 		end
