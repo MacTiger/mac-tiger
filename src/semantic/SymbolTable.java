@@ -83,6 +83,13 @@ public class SymbolTable {
 			Function function = new Function();
 			function.setType(intType);
 			SymbolTable table = new SymbolTable(root);
+			function.setSymbolTable(table);
+			root.functionsAndVariables.set("read", function);
+		}
+		{
+			Function function = new Function();
+			function.setType(intType);
+			SymbolTable table = new SymbolTable(root);
 			Namespace<FunctionOrVariable> functionsAndVariables = table.functionsAndVariables;
 			functionsAndVariables.set("i", intVariable);
 			function.setSymbolTable(table);
