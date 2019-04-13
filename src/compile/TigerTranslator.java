@@ -71,7 +71,7 @@ public class TigerTranslator {
 					// Si on donne un nombre strictement négatif, sauter en (*)
 					this.writer.writeHeader("BLW 20");
 					this.writer.writeHeader("LDQ 127, R1");
-					this.writer.writeHeader("SUB R1, R2, R1");
+					this.writer.writeHeader("CMP R1, R2");
 
 					// Si on donne un nombre plus grand ou égal à 128, sauter en (*)
 					this.writer.writeHeader("BLW 14");
@@ -307,7 +307,7 @@ public class TigerTranslator {
 					this.writer.writeHeader("LDW R2,(R1)");
 					this.writer.writeHeader("ADQ 2,R1");
 					this.writer.writeHeader("ADD R3,R4,R5");
-					this.writer.writeHeader("SUB R2,R5,R2");
+					this.writer.writeHeader("CMP R2,R5");
 					this.writer.writeHeader("BGE 12");//FIN
 					this.writer.writeHeader("LDW R5, #0");
 					this.writer.writeHeader("STW R5, (HP)+");
@@ -492,10 +492,10 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BGT 4"));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BGT 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("BMP 4"));
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {
 			StrStrictLessThan(registerRight,registerLeft,registerIndex);
@@ -547,7 +547,7 @@ public class TigerTranslator {
 		writer.writeFunction(String.format("LDW R"+registerIndex+", #1"));
 		writer.writeFunction(String.format("BMP 36"));
 
-		writer.writeFunction(String.format("SUB R"+registerLeft+",R"+registerRight+",R"+registerOp));
+		writer.writeFunction(String.format("CMP R"+registerLeft+",R"+registerRight));
 		writer.writeFunction(String.format("BGE 6"));
 		// str1 < str2
 		writer.writeFunction(String.format("LDW R"+registerIndex+",#1"));
@@ -583,7 +583,7 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
 			writer.writeFunction(String.format("BLW 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
@@ -604,7 +604,7 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
 			writer.writeFunction(String.format("BGE 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
@@ -662,7 +662,7 @@ public class TigerTranslator {
 		// => si ne vaut pas null : continue le programme
 
 		//Fait str1-str2
-		writer.writeFunction(String.format("SUB R"+registerLeft+",R"+registerRight+",R"+registerOp));
+		writer.writeFunction(String.format("CMP R"+registerLeft+",R"+registerRight));
 		//test si str1-str2 >= 0
 		writer.writeFunction(String.format("BGE 6"));
 		// => si str1 - str2 < 0 : true => fin du programme
@@ -704,7 +704,7 @@ public class TigerTranslator {
 
 		boolean isString = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 		if (!isString) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
 			writer.writeFunction(String.format("BLE 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
 			writer.writeFunction(String.format("BMP 4"));
@@ -724,11 +724,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BNE 6"));
-			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BEQ 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 		} else {
 			//adresse str1
 			int addOne;
@@ -751,7 +751,7 @@ public class TigerTranslator {
 			//Déréférencement : addOne et two contiennent les longueurs
 			writer.writeFunction(String.format("LDW R" + addOne + ", (R" + addOne + ")"));
 			writer.writeFunction(String.format("LDW R" + addTwo + ", (R" + addTwo + ")"));
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", addOne, addTwo, regOp));
+			writer.writeFunction(String.format("CMP R%d, R%d", addOne, addTwo));
 			writer.writeFunction(String.format("BEQ 6"));
 			//Tailles différentes : FALSE
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
@@ -793,7 +793,7 @@ public class TigerTranslator {
 
 
 			//Premier caractere str1 différent de nul (A)
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, regOp));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
 			writer.writeFunction(String.format("BEQ 6"));//A voir
 			// Ici str1-str2 != 0
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
@@ -834,11 +834,11 @@ public class TigerTranslator {
 		boolean isStringComparison = (currentTDS.treeTypeHashMap.get(tree.getChild(0)) == SymbolTable.stringType);
 
 		if (!isStringComparison) {
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, registerIndex));
-			writer.writeFunction(String.format("BEQ 6"));
-			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
-			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BNE 6"));
 			writer.writeFunction(String.format("LDW R%d, #0", registerIndex));
+			writer.writeFunction(String.format("BMP 4"));
+			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
 
 		} else {
 			//adresse str1
@@ -862,7 +862,7 @@ public class TigerTranslator {
 			//Déréférencement : addOne et two contiennent les longueurs
 			writer.writeFunction(String.format("LDW R" + addOne + ", (R" + addOne + ")"));
 			writer.writeFunction(String.format("LDW R" + addTwo + ", (R" + addTwo + ")"));
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", addOne, addTwo, regOp));
+			writer.writeFunction(String.format("CMP R%d, R%d", addOne, addTwo));
 			writer.writeFunction(String.format("BEQ 6"));
 			//Tailles différentes : FALSE
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
@@ -904,7 +904,7 @@ public class TigerTranslator {
 
 
 			//Premier caractere str1 différent de nul (A)
-			writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerLeft, registerRight, regOp));
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
 			writer.writeFunction(String.format("BEQ 6"));//A voir
 			// Ici str1-str2 != 0
 			writer.writeFunction(String.format("LDW R%d, #1", registerIndex));
@@ -942,7 +942,7 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat est nul, on peut sauter à la fin du *and*
-			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
@@ -958,7 +958,7 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
-			this.writer.writeFunction(String.format("BEQ 2"));
+			this.writer.writeFunction(String.format("BEQ 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
 
@@ -1347,7 +1347,7 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `else` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", elseLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
@@ -1364,7 +1364,7 @@ public class TigerTranslator {
 			String endifLabel = this.labelGenerator.getLabel(tree, "end");
 
 			// On saute au `endif` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BNE 2"));
+			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
@@ -1385,7 +1385,7 @@ public class TigerTranslator {
 		this.writer.writeFunction(testLabel, "NOP");
 		this.translate(tree.getChild(0), testRegister);
 		this.writer.writeFunction(String.format("TST R%d", testRegister));
-		this.writer.writeFunction(String.format("BNE 2"));
+		this.writer.writeFunction(String.format("BNE 4"));
 		this.writer.writeFunction(String.format("JEA @%s", endLabel));
 
 		// Corps de la boucle
@@ -1413,7 +1413,7 @@ public class TigerTranslator {
 		this.writeEntryFunction(table, label);
 		this.descend();
 		for (Map.Entry<String, FunctionOrVariable> entry: table.getFunctionsAndVariables()) {
-			this.writer.writeFunction(String.format("ADQ 2, SP // Empilage de l'indice de boucle"));
+			this.writer.writeFunction(String.format("ADQ -2, SP // Empilage de l'indice de boucle"));
 			((Variable) entry.getValue()).translate(true);
 		}
 		int register1 = this.registerManager.provideRegister();
@@ -1422,8 +1422,8 @@ public class TigerTranslator {
 		this.writer.writeFunction(String.format("LDW R%d, (BP)6", register1));
 		this.writer.writeFunction(String.format("STW R%d, (BP)-4 // Initialisation de l'indice de boucle", register1));
 		this.writer.writeFunction(String.format("LDW R%d, (BP)4", register2));
-		this.writer.writeFunction(String.format(testLabel, "CMP R%d, R%d", register2, register1));
-		this.writer.writeFunction(String.format("BGE 2", register2, register1));
+		this.writer.writeFunction(testLabel, String.format("CMP R%d, R%d", register2, register1));
+		this.writer.writeFunction(String.format("BGE 4", register2, register1));
 		this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		this.translate(tree.getChild(3), register3);
 		this.writer.writeFunction(String.format("ADQ 1, R%d", register1));

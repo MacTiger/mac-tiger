@@ -587,6 +587,7 @@ public class SymbolTable {
 		Variable index = new Variable();
 		index.configure(false);
 		index.setType(SymbolTable.intType);
+		index.setOffset(-wordSize);
 		table.functionsAndVariables.set(tree.getChild(0).toString(), index); // Ajout de la variable de boucle for dans sa table de symbole
 		this.checkType(tree.getChild(1), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne inférieure du for
 		this.checkType(tree.getChild(2), notifier, SymbolTable.intType);	// Rempli la table des symboles pour la borne supérieure du for
