@@ -1026,6 +1026,10 @@ public class TigerTranslator {
 		int registerB=registerManager.provideRegister();
 		translate(tree.getChild(1), registerB);
 
+		// Vérification d'erreur à l'exécution : cas d'une division par zéro
+		this.writer.writeFunction("BNE 2  // Vérification qu'on ne divise pas par zéro");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
 		/*
 		//Met A dans registerAsave : dernier registre réservé
 		int registerAsave=registerManager.provideRegister();
@@ -1306,7 +1310,21 @@ public class TigerTranslator {
 		int registerIndexOfArray = this.registerManager.provideRegister();
 		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
 
-		this.writer.writeFunction(String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		// Tests sur l'indice du tableau : negativeIndex
+		this.writer.writeFunction("BGE 4  // Vérifie que l'indice est positif");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+		// Tests sur l'indice du tableau : outOfBound Exception
+		int registerOfArraySize = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)-2  // Charge la taille du tableau",registerOfArraySize, registerIndex));
+		this.writer.writeFunction(String.format("CMP R%d, R%d ",registerOfArraySize, registerIndexOfArray));
+		String label = this.labelGenerator.getLabel(tree, "post_outOfBoundException");  // Besoin d'un label pour les sauts, car l'instruction freeRegister génère un nombre non fixe d'instructions
+		this.writer.writeFunction(String.format("BGT %s-$-2  // Vérifie que l'indice demandé est plus petit que la taille du tableau", label));
+		this.registerManager.freeRegister();
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+
+		this.writer.writeFunction(label, String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
 		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
 
 		this.registerManager.freeRegister();
@@ -1330,6 +1348,12 @@ public class TigerTranslator {
 	private void translateFIELDAdress(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
 		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
+
+		// Teste l'erreur à l'exécution : accès à un champ d'un record valant nil
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #-NIL", registerIndex, registerIndex));
+		this.writer.writeFunction("BNE 2  // Teste l'erreur à l'exécution : Si la structure vaut NIL");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #NIL  // Restaure la valeur de l'adresse de la structure après le test", registerIndex, registerIndex));
 
 		Record record = (Record) SymbolTable.treeTypeHashMap.get(exp);   // Récupère le type de exp
 		Namespace<Variable> fields = record.getNamespace();
