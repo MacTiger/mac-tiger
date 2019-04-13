@@ -1,0 +1,9 @@
+(
+  print(chr(33));
+  print("\n");
+  print(chr(48));
+  print("\n");
+  print(chr(57));
+  print("\n");
+  print(chr(126))
+)
