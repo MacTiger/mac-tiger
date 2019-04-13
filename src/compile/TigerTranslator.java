@@ -55,357 +55,354 @@ public class TigerTranslator {
 		this.registerManager = new RegisterManager(this.writer);
 		this.heapBase = 4098;
 		this.strings = new HashMap<String, Integer>();
-		this.writeHeader();
 		this.writeMainAndFunction(tree);
 	}
 
-	private void writeHeader() {
-		for (Map.Entry<String, FunctionOrVariable> entry: this.currentTDS.getParent().getFunctionsAndVariables()) {
-			String name = entry.getKey();
-			String label = this.labelGenerator.getLabel(((Function) entry.getValue()).getSymbolTable(), name);
-			switch (name) {
-				case "chr": {
-					// TODO: débugger cette fonction
-					this.writer.writeHeader(label, "LDW R2, (SP)2");
+	private void writeHeader(String name, Function function) {
+		String label = this.labelGenerator.getLabel(function.getSymbolTable(), name);
+		function.setWritten();
+		switch (name) {
+			case "chr": {
+				// TODO: débugger cette fonction
+				this.writer.writeHeader(label, "LDW R2, (SP)2");
 
-					// Si on donne un nombre strictement négatif, sauter en (*)
-					this.writer.writeHeader("BLW 20");
-					this.writer.writeHeader("LDQ 127, R1");
-					this.writer.writeHeader("CMP R1, R2");
+				// Si on donne un nombre strictement négatif, sauter en (*)
+				this.writer.writeHeader("BLW 20");
+				this.writer.writeHeader("LDQ 127, R1");
+				this.writer.writeHeader("CMP R1, R2");
 
-					// Si on donne un nombre plus grand ou égal à 128, sauter en (*)
-					this.writer.writeHeader("BLW 14");
+				// Si on donne un nombre plus grand ou égal à 128, sauter en (*)
+				this.writer.writeHeader("BLW 14");
 
-					// Si le nombre est valide, on ajoute la chaîne de (un seul) caractère dans le tas
-					this.writer.writeHeader("LDW R1, #1");
-					this.writer.writeHeader("STW R1, (HP)+");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("SWB R2, R2");
-					this.writer.writeHeader("STW R2, (HP)+");
-					this.writer.writeHeader("RTS");
+				// Si le nombre est valide, on ajoute la chaîne de (un seul) caractère dans le tas
+				this.writer.writeHeader("LDW R1, #1");
+				this.writer.writeHeader("STW R1, (HP)+");
+				this.writer.writeHeader("LDW R0, HP");
+				this.writer.writeHeader("SWB R2, R2");
+				this.writer.writeHeader("STW R2, (HP)+");
+				this.writer.writeHeader("RTS");
 
-					// (1) Termine le programme
-					this.writer.writeHeader("TRP #EXIT_EXC");
-					break;
-				}
-				case "concat": {
-					String str1 = "R1";
-					String str2 = "R2";
-					String str3 = "R0";
-					String size1 = "R3";
-					String size2 = "R4";
-					String size3 = "R5";
-					String character = "R6"; // Code ASCII du caractère courant
-					String inputPointer = "R7"; // Adresse du caractère d'entrée courant
-					String outputPointer = "HP"; // Là où on va écrire le prochain caractère
-					String word = "R8"; // 0 si on en est au premier mot, 1 sinon
-		            String rest = "R9"; // Reste dans les divisions
-		            String two = "R10";
-
-					// On empile dans le tas la taille du nouveau string
-					this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
-					this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
-					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size1, str1));
-					this.writer.writeHeader(String.format("LDW %s, (%s)-2", size2, str2));
-					this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
-					this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
-
-					// Initialisation des registres
-		            this.writer.writeHeader(String.format("LDW %s, #0", word));
-					this.writer.writeHeader(String.format("LDW %s, #2", two));
-					this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
-					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
-
-					// Saute en (3a)
-					this.writer.writeHeader(String.format("BMP 8"));
-
-					// (1) Extraction d'un caractère
-					this.writer.writeHeader(String.format("LDB %s, (%s)+", character, inputPointer));
-					this.writer.writeHeader(String.format("BMP 6")); // Saute en (3b)
-
-					// (2) Empile le caractère courant
-					this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
-					this.writer.writeHeader(String.format("BMP 0")); // Saute en (3a)
-
-					// (3a) Empiler un mot (sauf le \0)
-					this.writer.writeHeader(String.format("BMP -10")); // Saute en (1)
-					// (3b)
-					this.writer.writeHeader(String.format("TST %s", character));
-					this.writer.writeHeader(String.format("BEQ 2", character)); // Si character = 0 : saute en (4a)
-					this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
-
-					// (4a) Passer au mot suivant ou terminer
-					this.writer.writeHeader(String.format("TST %s", word));
-					this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
-					// (4b) word = 1, il faut empiler \0
-					this.writer.writeHeader(String.format("LDQ 0, %s", character));
-					this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
-					this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
-					this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
-					this.writer.writeHeader(String.format("TST %s", rest));
-					this.writer.writeHeader(String.format("BNE -12")); // Saute en (4b)
-					this.writer.writeHeader(String.format("RTS"));
-					// (4c) word = 0
-					this.writer.writeHeader(String.format("ADQ 1, %s", word));
-					this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
-					this.writer.writeHeader(String.format("BMP -32")); // Saute en (3a)
-
-					break;
-				}
-				case "exit": {
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("TRP #EXIT_EXC");
-					break;
-				}
-				case "getchar": {
-					this.writer.writeHeader(label, "LDQ 1, R0");
-					this.writer.writeHeader("STW R0, (HP)+");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("TRP #READ_EXC");
-					// this.writer.writeHeader("LDW R0, (HP)");
-					// this.writer.writeHeader("LDW R1, #0xFF00");
-					// this.writer.writeHeader("AND R1, R0, R0");
-					// this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
-					// this.writer.writeHeader("STW R0, (HP)");
-					// this.writer.writeHeader("LDW R0, HP");
-					// this.writer.writeHeader("ADQ 2, HP");
-					// this.writer.writeHeader("BMP 10"); // Saute en (**)
-					// this.writer.writeHeader("LDW R0, HP"); // (*)
-					// this.writer.writeHeader("ADQ -2, HP");
-					// this.writer.writeHeader("LDQ 0, R1");
-					// this.writer.writeHeader("STW R1, (HP)");
-					// this.writer.writeHeader("ADQ 4, HP");
-					this.writer.writeHeader("RTS"); // (**)
-					break;
-				}
-				case "not": {
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("BEQ 6");
-					this.writer.writeHeader("LDW R0, #0");
-					this.writer.writeHeader("BMP 4");
-					this.writer.writeHeader("LDW R0, #1");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "ord": {
-					this.writer.writeHeader(label, "LDW R1, (SP)2");
-					this.writer.writeHeader("LDW R0, (R1)-2");
-					this.writer.writeHeader("BNE 4");
-					this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
-					this.writer.writeHeader("RTS");
-					this.writer.writeHeader("LDB R0, (R1)");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "print": {
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("LDW R1, #WRITE_EXC");
-					this.writer.writeHeader("TRP R1");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "printi": {
-					this.writer.writeHeader(label, "LDW R1, (SP)2");
-					this.writer.writeHeader("LDW R2, #WRITE_EXC");
-					this.writer.writeHeader("LDW R3, SP");
-					this.writer.writeHeader("LDQ 10, R4");
-					this.writer.writeHeader("LDQ 0, R0");
-					this.writer.writeHeader("STB R0, -(SP)");
-					this.writer.writeHeader("LDW R0, R1");
-					this.writer.writeHeader("BGE 28");
-					this.writer.writeHeader("LDQ 45, R0");
-					this.writer.writeHeader("STB R0, -(SP)");
-					this.writer.writeHeader("LDW R0, SP");
-					this.writer.writeHeader("TRP R2");
-					this.writer.writeHeader("ADQ 1, SP");
-					this.writer.writeHeader("LDW R0, #-32768");
-					this.writer.writeHeader("CMP R0, R1");
-					this.writer.writeHeader("BNE 8");
-					this.writer.writeHeader("LDQ 56, R0");
-					this.writer.writeHeader("STB R0, -(SP)");
-					this.writer.writeHeader("LDW R1, #-3276");
-					this.writer.writeHeader("NEG R1, R1");
-					this.writer.writeHeader("LDW R0, R1");
-					this.writer.writeHeader("DIV R0, R4, R1");
-					this.writer.writeHeader("ADQ 48, R0");
-					this.writer.writeHeader("STB R0, -(SP)");
-					this.writer.writeHeader("TST R1");
-					this.writer.writeHeader("BNE -12");
-					this.writer.writeHeader("LDW R0, SP");
-					this.writer.writeHeader("TRP R2");
-					this.writer.writeHeader("LDW SP, R3");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "read": {
-					/*R0 : adresse du prochain byte lu
-					* R1 : résultat (entier)
-					* R2 : working registory
-					* R3 : wording registory 2
-					* R4 : booleen indiquant si l'entier lu doit être négatif
-					* */
-					this.writer.writeHeader(label, "LDW R0, HP");  // La lecture sera mise dans le tas, mais pas réservée (pourra être écrasée après cette fonction)
-					this.writer.writeHeader("TRP #READ_EXC");
-
-					this.writer.writeHeader("LDQ 0, R1  // Initialise le résultat à 0");   // Initialise le registre de résultat
-					this.writer.writeHeader("LDQ 0, R4  // Initialise l'information : nombre négatif");   // Permettra de conserver l'information : "l'entier lu doit être négatif"
-
-					// Récupère le premier caractère lu
-					this.writer.writeHeader("LDB R2, (R0)+  // Récupère un caractère");
-					this.writer.writeHeader("BEQ 38"); // Saute en fin de fonction si R1 vaut zéro   //TODO : calculer le jump
-
-					// Gère le cas où le premier caractère est un signe moins :
-					this.writer.writeHeader("LDW R3, R2");
-					this.writer.writeHeader("ADQ -45, R3  // Vérifie si le premier caractère est un signe moins");
-					this.writer.writeHeader("BNE 6");   // saute directement dans la boucle si le caractère n'est pas moins  //TODO : calculer le jump
-					this.writer.writeHeader("LDQ 1, R4");
-
-					// Parcours des autres caractères lus jusqu'à trouver un \0 (NULL, 0 en ASCII)
-					this.writer.writeHeader("LDB R2, (R0)+  // Parcours des autres caractères lus jusqu'à trouver un \\0 : Récupère un caractère");
-					this.writer.writeHeader("BEQ 20"); // Saute en fin de fonction  //TODO : calculer le jump
-
-					// Teste si le caractère est un chiffre :
-					this.writer.writeHeader("ADQ -48, R2  // Passe du code ASCII à un entier"); // Début boucle parcours
-					this.writer.writeHeader("BLW 16  // Teste la borne inférieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
-					this.writer.writeHeader("ADI R2, R3, #-10");
-					this.writer.writeHeader("BGE 10  // Teste la borne supérieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
-
-					// Ajoute le chiffre au résultat :
-					this.writer.writeHeader("LDQ 10, R3   // Décalage des unités");
-					this.writer.writeHeader("MUL R1, R3, R1   // Décalage des unités");
-					this.writer.writeHeader("ADD R2, R1, R1   // Ajout du chiffre lu au résultat");
-
-
-					this.writer.writeHeader("JMP #-22   // Boucle sur les caractères lus"); //TODO : jump au début de boucle parcours
-
-					// Gére le passage au négatif si l'entier doit être négatif :
-					this.writer.writeHeader("TST R4  // Vérifie si l'entier doit être négatif");
-					this.writer.writeHeader("BEQ 2");
-					this.writer.writeHeader("NEG R1, R1   // Charge l'entier lu dans R0");
-
-					this.writer.writeHeader("LDW R0, R1   // Charge l'entier lu dans R0");
-
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				case "size": {
-					this.writer.writeHeader(label, "LDW R0, (SP)2");
-					this.writer.writeHeader("LDW R0, (R0)-2");
-					this.writer.writeHeader("RTS");
-					break;
-				}
-				//On suppose i >= 0 et n>=0
-				case "substring":{
-
-					//Adresse str
-					this.writer.writeHeader(label,"LDW R1,(SP)6");
-					//Numéro de la lettre i
-					this.writer.writeHeader("LDW R3,(SP)4");
-					//Lg demandée m
-					this.writer.writeHeader("LDW R4,(SP)2");
-
-
-					//Test préliminaire i et n
-					this.writer.writeHeader("TST R3");
-					this.writer.writeHeader("BGE 12");//Go fin prog i<0
-					this.writer.writeHeader("LDW R5, #0 ");
-					this.writer.writeHeader("STW R5, (HP)+ ");
-					this.writer.writeHeader("LDW R0, HP" );
-					this.writer.writeHeader("STW R5, (HP)+");
-					this.writer.writeHeader("RTS");//FIN
-
-					this.writer.writeHeader("TST R4");
-					this.writer.writeHeader("BGE 12");//Go fin prog n<0
-					this.writer.writeHeader("LDW R5, #0 ");
-					this.writer.writeHeader("STW R5, (HP)+");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("STW R5, (HP)+");
-					this.writer.writeHeader("RTS");//FIN
-
-
-					//Check les longueurs
-					this.writer.writeHeader("ADQ -2,R1");
-					this.writer.writeHeader("LDW R2,(R1)");
-					this.writer.writeHeader("ADQ 2,R1");
-					this.writer.writeHeader("ADD R3,R4,R5");
-					this.writer.writeHeader("CMP R2,R5");
-					this.writer.writeHeader("BGE 12");//FIN
-					this.writer.writeHeader("LDW R5, #0");
-					this.writer.writeHeader("STW R5, (HP)+");
-					this.writer.writeHeader("LDW R0, HP");
-					this.writer.writeHeader("STW R5, (HP)+");
-					this.writer.writeHeader("RTS");//FIN
-					//Si n-(i+m) < 0 STOP
-
-
-					//Fait i %2 => quotient : nombre de mots à "sauter"
-					//Reste = nb d'octet à sauter (0 ou 1)
-					this.writer.writeHeader("LDW R2,#2");
-					this.writer.writeHeader("DIV R3,R2,R2");
-					this.writer.writeHeader("LDW R5, #2");
-					this.writer.writeHeader("MUL R2,R5,R2");
-					this.writer.writeHeader("ADD R2,R1,R1");
-					//Ajoute quotient*2 à adresse str
-
-
-					//Met lg en HP puis incrémente HP
-					// R0 a @ du premier caractere
-					this.writer.writeHeader("STW R4,(HP)");
-					this.writer.writeHeader("ADQ 2,HP");
-					this.writer.writeHeader("LDW R0,HP");
-
-
-					this.writer.writeHeader("TST R3");
-					this.writer.writeHeader("BEQ 14");
-					//SI R3=1, on décalle de 1 octet pour écrire le suivant
-					this.writer.writeHeader("ADQ 1,R1");
-					this.writer.writeHeader("LDB R5,(R1)");
-					this.writer.writeHeader("STB R5,(HP)");
-					this.writer.writeHeader("ADQ 1,HP");
-					this.writer.writeHeader("ADQ 1,R1");
-					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
-
-
-					//Ici R3=0
-					//R4 nb de carac à recopier
-					this.writer.writeHeader("BEQ 14 ");
-					this.writer.writeHeader("LDB R5,(R1) ");
-					this.writer.writeHeader("STB R5,(HP)");
-					this.writer.writeHeader("ADQ 1,HP");
-					this.writer.writeHeader("ADQ 1,R1");
-					this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
-					this.writer.writeHeader("BNE -12");
-
-
-
-					//On a tout écrit : test HP : pair ou impair ?
-					this.writer.writeHeader("LDW R2,#2");
-					this.writer.writeHeader("LDW R3,HP");
-					this.writer.writeHeader("DIV HP,R2,R2");
-					this.writer.writeHeader("TST HP");
-					this.writer.writeHeader("BEQ 10");
-					//Taille de Hp est impaire
-					this.writer.writeHeader("LDW HP,R3");
-					this.writer.writeHeader("LDB R3,#0");
-					this.writer.writeHeader("STB R3,(HP)");
-					this.writer.writeHeader("ADQ 1,HP");
-
-					//Taille de Hp est paire
-					this.writer.writeHeader("LDW HP,R3");
-					this.writer.writeHeader("LDW R3,#0");
-					this.writer.writeHeader("STW R3,(HP)");
-					this.writer.writeHeader("ADQ 2,HP");
-					this.writer.writeHeader("RTS");
-					break;
-
-				}
-				default: {
-					this.writer.writeHeader(label, "RTS"); // TODO
-					break;
-				}
+				// (1) Termine le programme
+				this.writer.writeHeader("TRP #EXIT_EXC");
+				break;
 			}
-			this.writer.writeHeader();
+			case "concat": {
+				String str1 = "R1";
+				String str2 = "R2";
+				String str3 = "R0";
+				String size1 = "R3";
+				String size2 = "R4";
+				String size3 = "R5";
+				String character = "R6"; // Code ASCII du caractère courant
+				String inputPointer = "R7"; // Adresse du caractère d'entrée courant
+				String outputPointer = "HP"; // Là où on va écrire le prochain caractère
+				String word = "R8"; // 0 si on en est au premier mot, 1 sinon
+	            String rest = "R9"; // Reste dans les divisions
+	            String two = "R10";
+
+				// On empile dans le tas la taille du nouveau string
+				this.writer.writeHeader(label, String.format("LDW %s, (SP)4", str1));
+				this.writer.writeHeader(String.format("LDW %s, (SP)2", str2));
+				this.writer.writeHeader(String.format("LDW %s, (%s)-2", size1, str1));
+				this.writer.writeHeader(String.format("LDW %s, (%s)-2", size2, str2));
+				this.writer.writeHeader(String.format("ADD %s, %s, %s", size1, size2, size3));
+				this.writer.writeHeader(String.format("STW %s, (%s)+", size3, outputPointer));
+
+				// Initialisation des registres
+	            this.writer.writeHeader(String.format("LDW %s, #0", word));
+				this.writer.writeHeader(String.format("LDW %s, #2", two));
+				this.writer.writeHeader(String.format("LDW %s, %s", str3, outputPointer));
+				this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str1));
+
+				// Saute en (3a)
+				this.writer.writeHeader(String.format("BMP 8"));
+
+				// (1) Extraction d'un caractère
+				this.writer.writeHeader(String.format("LDB %s, (%s)+", character, inputPointer));
+				this.writer.writeHeader(String.format("BMP 6")); // Saute en (3b)
+
+				// (2) Empile le caractère courant
+				this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
+				this.writer.writeHeader(String.format("BMP 0")); // Saute en (3a)
+
+				// (3a) Empiler un mot (sauf le \0)
+				this.writer.writeHeader(String.format("BMP -10")); // Saute en (1)
+				// (3b)
+				this.writer.writeHeader(String.format("TST %s", character));
+				this.writer.writeHeader(String.format("BEQ 2", character)); // Si character = 0 : saute en (4a)
+				this.writer.writeHeader(String.format("BMP -12")); // Saute en (2)
+
+				// (4a) Passer au mot suivant ou terminer
+				this.writer.writeHeader(String.format("TST %s", word));
+				this.writer.writeHeader(String.format("BEQ 14")); // Si word = 0 : saute en (4c)
+				// (4b) word = 1, il faut empiler \0
+				this.writer.writeHeader(String.format("LDQ 0, %s", character));
+				this.writer.writeHeader(String.format("STB %s, (%s)+", character, outputPointer));
+				this.writer.writeHeader(String.format("LDW %s, %s", rest, outputPointer));
+				this.writer.writeHeader(String.format("DIV %s, %s, %s", rest, two, rest));
+				this.writer.writeHeader(String.format("TST %s", rest));
+				this.writer.writeHeader(String.format("BNE -12")); // Saute en (4b)
+				this.writer.writeHeader(String.format("RTS"));
+				// (4c) word = 0
+				this.writer.writeHeader(String.format("ADQ 1, %s", word));
+				this.writer.writeHeader(String.format("LDW %s, %s", inputPointer, str2));
+				this.writer.writeHeader(String.format("BMP -32")); // Saute en (3a)
+
+				break;
+			}
+			case "exit": {
+				this.writer.writeHeader(label, "LDW R0, (SP)2");
+				this.writer.writeHeader("TRP #EXIT_EXC");
+				break;
+			}
+			case "getchar": {
+				this.writer.writeHeader(label, "LDQ 1, R0");
+				this.writer.writeHeader("STW R0, (HP)+");
+				this.writer.writeHeader("LDW R0, HP");
+				this.writer.writeHeader("TRP #READ_EXC");
+				this.writer.writeHeader("LDW R0, (HP)");
+				this.writer.writeHeader("LDW R1, #0xFF00");
+				this.writer.writeHeader("AND R1, R0, R0");
+				this.writer.writeHeader("BEQ 8"); // Saute en (*) si R1 vaut zéro
+				this.writer.writeHeader("STW R0, (HP)");
+				this.writer.writeHeader("LDW R0, HP");
+				this.writer.writeHeader("ADQ 2, HP");
+				this.writer.writeHeader("BMP 10"); // Saute en (**)
+				this.writer.writeHeader("LDW R0, HP"); // (*)
+				this.writer.writeHeader("ADQ -2, HP");
+				this.writer.writeHeader("LDQ 0, R1");
+				this.writer.writeHeader("STW R1, (HP)");
+				this.writer.writeHeader("ADQ 4, HP");
+				this.writer.writeHeader("RTS"); // (**)
+				break;
+			}
+			case "not": {
+				this.writer.writeHeader(label, "LDW R0, (SP)2");
+				this.writer.writeHeader("BEQ 6");
+				this.writer.writeHeader("LDW R0, #0");
+				this.writer.writeHeader("BMP 4");
+				this.writer.writeHeader("LDW R0, #1");
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			case "ord": {
+				this.writer.writeHeader(label, "LDW R1, (SP)2");
+				this.writer.writeHeader("LDW R0, (R1)-2");
+				this.writer.writeHeader("BNE 4");
+				this.writer.writeHeader("LDQ -1, R0"); // Renvoit -1 si chaîne vide
+				this.writer.writeHeader("RTS");
+				this.writer.writeHeader("LDB R0, (R1)");
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			case "print": {
+				this.writer.writeHeader(label, "LDW R0, (SP)2");
+				this.writer.writeHeader("LDW R1, #WRITE_EXC");
+				this.writer.writeHeader("TRP R1");
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			case "printi": {
+				this.writer.writeHeader(label, "LDW R1, (SP)2");
+				this.writer.writeHeader("LDW R2, #WRITE_EXC");
+				this.writer.writeHeader("LDW R3, SP");
+				this.writer.writeHeader("LDQ 10, R4");
+				this.writer.writeHeader("LDQ 0, R0");
+				this.writer.writeHeader("STB R0, -(SP)");
+				this.writer.writeHeader("LDW R0, R1");
+				this.writer.writeHeader("BGE 28");
+				this.writer.writeHeader("LDQ 45, R0");
+				this.writer.writeHeader("STB R0, -(SP)");
+				this.writer.writeHeader("LDW R0, SP");
+				this.writer.writeHeader("TRP R2");
+				this.writer.writeHeader("ADQ 1, SP");
+				this.writer.writeHeader("LDW R0, #-32768");
+				this.writer.writeHeader("CMP R0, R1");
+				this.writer.writeHeader("BNE 8");
+				this.writer.writeHeader("LDQ 56, R0");
+				this.writer.writeHeader("STB R0, -(SP)");
+				this.writer.writeHeader("LDW R1, #-3276");
+				this.writer.writeHeader("NEG R1, R1");
+				this.writer.writeHeader("LDW R0, R1");
+				this.writer.writeHeader("DIV R0, R4, R1");
+				this.writer.writeHeader("ADQ 48, R0");
+				this.writer.writeHeader("STB R0, -(SP)");
+				this.writer.writeHeader("TST R1");
+				this.writer.writeHeader("BNE -12");
+				this.writer.writeHeader("LDW R0, SP");
+				this.writer.writeHeader("TRP R2");
+				this.writer.writeHeader("LDW SP, R3");
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			case "read": {
+				/*R0 : adresse du prochain byte lu
+				* R1 : résultat (entier)
+				* R2 : working registory
+				* R3 : wording registory 2
+				* R4 : booleen indiquant si l'entier lu doit être négatif
+				* */
+				this.writer.writeHeader(label, "LDW R0, HP");  // La lecture sera mise dans le tas, mais pas réservée (pourra être écrasée après cette fonction)
+				this.writer.writeHeader("TRP #READ_EXC");
+
+				this.writer.writeHeader("LDQ 0, R1  // Initialise le résultat à 0");   // Initialise le registre de résultat
+				this.writer.writeHeader("LDQ 0, R4  // Initialise l'information : nombre négatif");   // Permettra de conserver l'information : "l'entier lu doit être négatif"
+
+				// Récupère le premier caractère lu
+				this.writer.writeHeader("LDB R2, (R0)+  // Récupère un caractère");
+				this.writer.writeHeader("BEQ 38"); // Saute en fin de fonction si R1 vaut zéro   //TODO : calculer le jump
+
+				// Gère le cas où le premier caractère est un signe moins :
+				this.writer.writeHeader("LDW R3, R2");
+				this.writer.writeHeader("ADQ -45, R3  // Vérifie si le premier caractère est un signe moins");
+				this.writer.writeHeader("BNE 6");   // saute directement dans la boucle si le caractère n'est pas moins  //TODO : calculer le jump
+				this.writer.writeHeader("LDQ 1, R4");
+
+				// Parcours des autres caractères lus jusqu'à trouver un \0 (NULL, 0 en ASCII)
+				this.writer.writeHeader("LDB R2, (R0)+  // Parcours des autres caractères lus jusqu'à trouver un \\0 : Récupère un caractère");
+				this.writer.writeHeader("BEQ 20"); // Saute en fin de fonction  //TODO : calculer le jump
+
+				// Teste si le caractère est un chiffre :
+				this.writer.writeHeader("ADQ -48, R2  // Passe du code ASCII à un entier"); // Début boucle parcours
+				this.writer.writeHeader("BLW 16  // Teste la borne inférieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
+				this.writer.writeHeader("ADI R2, R3, #-10");
+				this.writer.writeHeader("BGE 10  // Teste la borne supérieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
+
+				// Ajoute le chiffre au résultat :
+				this.writer.writeHeader("LDQ 10, R3   // Décalage des unités");
+				this.writer.writeHeader("MUL R1, R3, R1   // Décalage des unités");
+				this.writer.writeHeader("ADD R2, R1, R1   // Ajout du chiffre lu au résultat");
+
+
+				this.writer.writeHeader("JMP #-22   // Boucle sur les caractères lus"); //TODO : jump au début de boucle parcours
+
+				// Gére le passage au négatif si l'entier doit être négatif :
+				this.writer.writeHeader("TST R4  // Vérifie si l'entier doit être négatif");
+				this.writer.writeHeader("BEQ 2");
+				this.writer.writeHeader("NEG R1, R1   // Charge l'entier lu dans R0");
+
+				this.writer.writeHeader("LDW R0, R1   // Charge l'entier lu dans R0");
+
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			case "size": {
+				this.writer.writeHeader(label, "LDW R0, (SP)2");
+				this.writer.writeHeader("LDW R0, (R0)-2");
+				this.writer.writeHeader("RTS");
+				break;
+			}
+			//On suppose i >= 0 et n>=0
+			case "substring":{
+
+				//Adresse str
+				this.writer.writeHeader(label,"LDW R1,(SP)6");
+				//Numéro de la lettre i
+				this.writer.writeHeader("LDW R3,(SP)4");
+				//Lg demandée m
+				this.writer.writeHeader("LDW R4,(SP)2");
+
+
+				//Test préliminaire i et n
+				this.writer.writeHeader("TST R3");
+				this.writer.writeHeader("BGE 12");//Go fin prog i<0
+				this.writer.writeHeader("LDW R5, #0 ");
+				this.writer.writeHeader("STW R5, (HP)+ ");
+				this.writer.writeHeader("LDW R0, HP" );
+				this.writer.writeHeader("STW R5, (HP)+");
+				this.writer.writeHeader("RTS");//FIN
+
+				this.writer.writeHeader("TST R4");
+				this.writer.writeHeader("BGE 12");//Go fin prog n<0
+				this.writer.writeHeader("LDW R5, #0 ");
+				this.writer.writeHeader("STW R5, (HP)+");
+				this.writer.writeHeader("LDW R0, HP");
+				this.writer.writeHeader("STW R5, (HP)+");
+				this.writer.writeHeader("RTS");//FIN
+
+
+				//Check les longueurs
+				this.writer.writeHeader("ADQ -2,R1");
+				this.writer.writeHeader("LDW R2,(R1)");
+				this.writer.writeHeader("ADQ 2,R1");
+				this.writer.writeHeader("ADD R3,R4,R5");
+				this.writer.writeHeader("CMP R2,R5");
+				this.writer.writeHeader("BGE 12");//FIN
+				this.writer.writeHeader("LDW R5, #0");
+				this.writer.writeHeader("STW R5, (HP)+");
+				this.writer.writeHeader("LDW R0, HP");
+				this.writer.writeHeader("STW R5, (HP)+");
+				this.writer.writeHeader("RTS");//FIN
+				//Si n-(i+m) < 0 STOP
+
+
+				//Fait i %2 => quotient : nombre de mots à "sauter"
+				//Reste = nb d'octet à sauter (0 ou 1)
+				this.writer.writeHeader("LDW R2,#2");
+				this.writer.writeHeader("DIV R3,R2,R2");
+				this.writer.writeHeader("LDW R5, #2");
+				this.writer.writeHeader("MUL R2,R5,R2");
+				this.writer.writeHeader("ADD R2,R1,R1");
+				//Ajoute quotient*2 à adresse str
+
+
+				//Met lg en HP puis incrémente HP
+				// R0 a @ du premier caractere
+				this.writer.writeHeader("STW R4,(HP)");
+				this.writer.writeHeader("ADQ 2,HP");
+				this.writer.writeHeader("LDW R0,HP");
+
+
+				this.writer.writeHeader("TST R3");
+				this.writer.writeHeader("BEQ 14");
+				//SI R3=1, on décalle de 1 octet pour écrire le suivant
+				this.writer.writeHeader("ADQ 1,R1");
+				this.writer.writeHeader("LDB R5,(R1)");
+				this.writer.writeHeader("STB R5,(HP)");
+				this.writer.writeHeader("ADQ 1,HP");
+				this.writer.writeHeader("ADQ 1,R1");
+				this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+
+
+				//Ici R3=0
+				//R4 nb de carac à recopier
+				this.writer.writeHeader("BEQ 14 ");
+				this.writer.writeHeader("LDB R5,(R1) ");
+				this.writer.writeHeader("STB R5,(HP)");
+				this.writer.writeHeader("ADQ 1,HP");
+				this.writer.writeHeader("ADQ 1,R1");
+				this.writer.writeHeader("ADQ -1,R4");//-1 carac à recopier
+				this.writer.writeHeader("BNE -12");
+
+
+
+				//On a tout écrit : test HP : pair ou impair ?
+				this.writer.writeHeader("LDW R2,#2");
+				this.writer.writeHeader("LDW R3,HP");
+				this.writer.writeHeader("DIV HP,R2,R2");
+				this.writer.writeHeader("TST HP");
+				this.writer.writeHeader("BEQ 10");
+				//Taille de Hp est impaire
+				this.writer.writeHeader("LDW HP,R3");
+				this.writer.writeHeader("LDB R3,#0");
+				this.writer.writeHeader("STB R3,(HP)");
+				this.writer.writeHeader("ADQ 1,HP");
+
+				//Taille de Hp est paire
+				this.writer.writeHeader("LDW HP,R3");
+				this.writer.writeHeader("LDW R3,#0");
+				this.writer.writeHeader("STW R3,(HP)");
+				this.writer.writeHeader("ADQ 2,HP");
+				this.writer.writeHeader("RTS");
+				break;
+
+			}
+			default: {
+				this.writer.writeHeader(label, "RTS"); // TODO
+				break;
+			}
 		}
+		this.writer.writeHeader();
 	}
 
 	private void writeMainAndFunction(Tree tree) {
@@ -1029,6 +1026,10 @@ public class TigerTranslator {
 		int registerB=registerManager.provideRegister();
 		translate(tree.getChild(1), registerB);
 
+		// Vérification d'erreur à l'exécution : cas d'une division par zéro
+		this.writer.writeFunction("BNE 4  // Vérification qu'on ne divise pas par zéro");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
 		/*
 		//Met A dans registerAsave : dernier registre réservé
 		int registerAsave=registerManager.provideRegister();
@@ -1045,15 +1046,17 @@ public class TigerTranslator {
 		registerManager.freeRegister();//Libère registerA
 	}
 
+	/** Appel d'une fonction
+	 * @param tree
+	 * @param registerIndex
+	 */
 	private void translateCALL(Tree tree, int registerIndex) {
-		/* Appel d'une fonction
-		 *
-		 */
 		//Récupère la tds de la fonction appelée
 		String name = tree.getChild(0).toString();
 		Function function = currentTDS.findTranslatedFunction(name);
-		//TODO : isNative ?
-		//TODO : => Ajoute le code de la fonction dans le header (writeHeader) (une seule fois !)
+		if (function.isNative() && !function.isWritten()){  // Fonction native et pas encore écrite
+			this.writeHeader(name, function);   // Ecrit le code de la fonction dans le header
+		}
 		SymbolTable table = function.getSymbolTable();
 
 
@@ -1307,7 +1310,21 @@ public class TigerTranslator {
 		int registerIndexOfArray = this.registerManager.provideRegister();
 		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
 
-		this.writer.writeFunction(String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		// Tests sur l'indice du tableau : negativeIndex
+		this.writer.writeFunction("BGE 4  // Vérifie que l'indice est positif");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+		// Tests sur l'indice du tableau : outOfBound Exception
+		int registerOfArraySize = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)-2  // Charge la taille du tableau",registerOfArraySize, registerIndex));
+		this.writer.writeFunction(String.format("CMP R%d, R%d ",registerOfArraySize, registerIndexOfArray));
+		String label = this.labelGenerator.getLabel(tree, "post_outOfBoundException");  // Besoin d'un label pour les sauts, car l'instruction freeRegister génère un nombre non fixe d'instructions
+		this.writer.writeFunction(String.format("BGT %s-$-2  // Vérifie que l'indice demandé est plus petit que la taille du tableau", label));
+		this.registerManager.freeRegister();
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+
+		this.writer.writeFunction(label, String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
 		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
 
 		this.registerManager.freeRegister();
@@ -1331,6 +1348,12 @@ public class TigerTranslator {
 	private void translateFIELDAdress(Tree tree, int registerIndex) {
 		Tree exp = tree.getChild(0);
 		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
+
+		// Teste l'erreur à l'exécution : accès à un champ d'un record valant nil
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #-NIL", registerIndex, registerIndex));
+		this.writer.writeFunction("BNE 4  // Teste l'erreur à l'exécution : Si la structure vaut NIL");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #NIL  // Restaure la valeur de l'adresse de la structure après le test", registerIndex, registerIndex));
 
 		Record record = (Record) SymbolTable.treeTypeHashMap.get(exp);   // Récupère le type de exp
 		Namespace<Variable> fields = record.getNamespace();
