@@ -267,7 +267,7 @@ public class TigerTranslator {
 					// Teste si le caractère est un chiffre :
 					this.writer.writeHeader("ADQ -48, R2  // Passe du code ASCII à un entier"); // Début boucle parcours
 					this.writer.writeHeader("BLW 16  // Teste la borne inférieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
-					this.writer.writeHeader("ADI R2, R3, #-9");
+					this.writer.writeHeader("ADI R2, R3, #-10");
 					this.writer.writeHeader("BGE 10  // Teste la borne supérieure"); // Saute en fin de fonction //TODO : jump à la fin du parcours
 
 					// Ajoute le chiffre au résultat :
