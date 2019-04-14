@@ -34,8 +34,4 @@ public class Array extends Type {
 		return this.type;
 	}
 
-	public boolean isPointer() {
-		return true;
-	}
-
 }

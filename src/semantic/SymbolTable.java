@@ -1,6 +1,10 @@
 package semantic;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.antlr.runtime.tree.Tree;
 
@@ -25,7 +29,7 @@ public class SymbolTable {
 	public static Type intType;
 	public static Type stringType;
 	private static SymbolTable root;
-	public static HashMap<Tree, Type> treeTypeHashMap = new HashMap<>();  //TODO : Lorsque SymbolTable sera séparé en deux classes, mettre cet attribut dans la classe qui aura une instance par programme à compiler
+	public static Map<Tree, Type> treeTypeHashMap;  //TODO : Lorsque SymbolTable sera séparé en deux classes, mettre cet attribut dans la classe qui aura une instance par programme à compiler
 
 	static {
 		Type nilPseudoType = new Record();
@@ -144,6 +148,7 @@ public class SymbolTable {
 		SymbolTable.intType = intType;
 		SymbolTable.stringType = stringType;
 		SymbolTable.root = root;
+		SymbolTable.treeTypeHashMap = new HashMap<Tree, Type>();
 	}
 
 	private SymbolTable parent;
@@ -980,7 +985,7 @@ public class SymbolTable {
 		}
 
 		for (SymbolTable symbolTable : this.children){ // Parcours des TDS filles de cette TDS
-			ArrayList symbolTableGraph = symbolTable.toGraphViz(nameOfThisTDS, i);
+			ArrayList<String> symbolTableGraph = symbolTable.toGraphViz(nameOfThisTDS, i);
 			// Récupère les graphes créés par la fille symbolTable :
 			graphLinks += "\n" + symbolTableGraph.get(2) ;  // Ajout des liaisons créées par symbolTable
 			allTypes += symbolTableGraph.get(3);

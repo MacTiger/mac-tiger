@@ -8,10 +8,4 @@ public abstract class Type extends Symbol {
 
 	public abstract ArrayList<String> makeCellGraphviz(String nameOfThisTDS, String numOfCell);
 
-	/**
-	 * Indique si cette variable est un pointeur ou non
-	 * @return
-	 */
-	public abstract boolean isPointer();
-
 }

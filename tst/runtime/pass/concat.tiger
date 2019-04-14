@@ -1,21 +1,53 @@
- (
-	print (concat ("ab", "cd"));
+let
+	var str := ""
+in
+	str := concat ("ab", "cd");
+	print (str);
 	print ("\n");
-	print (concat ("ab", "cde"));
+	printi (size (str));
 	print ("\n");
-	print (concat ("abc", "de"));
+	str := concat ("ab", "cde");
+	print (str);
 	print ("\n");
-	print (concat ("abc", "def"));
+	printi (size (str));
 	print ("\n");
-	print (concat ("", "a"));
+	str := concat ("abc", "de");
+	print (str);
 	print ("\n");
-	print (concat ("a", ""));
+	printi (size (str));
 	print ("\n");
-	print (concat ("", ""));
+	str := concat ("abc", "def");
+	print (str);
 	print ("\n");
-	print (concat (concat ("ab", "cd"),  "ef"));
+	printi (size (str));
 	print ("\n");
-	print (concat ("ab",  concat ("cd", "ef")));
+	str := concat ("", "a");
+	print (str);
 	print ("\n");
-	print (concat (concat ("ab", "cd"),  concat ("ef", "gh")))
-)
+	printi (size (str));
+	print ("\n");
+	str := concat ("a", "");
+	print (str);
+	print ("\n");
+	printi (size (str));
+	print ("\n");
+	str := concat ("", "");
+	print (str);
+	print ("\n");
+	printi (size (str));
+	print ("\n");
+	str := concat (concat ("ab", "cd"),  "ef");
+	print (str);
+	print ("\n");
+	printi (size (str));
+	print ("\n");
+	str := concat ("ab",  concat ("cd", "ef"));
+	print (str);
+	print ("\n");
+	printi (size (str));
+	print ("\n");
+	str := concat (concat ("ab", "cd"),  concat ("ef", "gh"));
+	print (str);
+	print ("\n");
+	printi (size (str))
+end

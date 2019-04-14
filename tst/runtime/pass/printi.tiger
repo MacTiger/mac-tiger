@@ -1,0 +1,14 @@
+(
+	printi (0);
+	print ("\n");
+	printi (42);
+	print ("\n");
+	printi (32767);
+	print ("\n");
+	printi (32768);
+	print ("\n");
+	printi (-32768);
+	print ("\n");
+	printi (-32767);
+	print ("\n")
+)

@@ -24,7 +24,6 @@ public class Record extends Type {
 	public ArrayList<String> makeCellGraphviz(String nameOfThisTDS, String numOfCell) {
 		String partOfGraph ="";
 		String graphLinks = "";
-		ArrayList<String> graphVar = null;
 		int i = 0;
 		for(Map.Entry<String, Variable> stringVariableEntry : namespace){
 			if (i > 0){
@@ -39,10 +38,6 @@ public class Record extends Type {
 
 	public Namespace<Variable> getNamespace() {
 		return this.namespace;
-	}
-
-	public boolean isPointer() {
-		return true;
 	}
 
 }

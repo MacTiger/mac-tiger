@@ -8,8 +8,8 @@ import org.antlr.runtime.tree.Tree;
 public final class Notifier {
 
 	private String[] tokenNames;
-	private int lexicalErrorCount;
 	private boolean noColor;
+	private int lexicalErrorCount;
 	private int syntacticErrorCount;
 	private int semanticErrorCount;
 
@@ -43,7 +43,7 @@ public final class Notifier {
 
 	public void syntacticError(Parser parser, RecognitionException exception) {
 		++this.syntacticErrorCount;
-		this.log("Syntactic error", parser.getErrorMessage(exception, this.tokenNames).replaceAll("(?<= )(EOF|'[\\S\\s]+'$)", this.color(3) + "$1" + this.color(0)), exception.line, exception.charPositionInLine);
+		this.log("Syntactic error", parser.getErrorMessage(exception, this.tokenNames).replaceAll("(?<= )([A-Z][0-9A-Z_a-z]*|'[\\S\\s]+'$)", this.color(3) + "$1" + this.color(0)), exception.line, exception.charPositionInLine);
 	}
 
 	public void semanticError(Tree tree, String message, String... names) {

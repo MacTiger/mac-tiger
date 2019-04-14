@@ -9,8 +9,8 @@ in
 		total := total + i * i;
 		if i = 5 then (
 			printi (5);
-			print ("\n");
-		)
+			print ("\n")
+		);
 		i := i + 1;
 		testvar := i <= n
 	);

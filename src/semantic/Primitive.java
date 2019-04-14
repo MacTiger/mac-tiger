@@ -20,16 +20,4 @@ public class Primitive extends Type {
 		return new ArrayList<>(Arrays.asList(partOfGraph, graphLinks));
 	}
 
-	/**
-	 * Indique si cette variable est un pointeur ou non
-	 * @return
-	 */
-	@Override
-	public boolean isPointer() {
-		if (this != SymbolTable.intType){   // Seul le type primitif ENTIER n'est pas un pointeur
-			return false;
-		}
-		return true;
-	}
-
 }
