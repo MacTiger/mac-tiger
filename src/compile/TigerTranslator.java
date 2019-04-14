@@ -405,7 +405,7 @@ public class TigerTranslator {
 	/**
 	 * @return Somme des tailles des variables locales à cette TDS
 	 */
-	public int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
+	private int getSizeOfVars(Namespace<FunctionOrVariable> functionsAndVariables){
 		int size = 0;
 		for (Map.Entry<String, FunctionOrVariable> functionOrVariable : functionsAndVariables){
 			if (functionOrVariable.getValue() instanceof Variable){
@@ -1553,7 +1553,7 @@ public class TigerTranslator {
 	 * @param TDSDest TDS de la fonction appelée
 	 * @param name nom de la fonction tiger appelée
 	 */
-	public void writeEntryFunction(SymbolTable TDSDest, String name){
+	private void writeEntryFunction(SymbolTable TDSDest, String name){
 		this.writeStaticLinking(TDSDest);
 		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel(TDSDest,name)));
 	}
@@ -1563,7 +1563,7 @@ public class TigerTranslator {
 	 * En fin de cette méthode, le registre R0 contient le chaînage statique de la fonction appelée. Il n'a pas été reservé via le RegisterManager
 	 * @param TDSDest TDS de la fonction dont on calcule le chaînage statique
 	 */
-	public void writeStaticLinking(SymbolTable TDSDest){
+	private void writeStaticLinking(SymbolTable TDSDest){
 		if (TDSDest.getDepth() <= 1){   // On ne calcule pas le chaînage statique si on appelle une fonction built-in   //TODO : vérifier que c'est la bonne profondeur
 			return ;
 		}

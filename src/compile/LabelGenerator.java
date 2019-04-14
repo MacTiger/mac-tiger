@@ -28,7 +28,7 @@ public class LabelGenerator {
 	 * Rogne une étiquette pour qu'elle ne dépasse par la longueur maximale d'une étiquette
 	 * @return l'étiquette rognée
 	 */
-	public String trimLabel(String string) {
+	private String trimLabel(String string) {
 		if (string.length() >= this.length - 1) {
 			return string.substring(0, this.length - 1);
 		}
