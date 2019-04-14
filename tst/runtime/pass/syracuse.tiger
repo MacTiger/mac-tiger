@@ -1,16 +1,18 @@
 let
-	var resultat : int := 0
+	/*
+		`syracuse`:
+			fonction qui retourne le `n`-ième terme de la suite de syracuse de premier terme `u`
+	*/
 	function syracuse (u : int, n : int) : int = (
-		/* Renvoit le n-ieme terme de la suite de syracuse de premier terme u */
 		for i := 1 to n do
-			if (u / 2) * 2 = u then (
-				/* Si u est pair */
+			if u / 2 * 2 = u then ( /* Si u est pair */
 				u := u / 2
-			) else (
+			) else ( /* Si u est impair */
 				u := u * 3 + 1
 			);
 		u
 	)
+	var resultat := 0
 in
 	resultat := syracuse (1, 11);
 	printi (resultat);
