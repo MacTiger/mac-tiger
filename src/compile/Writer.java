@@ -16,9 +16,8 @@ public class Writer {
 			"READ_EXC EQU 65 // Trappe read\n" +
 			"WRITE_EXC EQU 66 // Trappe write\n" +
 			"STACK_ADDR EQU 0x1000 // Adresse du bas de la pile\n" +
-			"HEAP_ADDR EQU 0x1002 // Adresse du haut du tas\n" +
+			"HEAP_ADDR EQU 0x1000 // Adresse du haut du tas\n" +
 			"LOAD_ADDR EQU 0x9000 // Adresse du haut du programme\n" +
-			"NIL EQU 0X1000 // Adresse spéciale pour la constante nil\n" +
 			"\n" +
 			"SP EQU R15 // Adresse du haut de la pile\n" +
 			"HP EQU R14 // Adresse du bas du tas\n" +
@@ -46,8 +45,7 @@ public class Writer {
 		this.header = "";
 		this.mainStart =
 			labelGenerator.padLabel("MAIN") + "LDW SP, #STACK_ADDR // Initialisation du haut de la pile\n" +
-			labelGenerator.getIndent() + "LDW HP, #HEAP_ADDR // Initialisation du bas de la pile\n" +
-			labelGenerator.getIndent() + "LDW BP, #STACK_ADDR // Initialisation de la base de l'environnement courant\n";
+			labelGenerator.getIndent() + "LDW HP, #HEAP_ADDR // Initialisation du bas de la pile\n";
 		this.main = "";
 		this.mainEnd =
 			labelGenerator.getIndent() + "TRP #EXIT_EXC // Terminaison normale du programme\n";

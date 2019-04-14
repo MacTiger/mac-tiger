@@ -23,20 +23,6 @@ import semantic.*;
 
 public class TigerTranslator {
 
-/*	private static Type nilPseudoType;
-	private static Type intType;
-	private static Type stringType;*/
-
-	//TODO : faire un static pour les fonctions du langage (print ...)
-
-/*
-	private semantic.SymbolTable parent;
-	private List<semantic.SymbolTable> children;
-	private Namespace<Type> types;
-	private Namespace<FunctionOrVariable> functionsAndVariables;
-*/
-
-//	private Tree currentASTNode;    // Noeud de l'AST actuel
 	private SymbolTable currentTDS; // TDS actuelle
 	private List<Integer> childrenIndexStack;  // Pile des childrenIndex, mis à jour en descente et en remontée de TDS
 	private Writer writer;  // Classe gérant les écritures de code au bon endroit (pour permettre d'écrire le code d'une fonction en plusieurs fois, si une autre fonction (assembleur) est nécessaire durant son écriture)
@@ -53,7 +39,7 @@ public class TigerTranslator {
 		this.labelGenerator = new LabelGenerator(16);
 		this.writer = new Writer(this.labelGenerator);
 		this.registerManager = new RegisterManager(this.writer);
-		this.heapBase = 4098;
+		this.heapBase = 4096;
 		this.strings = new HashMap<String, Integer>();
 		this.writeMainAndFunction(tree);
 	}
@@ -960,6 +946,7 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat est nul, on peut sauter à la fin du *and*
+			this.writer.writeFunction(String.format("TST R%d", registerIndex));
 			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
@@ -976,6 +963,7 @@ public class TigerTranslator {
 			this.translate(tree.getChild(i), registerIndex);
 
 			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
+			this.writer.writeFunction(String.format("TST R%d", registerIndex));
 			this.writer.writeFunction(String.format("BEQ 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endLabel));
 		}
@@ -1027,7 +1015,8 @@ public class TigerTranslator {
 		translate(tree.getChild(1), registerB);
 
 		// Vérification d'erreur à l'exécution : cas d'une division par zéro
-		this.writer.writeFunction("BNE 4  // Vérification qu'on ne divise pas par zéro");
+		this.writer.writeFunction(String.format("TST R%d", registerB));
+		this.writer.writeFunction("BNE 4 // Vérifie que l'on ne divise par zéro");
 		this.writer.writeFunction("TRP #EXIT_EXC");
 
 		/*
@@ -1086,7 +1075,6 @@ public class TigerTranslator {
 	}
 
 	private void translateREC(Tree tree, int registerIndex) {
-		this.writer.writeFunction("ADQ 2, HP");
 		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
 		int size = (tree.getChildCount() / 2) * wordSize;
 		if (size > 0) {
@@ -1100,11 +1088,14 @@ public class TigerTranslator {
 			}
 			this.registerManager.freeRegister();
 			this.registerManager.freeRegister();
+		} else {
+			this.writer.writeFunction("ADQ 2, HP");
 		}
 	}
 
 	private void translateARR(Tree tree, int registerIndex) {
 		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
 		this.writer.writeFunction("BGE 4");
 		this.writer.writeFunction("TRP #EXIT_EXC");
 		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
@@ -1311,20 +1302,19 @@ public class TigerTranslator {
 		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
 
 		// Tests sur l'indice du tableau : negativeIndex
-		this.writer.writeFunction("BGE 4  // Vérifie que l'indice est positif");
+		this.writer.writeFunction(String.format("TST R%d", registerIndexOfArray));
+		this.writer.writeFunction("BGE 4 // Vérifie que l'indice est positif");
 		this.writer.writeFunction("TRP #EXIT_EXC");
 
 		// Tests sur l'indice du tableau : outOfBound Exception
 		int registerOfArraySize = this.registerManager.provideRegister();
 		this.writer.writeFunction(String.format("LDW R%d, (R%d)-2  // Charge la taille du tableau",registerOfArraySize, registerIndex));
-		this.writer.writeFunction(String.format("CMP R%d, R%d ",registerOfArraySize, registerIndexOfArray));
-		String label = this.labelGenerator.getLabel(tree, "post_outOfBoundException");  // Besoin d'un label pour les sauts, car l'instruction freeRegister génère un nombre non fixe d'instructions
-		this.writer.writeFunction(String.format("BGT %s-$-2  // Vérifie que l'indice demandé est plus petit que la taille du tableau", label));
-		this.registerManager.freeRegister();
+		this.writer.writeFunction(String.format("CMP R%d, R%d ", registerIndexOfArray, registerOfArraySize));
+		this.writer.writeFunction(String.format("BLW 4 // Vérifie que l'indice est strictement inférieur à la taille du tableau"));
 		this.writer.writeFunction("TRP #EXIT_EXC");
+		this.registerManager.freeRegister();
 
-
-		this.writer.writeFunction(label, String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		this.writer.writeFunction(String.format("SHL R%d, R%d  // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
 		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d  // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
 
 		this.registerManager.freeRegister();
@@ -1350,10 +1340,9 @@ public class TigerTranslator {
 		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
 
 		// Teste l'erreur à l'exécution : accès à un champ d'un record valant nil
-		this.writer.writeFunction(String.format("ADI R%d, R%d, #-NIL", registerIndex, registerIndex));
-		this.writer.writeFunction("BNE 4  // Teste l'erreur à l'exécution : Si la structure vaut NIL");
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
+		this.writer.writeFunction("BNE 4 // Vérifie que la structure n'est pas nil");
 		this.writer.writeFunction("TRP #EXIT_EXC");
-		this.writer.writeFunction(String.format("ADI R%d, R%d, #NIL  // Restaure la valeur de l'adresse de la structure après le test", registerIndex, registerIndex));
 
 		Record record = (Record) SymbolTable.treeTypeHashMap.get(exp);   // Récupère le type de exp
 		Namespace<Variable> fields = record.getNamespace();
@@ -1382,16 +1371,15 @@ public class TigerTranslator {
 	}
 
 	private void translateIf(Tree tree, int registerIndex) {
+		// Label
+		String endifLabel = this.labelGenerator.getLabel(tree, "end");
 		this.translate(tree.getChild(0), registerIndex);
-		boolean hasElse = (tree.getChildCount() == 3);
-
-		if (hasElse) {
-			// Labels
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
+		this.writer.writeFunction(String.format("BNE 4"));
+		if (tree.getChildCount() == 3) {
+			// Label
 			String elseLabel = this.labelGenerator.getLabel(tree, "else");
-			String endifLabel = this.labelGenerator.getLabel(tree, "end");
-
 			// On saute au `else` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", elseLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
@@ -1400,22 +1388,15 @@ public class TigerTranslator {
 			// On génère le l'étiquette et le code de else
 			this.writer.writeFunction(elseLabel, "NOP");
 			this.translate(tree.getChild(2), registerIndex);
-			// Étiquette endif
-			this.writer.writeFunction(endifLabel, "NOP");
 
 		} else {
-			// Labels
-			String endifLabel = this.labelGenerator.getLabel(tree, "end");
-
 			// On saute au `endif` si l'instruction évaluée est fausse
-			this.writer.writeFunction(String.format("BNE 4"));
 			this.writer.writeFunction(String.format("JEA @%s", endifLabel));
 			// On génère le code de `then`
 			this.translate(tree.getChild(1), registerIndex);
-			// Étiquette endif
-			this.writer.writeFunction(endifLabel, "NOP");
-
 		}
+		// Étiquette endif
+		this.writer.writeFunction(endifLabel, "NOP");
 	}
 
 	private void translateWhile(Tree tree, int registerIndex) {
@@ -1567,7 +1548,7 @@ public class TigerTranslator {
 	}
 
 	private void translateNil(Tree tree, int registerIndex) {
-		this.writer.writeFunction(String.format("LDW R%d, #NIL", registerIndex));
+		this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
 	}
 
 	private void translateBreak(Tree tree, int registerIndex) {
