@@ -141,7 +141,7 @@ public class Writer {
 	 */
 	public void descend() {
 		int index = fonctionCode.size();
-		fonctionCode.add("");     // Initialise le code de la fonction assembleur
+		fonctionCode.add(""); // Initialise le code de la fonction assembleur
 		fonctionPile.push(index); // Ajoute le nouvel index de fonction dans la pile
 	}
 

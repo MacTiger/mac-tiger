@@ -28,25 +28,16 @@ public class Function extends FunctionOrVariable {
 		return this.table;
 	}
 
-	public String getTypeToGraphviz(){
-		String typeString ="";
-		if (type == null){
-			typeString += "VOID";
-		} else{
-			typeString += type.toString();
-		}
-		return typeString;
-	}
-
-	public boolean isNative(){
-		return this.table.getDepth() == 1;  // Cette fonction est une fonction de la librairie standard si elle est déclarée dans la TDS globale, donc que sa TDS est de profondeur 1
-	}
-
-	public void setWritten(){
+	public void setWritten() {
 		this.written = true;
 	}
 
 	public boolean isWritten() {
 		return written;
 	}
+
+	public boolean isNative() {
+		return this.table.getDepth() == 1; // Cette fonction est une fonction de la bibliothèque standard si elle est déclarée dans la TDS globale, donc que sa TDS est de profondeur 1
+	}
+
 }

@@ -6,16 +6,16 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.Tree;
 
-import misc.Notifier;
 import lexical.TigerLexer;
 import syntactic.TigerParser;
-import semantic.SymbolTable;
+import semantic.TigerChecker;
+import debug.TigerIllustrator;
 import compile.TigerTranslator;
 
 public class Main {
 
-	static int defaultColor = 1;
-	static int defaultOutput = 2;
+	private static int defaultColor = 1;
+	private static int defaultOutput = 2;
 
 	public static void main(String[] arguments) throws Exception {
 		int color = -1;
@@ -41,46 +41,68 @@ public class Main {
 		if (output == -1) {
 			output = defaultOutput;
 		}
-		System.exit(Main.compile(System.in, color, output));
+		System.exit(Main.process(System.in, color, output));
 	}
 
-	public static int compile(InputStream stream, int color, int output) throws Exception {
+	public static int process(InputStream stream, int color, int output) throws Exception {
 		boolean noColor = color == 0;
-		Notifier notifier = new Notifier(TigerParser.tokenNames, noColor);
-		ANTLRInputStream input = new ANTLRInputStream(System.in);
+		Notifier notifier = new Notifier(noColor);
+		String[] tokenNames = TigerParser.tokenNames;
+		ANTLRInputStream input = new ANTLRInputStream(stream);
 		TigerLexer lexer = new TigerLexer(input) {
 			public void reportError(RecognitionException exception) {
-				notifier.lexicalError(this, exception);
+				String message = this.getErrorMessage(exception, tokenNames);
+				int row = exception.line;
+				int column = exception.line;
+				notifier.lexicalError(message, row, column);
 			}
 			public String getCharErrorDisplay(int character) {
 				String name = super.getCharErrorDisplay(character);
-				return noColor ? name : "\033[0;33m" + name + "\033[0m";
+				return notifier.highlight(name, 3);
 			}
 			// public String getTokenErrorDisplay(Token token) {
 			// 	String name = super.getTokenErrorDisplay(token);
-			// 	return noColor ? name : "\033[0;33m" + name + "\033[0m";
+			// 	return notifier.highlight(name, 3);
 			// }
 		};
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		TigerParser parser = new TigerParser(tokens) {
 			public void reportError(RecognitionException exception) {
-				notifier.syntacticError(this, exception);
+				String message = this.getErrorMessage(exception, tokenNames);
+				int row = exception.line;
+				int column = exception.line;
+				notifier.syntacticError(message, row, column);
 			}
 			public String getTokenErrorDisplay(Token token) {
 				String name = super.getTokenErrorDisplay(token);
-				return noColor ? name : "\033[0;33m" + name + "\033[0m";
+				return notifier.highlight(name, 3);
+			}
+			public String getErrorMessage(RecognitionException exception, String[] tokenNames) {
+				String message = super.getErrorMessage(exception, tokenNames);
+				return message.replaceAll("(?<= )([A-Z][0-9A-Z_a-z]*|'[\\S\\s]+'$)", notifier.highlight("$1", 3));
 			}
 		};
-		TigerParser.program_return result = parser.program();
-		SymbolTable root = new SymbolTable();
-		Tree tree = (Tree) result.getTree();
-		root.fillWith(tree, notifier);
-		int[] errorCounts = notifier.reset();
-		if (output != 0 && errorCounts[0] == 0 && errorCounts[1] == 0 && errorCounts[2] == 0 ){ // S'il n'y a pas eu d'erreur : on peut faire la visualisation graphique
-			if (output == 1) {   // Ecrit sur la sortie standard le code .gv permettant de visualiser la TDS
-				System.out.println(root.toGraphVizFirst());
+		Tree tree = (Tree) parser.program().getTree();
+		TigerChecker checker = new TigerChecker(tree) {
+			public void reportError(Tree tree, String message, String... names) {
+				message = this.getErrorMessage(tree, message, names);
+				int row = tree.getLine();
+				int column = tree.getCharPositionInLine();
+				notifier.semanticError(message, row, column);
+			}
+			public String getTokenErrorDisplay(String token) {
+				String name = super.getTokenErrorDisplay(token);
+				return notifier.highlight(name, 3);
+			}
+		};
+		int[] errorCounts = notifier.consume();
+		if (output != 0 && errorCounts[0] == 0 && errorCounts[1] == 0 && errorCounts[2] == 0) {
+			if (output == 1) {
+				TigerIllustrator illustrator = new TigerIllustrator(checker.getSymbolTable());
+				System.out.println(illustrator);
 			} else if (output == 2) {
-				System.out.println(new TigerTranslator(tree, root).toString());
+				TigerTranslator translator = new TigerTranslator(tree, checker.getTreeTypes(), checker.getSymbolTable());
+				System.out.println(translator);
 			}
 		}
 		return errorCounts[0] > 0 ? 2 : errorCounts[1] > 0 ? 3 : errorCounts[2] > 0 ? 4 : 0;
