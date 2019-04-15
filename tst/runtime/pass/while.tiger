@@ -1,0 +1,76 @@
+let
+	var a := 0
+in
+	while a < 10 do (
+		printi (a);
+		print ("\n");
+		a := a + 1
+	);
+	printi (a);
+	print ("\n");
+	a := 0;
+	while a < 0 do (
+		printi (a);
+		print ("\n");
+		a := a + 1
+	);
+	printi (a);
+	print ("\n");
+	a := 0;
+	while a < 10 do
+		let
+			var b := 666
+		in
+			if a = 5 then
+				break;
+			printi (a);
+			print ("\n");
+			a := a + 1
+		end;
+	printi (a);
+	print ("\n");
+	a := 0;
+	while a < 10 do
+		let
+			var b := (
+				if a = 5 then
+					break;
+				666
+			)
+		in
+			printi (a);
+			print ("\n");
+			a := a + 1
+		end;
+	printi (a);
+	print ("\n");
+	a := 0;
+	while let
+		var b := 666
+	in
+		if a = 5 then
+			break;
+		a < 10
+	end do (
+		printi (a);
+		print ("\n");
+		a := a + 1
+	);
+	printi (a);
+	print ("\n");
+	a := 0;
+	while let
+		var b := (
+			if a = 5 then
+				break;
+			666
+		)
+	in
+		a < 10
+	end do (
+		printi (a);
+		print ("\n");
+		a := a + 1
+	);
+	printi (a)
+end

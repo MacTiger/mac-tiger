@@ -1,0 +1,97 @@
+let
+	var a := 42
+in
+	for b := 0 to 9 do
+		let
+			var a := 666
+		in
+			printi (b);
+			print ("\n")
+		end;
+	printi (a);
+	print ("\n");
+	for b := 0 to -1 do
+		let
+			var a := 666
+		in
+			printi (b);
+			print ("\n")
+		end;
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		let
+			var a := 666
+		in
+			if b = 5 then
+				break;
+			printi (b);
+			print ("\n")
+		end;
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		let
+			var a := (
+				if b = 5 then
+					break;
+				666
+			)
+		in
+			printi (b);
+			print ("\n")
+		end;
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		for b := let
+			var a := 666
+		in
+			if b = 5 then
+				break;
+			printi (b);
+			print ("\n");
+			0
+		end to 9 do ();
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		for b := let
+			var a := (
+				if b = 5 then
+					break;
+				666
+			)
+		in
+			printi (b);
+			print ("\n");
+			0
+		end to 9 do ();
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		for b := 0 to let
+			var a := 666
+		in
+			if b = 5 then
+				break;
+			printi (b);
+			print ("\n");
+			9
+		end do ();
+	printi (a);
+	print ("\n");
+	for b := 0 to 9 do
+		for b := 0 to let
+			var a :=  (
+				if b = 5 then
+					break;
+				666
+			)
+		in
+			printi (b);
+			print ("\n");
+			9
+		end do ();
+	printi (a)
+end

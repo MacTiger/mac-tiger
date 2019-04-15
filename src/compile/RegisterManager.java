@@ -4,79 +4,70 @@ import java.util.Stack;
 
 public class RegisterManager {
 
-	//R1 à R10
-	private final int REGMAX = 12; // nb max de registres R1->R12
-
 	private Writer writer;
-	private Stack<Integer> availableRegisters;
-	private int peak;
+	private StackCounter stackCounter;
+	private int available;
+	private Stack<Integer> previousCounts;
+	private int currentCount;
 
-	public RegisterManager(Writer writer) {
+	public RegisterManager(Writer writer, StackCounter stackCounter, int available) {
 		this.writer = writer;
-		this.availableRegisters = new Stack<Integer>();
-		this.peak = REGMAX;
+		this.stackCounter = stackCounter;
+		this.available = available;
+		this.previousCounts = new Stack<Integer>();
+		this.currentCount = 0;
 	}
 
-	public void descend() { // On descend dans le fils : push du nb de regitres disponibles
-		availableRegisters.push(peak);
-		peak = REGMAX;
+	public void descend() {
+		this.previousCounts.push(this.currentCount);
+		this.currentCount = 0;
 	}
 
 	public void ascend() {
-		peak = availableRegisters.pop();
+		this.currentCount = this.previousCounts.pop();
 	}
 
-	/**
-	 * Sauvegarde les registres utilisés dans la pile
-	 * @return le nombre de registres sauvegardés
-	 */
-	public int saveAll() {
-		int registersToSave = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
-
-		for (int i = 0; i < registersToSave; i++) {
-			save(REGMAX-i);
-		}
-		return registersToSave;
-	}
-
-	public void restoreAll() {
-		int registersToRestore = (peak >= 0) ? (REGMAX - peak) : (REGMAX);
-
-		for (int i = registersToRestore - 1; i >= 0; i--) {
-			restore(REGMAX - i);
+	public void saveAll(int current) {
+		for (int i = 1, l = this.currentCount > this.available ? this.available : this.currentCount; i <= l; ++i) {
+			if (i != current) {
+				this.save(i);
+			}
 		}
 	}
 
-	//Met le registre req dans la pile
-	private void save(int reg) {
-		writer.writeFunction(String.format("STW R%d, -(SP) // Empile un registre", reg));
+	public void restoreAll(int current) {
+		for (int i = this.currentCount > this.available ? this.available : this.currentCount; i >= 1; --i) {
+			if (i != current) {
+				this.restore(i);
+			}
+		}
 	}
 
-	private void restore(int reg) {
-		writer.writeFunction(String.format("LDW R%d, (SP)+ // Dépile un registre", reg));
+	private void save(int register) {
+		writer.writeFunction(String.format("STW R%d, -(SP) // Empile un registre", register));
+		this.stackCounter.addCount(2);
 	}
 
-	//Renvoie l'indice d'un registre disponible
+	private void restore(int register) {
+		this.stackCounter.addCount(-2);
+		writer.writeFunction(String.format("LDW R%d, (SP)+ // Dépile un registre", register));
+	}
+
 	public int provideRegister() {
-		if (peak > 0) {
-			return peak--; // Pour 16 places renvoie 15, etc.
-		} else { // Registres pleins
-			int reg = REGMAX - -peak % REGMAX; // Registre à libérer.
-			//peak = 0 -> libere R15 ; regiDisp=-1 -> libère R14 etc.
-			save(reg);
-			peak--;
-			return reg;
+		if (this.currentCount < this.available) {
+			return ++this.currentCount;
+		} else {
+			int register = ++this.currentCount % this.available;
+			this.save(register);
+			return register;
 		}
 	}
 
-	//Libère le dernier registre "réservé"
 	public void freeRegister() {
-		if (peak > -1 && peak < REGMAX) {
-			peak++;
+		if (this.currentCount <= this.available) {
+			this.currentCount--;
 		} else {
-			peak++;
-			int reg = REGMAX - -peak % REGMAX;
-			restore(reg);
+			this.restore(this.currentCount-- % this.available);
 		}
 	}
 
