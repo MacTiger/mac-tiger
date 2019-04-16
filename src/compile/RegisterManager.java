@@ -7,24 +7,29 @@ public class RegisterManager {
 	private Writer writer;
 	private StackCounter stackCounter;
 	private int available;
-	private Stack<Integer> previousCounts;
+	private Stack<Stack<Integer>> previousCounts;
+	private Stack<Integer> currentCounts;
 	private int currentCount;
 
 	public RegisterManager(Writer writer, StackCounter stackCounter, int available) {
 		this.writer = writer;
 		this.stackCounter = stackCounter;
 		this.available = available;
-		this.previousCounts = new Stack<Integer>();
+		this.previousCounts = new Stack<Stack<Integer>>();
+		this.currentCounts = new Stack<Integer>();
 		this.currentCount = 0;
 	}
 
 	public void descend() {
-		this.previousCounts.push(this.currentCount);
+		this.currentCounts.push(this.currentCount);
+		this.previousCounts.push(this.currentCounts);
+		this.currentCounts = new Stack<Integer>();
 		this.currentCount = 0;
 	}
 
 	public void ascend() {
-		this.currentCount = this.previousCounts.pop();
+		this.currentCounts = this.previousCounts.pop();
+		this.currentCount = this.currentCounts.pop();
 	}
 
 	public void saveAll(int current) {
@@ -33,9 +38,12 @@ public class RegisterManager {
 				this.save(i);
 			}
 		}
+		this.currentCounts.push(this.currentCount);
+		this.currentCount = 0;
 	}
 
 	public void restoreAll(int current) {
+		this.currentCount = this.currentCounts.pop();
 		for (int i = this.currentCount > this.available ? this.available : this.currentCount; i >= 1; --i) {
 			if (i != current) {
 				this.restore(i);
