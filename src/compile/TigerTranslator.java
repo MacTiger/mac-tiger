@@ -276,7 +276,6 @@ public class TigerTranslator {
 				this.writer.writeHeader("MUL R1, R3, R1 // Décalage des unités");
 				this.writer.writeHeader("ADD R2, R1, R1 // Ajout du chiffre lu au résultat");
 
-
 				this.writer.writeHeader("JMP #-22 // Boucle sur les caractères lus"); // TODO : jump au début de boucle parcours
 
 				// Gére le passage au négatif si l'entier doit être négatif :
@@ -327,7 +326,6 @@ public class TigerTranslator {
 				//Lg demandée m
 				this.writer.writeHeader("LDW R4, (SP)2");
 
-
 				//Test préliminaire i et n
 				this.writer.writeHeader("TST R3");
 				this.writer.writeHeader("BGE 12"); // Go fin prog i<0
@@ -345,7 +343,6 @@ public class TigerTranslator {
 				this.writer.writeHeader("STW R5, (HP)+");
 				this.writer.writeHeader("RTS"); // FIN
 
-
 				//Check les longueurs
 				this.writer.writeHeader("ADQ -2, R1");
 				this.writer.writeHeader("LDW R2, (R1)");
@@ -360,7 +357,6 @@ public class TigerTranslator {
 				this.writer.writeHeader("RTS"); // FIN
 				//Si n-(i+m) < 0 STOP
 
-
 				//Fait i %2 => quotient : nombre de mots à "sauter"
 				//Reste = nb d'octet à sauter (0 ou 1)
 				this.writer.writeHeader("LDW R2, #2");
@@ -370,13 +366,11 @@ public class TigerTranslator {
 				this.writer.writeHeader("ADD R2, R1, R1");
 				//Ajoute quotient*2 à adresse str
 
-
 				//Met lg en HP puis incrémente HP
 				// R0 a @ du premier caractere
 				this.writer.writeHeader("STW R4, (HP)");
 				this.writer.writeHeader("ADQ 2, HP");
 				this.writer.writeHeader("LDW R0, HP");
-
 
 				this.writer.writeHeader("TST R3");
 				this.writer.writeHeader("BEQ 14");
@@ -388,7 +382,6 @@ public class TigerTranslator {
 				this.writer.writeHeader("ADQ 1, R1");
 				this.writer.writeHeader("ADQ -1, R4"); // -1 carac à recopier
 
-
 				//Ici R3=0
 				//R4 nb de carac à recopier
 				this.writer.writeHeader("BEQ 14");
@@ -398,8 +391,6 @@ public class TigerTranslator {
 				this.writer.writeHeader("ADQ 1, R1");
 				this.writer.writeHeader("ADQ -1, R4"); // -1 carac à recopier
 				this.writer.writeHeader("BNE -12");
-
-
 
 				//On a tout écrit : test HP : pair ou impair ?
 				this.writer.writeHeader("LDW R2, #2");
@@ -450,10 +441,9 @@ public class TigerTranslator {
 	 */
 	private void writeStaticLinking(SymbolTable TDSDest) {
 		if (TDSDest.getDepth() <= 1) { // On ne calcule pas le chaînage statique si on appelle une fonction built-in // TODO : vérifier que c'est la bonne profondeur
-			return ;
+			return;
 		}
 		int count_stat = this.currentTable.getDepth()-TDSDest.getDepth() + 1;
-
 
 		if (count_stat == 0) {
 			this.writer.writeFunction("LDW R0, BP // STATIC_LINK : Calcul du chaînage statique");
@@ -590,259 +580,70 @@ public class TigerTranslator {
 			case ":=": this.translateAssignment(tree, registerIndex); return;
 			case "=": this.translateEqual(tree, registerIndex); return;
 			case "<>": this.translateNotEqual(tree, registerIndex); return;
-			case ">": this.translateStrictGreaterThan(tree, registerIndex); return;
-			case "<": this.translateStrictLessThan(tree, registerIndex); return;
-			case ">=": this.translateGreaterOrEqualThan(tree, registerIndex); return;
-			case "<=": this.translateLessOrEqualThan(tree, registerIndex); return;
-			case "|": this.translateOrOperator(tree, registerIndex); return;
-			case "&": this.translateAndOperator(tree, registerIndex); return;
-			case "+": this.translateAddOperator(tree, registerIndex); return;
-			case "-": this.translateSubOperator(tree, registerIndex); return;
-			case "*": this.translateMulOperator(tree, registerIndex); return;
-			case "/": this.translateDivOperator(tree, registerIndex); return;
+			case "<": this.translateLower(tree, registerIndex); return;
+			case ">=": this.translateNotLower(tree, registerIndex); return;
+			case ">": this.translateGreater(tree, registerIndex); return;
+			case "<=": this.translateNotGreater(tree, registerIndex); return;
+			case "|": this.translateOr(tree, registerIndex); return;
+			case "&": this.translateAnd(tree, registerIndex); return;
+			case "+": this.translateAdd(tree, registerIndex); return;
+			case "-": this.translateSub(tree, registerIndex); return;
+			case "*": this.translateMul(tree, registerIndex); return;
+			case "/": this.translateDiv(tree, registerIndex); return;
 			case "if": this.translateIf(tree, registerIndex); return;
 			case "while": this.translateWhile(tree, registerIndex); return;
 			case "for": this.translateFor(tree, registerIndex); return;
 			case "let": this.translateLet(tree, registerIndex); return;
 			case "nil": this.translateNil(tree, registerIndex); return;
 			case "break": this.translateBreak(tree, registerIndex); return;
-			default: {
-				for (int i = 0, li = tree.getChildCount(); i < li; ++i) {
-					this.translate(tree.getChild(i), registerIndex);
-				}
-			}
 		}
 	}
 
-	private void translateSpaceship(Tree leftTree, Tree rightTree, int registerIndex) {
-		if (!this.dependencies.contains(null)) { // Comparaison trilatérale pas encore écrite
-			this.dependencies.add(null);
-			this.writeHeader(null, "spaceship"); // Ecrit le code de la comparaison trilatérale dans le header
-		}
-		this.registerManager.saveAll(registerIndex);
-		int registerIndex2 = this.registerManager.provideRegister();
-		this.translate(leftTree, registerIndex2);
-		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de l'opérande gauche avant la comparaison trilatérale", registerIndex2));
-		this.stackCounter.addCount(2);
-		this.translate(rightTree, registerIndex2);
-		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de l'opérande droit avant la comparaison trilatérale", registerIndex2));
-		this.stackCounter.addCount(2);
-		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel((SymbolTable) null, "spaceship")));
-		this.stackCounter.addCount(-4);
-		this.writer.writeFunction("ADQ 4, SP // Dépilage après la comparaison trilatérale");
-		this.registerManager.freeRegister();
-		this.registerManager.restoreAll(registerIndex);
-		this.writer.writeFunction(String.format("LDW R%d, R0", registerIndex));
-	}
-
-	private void translateStrictGreaterThan(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BGT 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction("BGE 2");
-			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-		}
-	}
-
-	private void translateStrictLessThan(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BLW 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
-			this.writer.writeFunction("BGE 2");
-			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-		}
-	}
-
-	private void translateGreaterOrEqualThan(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BGE 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction("BGT 2");
-			this.writer.writeFunction(String.format("ADQ 1, R%d", registerIndex));
-		}
-	}
-
-	private void translateLessOrEqualThan(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BLE 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
-			this.writer.writeFunction("BGT 2");
-			this.writer.writeFunction(String.format("ADQ 1, R%d", registerIndex));
-		}
-	}
-
-	private void translateEqual(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BEQ 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction("BEQ 4");
-			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			this.writer.writeFunction("BMP 2");
-			this.writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-		}
-	}
-
-	private void translateNotEqual(Tree tree, int registerIndex) {
-		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
-			int registerLeft = registerIndex;
-			this.translate(tree.getChild(0), registerLeft);
-			int registerRight = registerManager.provideRegister();
-			this.translate(tree.getChild(1), registerRight);
-			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
-			writer.writeFunction(String.format("BNE 4"));
-			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
-			writer.writeFunction(String.format("BMP 2"));
-			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-			registerManager.freeRegister();
-		} else {
-			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
-			this.writer.writeFunction("BGE 2");
-			this.writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
-		}
-	}
-
-	private void translateAndOperator(Tree tree, int registerIndex) {
-
-		String endLabel = this.labelGenerator.getLabel(tree, "end");
-
-		for (int i = 0; i < tree.getChildCount(); i++) {
-
+	private void translateSEQ(Tree tree, int registerIndex) {
+		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
 			this.translate(tree.getChild(i), registerIndex);
-
-			// Si le résultat est nul, on peut sauter à la fin du *and*
-			this.writer.writeFunction(String.format("TST R%d", registerIndex));
-			this.writer.writeFunction(String.format("BNE 4"));
-			this.writer.writeFunction(String.format("JEA @%s", endLabel));
-		}
-
-		this.writer.writeFunction(endLabel, "NOP");
-	}
-
-	private void translateOrOperator(Tree tree, int registerIndex) {
-
-		String endLabel = this.labelGenerator.getLabel(tree, "end");
-
-		for (int i = 0; i < tree.getChildCount(); i++) {
-
-			this.translate(tree.getChild(i), registerIndex);
-
-			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
-			this.writer.writeFunction(String.format("TST R%d", registerIndex));
-			this.writer.writeFunction(String.format("BEQ 4"));
-			this.writer.writeFunction(String.format("JEA @%s", endLabel));
-		}
-
-		this.writer.writeFunction(endLabel, "NOP");
-	}
-
-	private void translateAddOperator(Tree tree, int registerIndex) {
-		translate(tree.getChild(0), registerIndex);
-		int register = registerManager.provideRegister();
-		for (int i = 1; i < tree.getChildCount(); i++) {
-			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", registerIndex, register, registerIndex));
-		}
-		registerManager.freeRegister();
-	}
-
-	private void translateSubOperator(Tree tree, int registerIndex) {
-		translate(tree.getChild(0), registerIndex);
-		if (tree.getChildCount() == 1) {
-			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
-		} else {
-			int register = registerManager.provideRegister();
-			translate(tree.getChild(1), register);
-			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerIndex, register, registerIndex));
-			registerManager.freeRegister();
 		}
 	}
 
-	private void translateMulOperator(Tree tree, int registerIndex) {
-		translate(tree.getChild(0), registerIndex);
-		int register = registerManager.provideRegister();
-		for (int i = 1; i < tree.getChildCount(); i++) {
-			translate(tree.getChild(i), register);
-			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", registerIndex, register, registerIndex));
-		}
-		registerManager.freeRegister();
-	}
-
-	// A/B
-	private void translateDivOperator(Tree tree, int registerIndex) {
-
-		//registerIndex contient A
-		int registerA = registerManager.provideRegister();
-		translate(tree.getChild(0), registerA);
-
-		//Met B dans registerB
-		int registerB=registerManager.provideRegister();
-		translate(tree.getChild(1), registerB);
-
-		// Vérification d'erreur à l'exécution : cas d'une division par zéro
-		this.writer.writeFunction(String.format("TST R%d", registerB));
-		this.writer.writeFunction("BNE 4 // Vérifie que l'on ne divise par zéro");
+	private void translateARR(Tree tree, int registerIndex) {
+		this.translate(tree.getChild(1), registerIndex);
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
+		this.writer.writeFunction("BGE 4");
 		this.writer.writeFunction("TRP #EXIT_EXC");
+		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
+		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
+		this.writer.writeFunction(String.format("ADD R%d, HP, HP", registerIndex));
+		int register1 = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+		int register2 = this.registerManager.provideRegister();
+		this.translate(tree.getChild(2), register2);
+		this.writer.writeFunction(String.format("TST R%d", registerIndex));
+		this.writer.writeFunction("BEQ 6");
+		this.writer.writeFunction(String.format("STW R%d, -(R%d)", register2, register1));
+		this.writer.writeFunction(String.format("ADQ -2, R%d", registerIndex));
+		this.writer.writeFunction("BNE -6");
+		this.registerManager.freeRegister();
+		this.writer.writeFunction(String.format("LDW R%d, R%d", registerIndex, register1));
+		this.registerManager.freeRegister();
+	}
 
-		//Opération diviser va modifier registerA
-		this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerA, registerB, registerIndex));
-
-		/*
-		this.writer.writeMain("LDW R"+registerA+"");
-		*/
-		registerManager.freeRegister(); // Libère registerB
-		registerManager.freeRegister(); // Libère registerA
+	private void translateREC(Tree tree, int registerIndex) {
+		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
+		int size = tree.getChildCount() / 2 * 2;
+		if (size > 0) {
+			int register1 = this.registerManager.provideRegister();
+			this.writer.writeFunction(String.format("LDW R%d, HP", register1));
+			this.writer.writeFunction(String.format("ADI HP, HP, #%d", size));
+			int register2 = this.registerManager.provideRegister();
+			for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
+				this.translate(tree.getChild(i + 1), register2);
+				this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
+			}
+			this.registerManager.freeRegister();
+			this.registerManager.freeRegister();
+		} else {
+			this.writer.writeFunction("ADQ 2, HP");
+		}
 	}
 
 	/** Appel d'une fonction
@@ -885,74 +686,130 @@ public class TigerTranslator {
 		}
 	}
 
-	private void translateREC(Tree tree, int registerIndex) {
-		this.writer.writeFunction(String.format("LDW R%d, HP", registerIndex));
-		int size = tree.getChildCount() / 2 * 2;
-		if (size > 0) {
-			int register1 = this.registerManager.provideRegister();
-			this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-			this.writer.writeFunction(String.format("ADI HP, HP, #%d", size));
-			int register2 = this.registerManager.provideRegister();
-			for (int i = 1, l = tree.getChildCount(); i < l; i += 2) {
-				this.translate(tree.getChild(i + 1), register2);
-				this.writer.writeFunction(String.format("STW R%d, (R%d)+", register2, register1));
-			}
-			this.registerManager.freeRegister();
-			this.registerManager.freeRegister();
-		} else {
-			this.writer.writeFunction("ADQ 2, HP");
-		}
-	}
+	/**
+	 * Ecrit le code pour mettre l'adresse d'un élément de tableau (ARRAY) dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateITEMAddress(Tree tree, int registerIndex) {
+		Tree exp = tree.getChild(0);
+		this.translate(exp, registerIndex); // register Index contient maintenant l'adresse du tableau
 
-	private void translateARR(Tree tree, int registerIndex) {
-		this.translate(tree.getChild(1), registerIndex);
-		this.writer.writeFunction(String.format("TST R%d", registerIndex));
-		this.writer.writeFunction("BGE 4");
+		int registerIndexOfArray = this.registerManager.provideRegister();
+		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
+
+		// Tests sur l'indice du tableau : negativeIndex
+		this.writer.writeFunction(String.format("TST R%d", registerIndexOfArray));
+		this.writer.writeFunction("BGE 4 // Vérifie que l'indice est positif");
 		this.writer.writeFunction("TRP #EXIT_EXC");
-		this.writer.writeFunction(String.format("STW R%d, (HP)+", registerIndex));
-		this.writer.writeFunction(String.format("SHL R%d, R%d", registerIndex, registerIndex));
-		this.writer.writeFunction(String.format("ADD R%d, HP, HP", registerIndex));
-		int register1 = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDW R%d, HP", register1));
-		int register2 = this.registerManager.provideRegister();
-		this.translate(tree.getChild(2), register2);
+
+		// Tests sur l'indice du tableau : outOfBound Exception
+		int registerOfArraySize = this.registerManager.provideRegister();
+		this.writer.writeFunction(String.format("LDW R%d, (R%d)-2 // Charge la taille du tableau", registerOfArraySize, registerIndex));
+		this.writer.writeFunction(String.format("CMP R%d, R%d", registerIndexOfArray, registerOfArraySize));
+		this.writer.writeFunction(String.format("BLW 4 // Vérifie que l'indice est strictement inférieur à la taille du tableau"));
+		this.writer.writeFunction("TRP #EXIT_EXC");
+		this.registerManager.freeRegister();
+
+		this.writer.writeFunction(String.format("SHL R%d, R%d // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
+		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
+
+		this.registerManager.freeRegister();
+	}
+
+	/**
+	 * Ecrit le code pour mettre la valeur d'un élément de tableau (ARRAY) dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateITEM(Tree tree, int registerIndex) {
+		translateITEMAddress(tree, registerIndex);
+		this.writer.writeFunction(String.format("LDW R%d, (R%d) // ITEM : La valeur de l'élémént du tableau dans un registre", registerIndex, registerIndex));
+	}
+
+	/**
+	 * Ecrit le code pour mettre l'adresse d'un champ dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateFIELDAddress(Tree tree, int registerIndex) {
+		Tree exp = tree.getChild(0);
+		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
+
+		// Teste l'erreur à l'exécution : accès à un champ d'un record valant nil
 		this.writer.writeFunction(String.format("TST R%d", registerIndex));
-		this.writer.writeFunction("BEQ 6");
-		this.writer.writeFunction(String.format("STW R%d, -(R%d)", register2, register1));
-		this.writer.writeFunction(String.format("ADQ -2, R%d", registerIndex));
-		this.writer.writeFunction("BNE -6");
-		this.registerManager.freeRegister();
-		this.writer.writeFunction(String.format("LDW R%d, R%d", registerIndex, register1));
-		this.registerManager.freeRegister();
+		this.writer.writeFunction("BNE 4 // Vérifie que la structure n'est pas nil");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+		Record record = (Record) this.treeTypes.get(exp); // Récupère le type de exp
+		Namespace<Variable> fields = record.getNamespace();
+		String nameOfField = tree.getChild(1).toString(); // Récupère le nom du field
+
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d // FIELD : Calcul de l'adresse du champ \"%s\"", registerIndex, registerIndex, fields.get(nameOfField).getOffset(), nameOfField));
 	}
 
-	private void translateAssignment(Tree tree, int registerIndex) {
-		Tree lValue = tree.getChild(0);
-		Tree expToAssign = tree.getChild(1);
-		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
-			case ID:
-				translateIDAdress(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
-				break;
-			case ITEM:
-				translateITEMAdress(lValue, registerIndex);
-				break;
-			case FIELD:
-				translateFIELDAdress(lValue, registerIndex);
-				break;
-			default:
-				// On ne doit pas arriver là si les tests sémantiques sont passés
-		}
-		// Calcule la partie droite du :=, l'assigne à la lValue
-		int registerExp = this.registerManager.provideRegister();
-		translate(expToAssign, registerExp);
-		this.writer.writeFunction(String.format("STW R%d, (R%d) // Affectation", registerExp, registerIndex));
-		this.registerManager.freeRegister();
+	/**
+	 * Ecrit le code pour mettre la valeur d'un champ dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 */
+	private void translateFIELD(Tree tree, int registerIndex) {
+		translateFIELDAddress(tree, registerIndex);
+
+		String nameOfField = tree.getChild(1).toString(); // Récupère le nom du field
+
+		this.writer.writeFunction(String.format("LDW R%d, (R%d) // FIELD : La valeur du champ \"%s\" est mise dans un registre", registerIndex, registerIndex, nameOfField));
 	}
 
-	private void translateSEQ(Tree tree, int registerIndex) {
-		for (int i = 0, l = tree.getChildCount(); i < l; ++i) {
-			this.translate(tree.getChild(i), registerIndex);
+	/**
+	 * Ecrit le code pour mettre l'adresse de l'identifiant dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 * @return
+	 */
+	private void translateIDAddress(Tree tree, int registerIndex) {
+		String name = tree.toString();
+		Variable variable = this.findVariable(name);
+
+		int deplacementVariable = variable.getOffset();
+		String typeOfVar;
+		if (deplacementVariable < 0) { // Si variable est une variable locale
+			deplacementVariable -= 2; // On doit compter le déplacement statique
+			typeOfVar = "variable locale";
+		} else { // variable est un argument de fonction
+			deplacementVariable += 4; // Taille de l'adresse de retour
+			typeOfVar = "argument";
 		}
+
+		int countStaticChain = this.countStaticChainToVariable(tree.toString());
+
+		this.writer.writeFunction(String.format("LDW R%d, BP // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat
+		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
+
+			int loopRegister = this.registerManager.provideRegister();
+
+			this.writer.writeFunction(String.format("LDW R%d, #%d // Début de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", loopRegister, countStaticChain, typeOfVar, name));
+			// Début de boucle :
+			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, -2));
+			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
+			this.writer.writeFunction(String.format("BNE -10 // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
+			// Fin de boucle
+
+			this.registerManager.freeRegister();
+		}
+		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable, typeOfVar, name)); // L'adresse de la variable recherchée est maintenant dans registre voulu
+	}
+
+	/**
+	 * Ecrit le code pour mettre la valeur de l'identifiant dans le registre registerIndex
+	 * @param tree
+	 * @param registerIndex
+	 * @return
+	 */
+	private void translateID(Tree tree, int registerIndex) {
+		String name = tree.toString();
+		translateIDAddress(tree, registerIndex); // Charge l'adresse de ID dans le registre
+		this.writer.writeFunction(String.format("LDW R%d, (R%d) // Chargement de la valeur de \"%s\" dans un registre", registerIndex, registerIndex, name ));
 	}
 
 	private void translateSTR(Tree tree, int registerIndex) {
@@ -1047,134 +904,261 @@ public class TigerTranslator {
 		}
 	}
 
-	/**
-	 * Ecrit le code pour mettre l'adresse de l'identifiant dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 * @return
-	 */
-	private void translateIDAdress(Tree tree, int registerIndex) {
-		String name = tree.toString();
-		Variable variable = this.findVariable(name);
-
-		int deplacementVariable = variable.getOffset();
-		String typeOfVar;
-		if (deplacementVariable < 0) { // Si variable est une variable locale
-			deplacementVariable -= 2; // On doit compter le déplacement statique
-			typeOfVar = "variable locale";
-		} else { // variable est un argument de fonction
-			deplacementVariable += 4; // Taille de l'adresse de retour
-			typeOfVar = "argument";
-		}
-
-		int countStaticChain = this.countStaticChainToVariable(tree.toString());
-
-		this.writer.writeFunction(String.format("LDW R%d, BP // ID_BEGIN : Préparation pour le chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, typeOfVar, name)); // Copie le registre de base dans le registre résultat
-		if (countStaticChain > 0) { // S'il y des chaînages statiques à remonter :
-
-			int loopRegister = this.registerManager.provideRegister();
-
-			this.writer.writeFunction(String.format("LDW R%d, #%d // Début de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", loopRegister, countStaticChain, typeOfVar, name));
-			// Début de boucle :
-			this.writer.writeFunction(String.format("LDW R%d, (R%d)%d", registerIndex, registerIndex, -2));
-			this.writer.writeFunction(String.format("ADQ -1, R%d", loopRegister));
-			this.writer.writeFunction(String.format("BNE -10 // Fin de remontée de chaînage statique pour charger l'adresse de %s \"%s\" dans un registre", typeOfVar, name)); // Jump à (6 - 2)/3 = 2 instructions plus tôt. Le -2 c'est pour cette instruction de saut
-			// Fin de boucle
-
-			this.registerManager.freeRegister();
-		}
-		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d // ID_END : Chargement de l'adresse de %s \"%s\" dans un registre", registerIndex, registerIndex, deplacementVariable, typeOfVar, name)); // L'adresse de la variable recherchée est maintenant dans registre voulu
-	}
-
-	/**
-	 * Ecrit le code pour mettre la valeur de l'identifiant dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 * @return
-	 */
-	private void translateID(Tree tree, int registerIndex) {
-		String name = tree.toString();
-		translateIDAdress(tree, registerIndex); // Charge l'adresse de ID dans le registre
-		this.writer.writeFunction(String.format("LDW R%d, (R%d) // Chargement de la valeur de \"%s\" dans un registre", registerIndex, registerIndex, name ));
-	}
-
-	/**
-	 * Ecrit le code pour mettre l'adresse d'un élément de tableau (ARRAY) dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 */
-	private void translateITEMAdress(Tree tree, int registerIndex) {
-		Tree exp = tree.getChild(0);
-		this.translate(exp, registerIndex); // register Index contient maintenant l'adresse du tableau
-
-		int registerIndexOfArray = this.registerManager.provideRegister();
-		this.translate(tree.getChild(1), registerIndexOfArray); // Evaluation de l'indice du tableau
-
-		// Tests sur l'indice du tableau : negativeIndex
-		this.writer.writeFunction(String.format("TST R%d", registerIndexOfArray));
-		this.writer.writeFunction("BGE 4 // Vérifie que l'indice est positif");
-		this.writer.writeFunction("TRP #EXIT_EXC");
-
-		// Tests sur l'indice du tableau : outOfBound Exception
-		int registerOfArraySize = this.registerManager.provideRegister();
-		this.writer.writeFunction(String.format("LDW R%d, (R%d)-2 // Charge la taille du tableau", registerOfArraySize, registerIndex));
-		this.writer.writeFunction(String.format("CMP R%d, R%d", registerIndexOfArray, registerOfArraySize));
-		this.writer.writeFunction(String.format("BLW 4 // Vérifie que l'indice est strictement inférieur à la taille du tableau"));
-		this.writer.writeFunction("TRP #EXIT_EXC");
-		this.registerManager.freeRegister();
-
-		this.writer.writeFunction(String.format("SHL R%d, R%d // ITEM : Calcul de l'offset de l'élément du tableau", registerIndexOfArray, registerIndexOfArray));
-		this.writer.writeFunction(String.format("ADD R%d, R%d, R%d // ITEM : Calcul de l'adresse de l'élement du tableau", registerIndex, registerIndexOfArray, registerIndex));
-
-		this.registerManager.freeRegister();
-	}
-
-	/**
-	 * Ecrit le code pour mettre la valeur d'un élément de tableau (ARRAY) dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 */
-	private void translateITEM(Tree tree, int registerIndex) {
-		translateITEMAdress(tree, registerIndex);
-		this.writer.writeFunction(String.format("LDW R%d, (R%d) // ITEM : La valeur de l'élémént du tableau dans un registre", registerIndex, registerIndex));
-	}
-
-	/**
-	 * Ecrit le code pour mettre l'adresse d'un champ dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 */
-	private void translateFIELDAdress(Tree tree, int registerIndex) {
-		Tree exp = tree.getChild(0);
-		this.translate(exp, registerIndex); // Evaluation de la partie gauche, le pointeur du Record est maintenant dans registerIndex
-
-		// Teste l'erreur à l'exécution : accès à un champ d'un record valant nil
-		this.writer.writeFunction(String.format("TST R%d", registerIndex));
-		this.writer.writeFunction("BNE 4 // Vérifie que la structure n'est pas nil");
-		this.writer.writeFunction("TRP #EXIT_EXC");
-
-		Record record = (Record) this.treeTypes.get(exp); // Récupère le type de exp
-		Namespace<Variable> fields = record.getNamespace();
-		String nameOfField = tree.getChild(1).toString(); // Récupère le nom du field
-
-		this.writer.writeFunction(String.format("ADI R%d, R%d, #%d // FIELD : Calcul de l'adresse du champ \"%s\"", registerIndex, registerIndex, fields.get(nameOfField).getOffset(), nameOfField));
-	}
-
-	/**
-	 * Ecrit le code pour mettre la valeur d'un champ dans le registre registerIndex
-	 * @param tree
-	 * @param registerIndex
-	 */
-	private void translateFIELD(Tree tree, int registerIndex) {
-		translateFIELDAdress(tree, registerIndex);
-
-		String nameOfField = tree.getChild(1).toString(); // Récupère le nom du field
-
-		this.writer.writeFunction(String.format("LDW R%d, (R%d) // FIELD : La valeur du champ \"%s\" est mise dans un registre", registerIndex, registerIndex, nameOfField));
-	}
-
 	private void translateINT(Tree tree, int registerIndex) {
 		this.writer.writeFunction(String.format("LDW R%d, #%s", registerIndex, tree.toString()));
+	}
+
+	private void translateAssignment(Tree tree, int registerIndex) {
+		Tree lValue = tree.getChild(0);
+		Tree expToAssign = tree.getChild(1);
+		switch (lValue.getType()) { // Disjonction de cas selon le type de lValue qui prendra l'assignement
+			case ID:
+				translateIDAddress(lValue, registerIndex); // registerIndex contient maintenant l'adresse de la variable de destination de l'affectation
+				break;
+			case ITEM:
+				translateITEMAddress(lValue, registerIndex);
+				break;
+			case FIELD:
+				translateFIELDAddress(lValue, registerIndex);
+				break;
+			default:
+				// On ne doit pas arriver là si les tests sémantiques sont passés
+		}
+		// Calcule la partie droite du :=, l'assigne à la lValue
+		int registerExp = this.registerManager.provideRegister();
+		translate(expToAssign, registerExp);
+		this.writer.writeFunction(String.format("STW R%d, (R%d) // Affectation", registerExp, registerIndex));
+		this.registerManager.freeRegister();
+	}
+
+	private void translateSpaceship(Tree leftTree, Tree rightTree, int registerIndex) {
+		if (!this.dependencies.contains(null)) { // Comparaison trilatérale pas encore écrite
+			this.dependencies.add(null);
+			this.writeHeader(null, "spaceship"); // Ecrit le code de la comparaison trilatérale dans le header
+		}
+		this.registerManager.saveAll(registerIndex);
+		int registerIndex2 = this.registerManager.provideRegister();
+		this.translate(leftTree, registerIndex2);
+		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de l'opérande gauche avant la comparaison trilatérale", registerIndex2));
+		this.stackCounter.addCount(2);
+		this.translate(rightTree, registerIndex2);
+		this.writer.writeFunction(String.format("STW R%d, -(SP) // Empilage de l'opérande droit avant la comparaison trilatérale", registerIndex2));
+		this.stackCounter.addCount(2);
+		this.writer.writeFunction(String.format("JSR @%s", labelGenerator.getLabel((SymbolTable) null, "spaceship")));
+		this.stackCounter.addCount(-4);
+		this.writer.writeFunction("ADQ 4, SP // Dépilage après la comparaison trilatérale");
+		this.registerManager.freeRegister();
+		this.registerManager.restoreAll(registerIndex);
+		this.writer.writeFunction(String.format("LDW R%d, R0", registerIndex));
+	}
+
+	private void translateEqual(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BEQ 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction("BEQ 4");
+			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			this.writer.writeFunction("BMP 2");
+			this.writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+		}
+	}
+
+	private void translateNotEqual(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BNE 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction("BGE 2");
+			this.writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+		}
+	}
+
+	private void translateLower(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BLW 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
+			this.writer.writeFunction("BGE 2");
+			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+		}
+	}
+
+	private void translateNotLower(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BGE 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction("BGT 2");
+			this.writer.writeFunction(String.format("ADQ 1, R%d", registerIndex));
+		}
+	}
+
+	private void translateGreater(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BGT 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction("BGE 2");
+			this.writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+		}
+	}
+
+	private void translateNotGreater(Tree tree, int registerIndex) {
+		if (this.treeTypes.get(tree.getChild(0)) != stringType) {
+			int registerLeft = registerIndex;
+			this.translate(tree.getChild(0), registerLeft);
+			int registerRight = registerManager.provideRegister();
+			this.translate(tree.getChild(1), registerRight);
+			writer.writeFunction(String.format("CMP R%d, R%d", registerLeft, registerRight));
+			writer.writeFunction(String.format("BLE 4"));
+			writer.writeFunction(String.format("LDQ 0, R%d", registerIndex));
+			writer.writeFunction(String.format("BMP 2"));
+			writer.writeFunction(String.format("LDQ 1, R%d", registerIndex));
+			registerManager.freeRegister();
+		} else {
+			this.translateSpaceship(tree.getChild(0), tree.getChild(1), registerIndex);
+			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
+			this.writer.writeFunction("BGT 2");
+			this.writer.writeFunction(String.format("ADQ 1, R%d", registerIndex));
+		}
+	}
+
+	private void translateOr(Tree tree, int registerIndex) {
+
+		String endLabel = this.labelGenerator.getLabel(tree, "end");
+
+		for (int i = 0; i < tree.getChildCount(); i++) {
+
+			this.translate(tree.getChild(i), registerIndex);
+
+			// Si le résultat n'est pas nul, on peut sauter à la fin du *or*
+			this.writer.writeFunction(String.format("TST R%d", registerIndex));
+			this.writer.writeFunction(String.format("BEQ 4"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
+		}
+
+		this.writer.writeFunction(endLabel, "NOP");
+	}
+
+	private void translateAnd(Tree tree, int registerIndex) {
+
+		String endLabel = this.labelGenerator.getLabel(tree, "end");
+
+		for (int i = 0; i < tree.getChildCount(); i++) {
+
+			this.translate(tree.getChild(i), registerIndex);
+
+			// Si le résultat est nul, on peut sauter à la fin du *and*
+			this.writer.writeFunction(String.format("TST R%d", registerIndex));
+			this.writer.writeFunction(String.format("BNE 4"));
+			this.writer.writeFunction(String.format("JEA @%s", endLabel));
+		}
+
+		this.writer.writeFunction(endLabel, "NOP");
+	}
+
+	private void translateAdd(Tree tree, int registerIndex) {
+		translate(tree.getChild(0), registerIndex);
+		int register = registerManager.provideRegister();
+		for (int i = 1; i < tree.getChildCount(); i++) {
+			translate(tree.getChild(i), register);
+			this.writer.writeFunction(String.format("ADD R%d, R%d, R%d", registerIndex, register, registerIndex));
+		}
+		registerManager.freeRegister();
+	}
+
+	private void translateSub(Tree tree, int registerIndex) {
+		translate(tree.getChild(0), registerIndex);
+		if (tree.getChildCount() == 1) {
+			this.writer.writeFunction(String.format("NEG R%d, R%d", registerIndex, registerIndex));
+		} else {
+			int register = registerManager.provideRegister();
+			translate(tree.getChild(1), register);
+			this.writer.writeFunction(String.format("SUB R%d, R%d, R%d", registerIndex, register, registerIndex));
+			registerManager.freeRegister();
+		}
+	}
+
+	private void translateMul(Tree tree, int registerIndex) {
+		translate(tree.getChild(0), registerIndex);
+		int register = registerManager.provideRegister();
+		for (int i = 1; i < tree.getChildCount(); i++) {
+			translate(tree.getChild(i), register);
+			this.writer.writeFunction(String.format("MUL R%d, R%d, R%d", registerIndex, register, registerIndex));
+		}
+		registerManager.freeRegister();
+	}
+
+	private void translateDiv(Tree tree, int registerIndex) {
+
+		//registerIndex contient A
+		int registerA = registerManager.provideRegister();
+		translate(tree.getChild(0), registerA);
+
+		//Met B dans registerB
+		int registerB=registerManager.provideRegister();
+		translate(tree.getChild(1), registerB);
+
+		// Vérification d'erreur à l'exécution : cas d'une division par zéro
+		this.writer.writeFunction(String.format("TST R%d", registerB));
+		this.writer.writeFunction("BNE 4 // Vérifie que l'on ne divise par zéro");
+		this.writer.writeFunction("TRP #EXIT_EXC");
+
+		//Opération diviser va modifier registerA
+		this.writer.writeFunction(String.format("DIV R%d, R%d, R%d", registerA, registerB, registerIndex));
+
+		/*
+		this.writer.writeMain("LDW R"+registerA+"");
+		*/
+		registerManager.freeRegister(); // Libère registerB
+		registerManager.freeRegister(); // Libère registerA
 	}
 
 	private void translateIf(Tree tree, int registerIndex) {

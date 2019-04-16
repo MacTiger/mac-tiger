@@ -221,12 +221,11 @@ public class TigerChecker {
 		switch (tree.toString()) {
 			case ":=": return this.checkAssignment(tree);
 			case "=":
-			case "<>": return this.checkComparison(tree);
-			case ">":
+			case "<>": return this.checkEquality(tree);
 			case "<":
 			case ">=":
-			case "<=": return this.checkOrdering(tree);
-			// "|", "&", "+", "-", "*" et "/" ont tous le même comportement pour les types de leurs opérandes :
+			case ">":
+			case "<=": return this.checkInequality(tree);
 			case "|":
 			case "&":
 			case "+":
@@ -468,7 +467,7 @@ public class TigerChecker {
 		return null;
 	}
 
-	private Type checkComparison(Tree tree) {
+	private Type checkEquality(Tree tree) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.check(exp);
 		if (this.check(tree.getChild(1), expType) == TigerChecker.nilPseudoType) {
@@ -478,7 +477,7 @@ public class TigerChecker {
 		return TigerChecker.intType;
 	}
 
-	private Type checkOrdering(Tree tree) {
+	private Type checkInequality(Tree tree) {
 		Tree exp = tree.getChild(0);
 		Type expType = this.check(exp);
 		if ((expType != TigerChecker.intType) && (expType != TigerChecker.stringType)) {
