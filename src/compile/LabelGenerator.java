@@ -95,7 +95,7 @@ public class LabelGenerator {
 			this.treeLabels.put(tree, labels);
 		}
 
-		String label = this.trimLabel("B" + this.treeLabels.size() + "_" + key);
+		String label = this.trimLabel("B" + this.treeLabels.size() + key);
 		labels.put(key, label);
 		return label;
 	}

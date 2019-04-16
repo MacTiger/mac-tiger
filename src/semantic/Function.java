@@ -4,12 +4,10 @@ public class Function extends FunctionOrVariable {
 
 	private Type type;
 	private SymbolTable table;
-	private boolean written;
 
 	public Function() {
 		this.type = null;
 		this.table = null;
-		this.written = false;
 	}
 
 	public void setType(Type type) {
@@ -26,14 +24,6 @@ public class Function extends FunctionOrVariable {
 
 	public SymbolTable getSymbolTable() {
 		return this.table;
-	}
-
-	public void setWritten() {
-		this.written = true;
-	}
-
-	public boolean isWritten() {
-		return written;
 	}
 
 	public boolean isNative() {

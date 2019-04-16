@@ -1,0 +1,44 @@
+let
+	/*
+		`intArray`:
+			type de tableau contenant des entiers
+	*/
+	type intArray = array of int
+	/*
+		`max`:
+			fonction qui retourne le maximum d'un tableau `arr` de taille `size`
+	*/
+	function max (arr : intArray, size : int) : int =
+		if size > 0 then
+			let
+				var max := arr [0]
+			in
+				for i := 1 to size - 1 do
+					let
+						var item := arr [i]
+					in
+						if item > max then (
+							max := item
+						)
+					end;
+				max
+			end
+		else
+			0
+	var size := 12
+	var arr := intArray [size] of 0
+in
+	arr [0] := 48;
+	arr [1] := -26;
+	arr [2] := 4;
+	arr [3] := -50;
+	arr [4] := -47;
+	arr [5] := -110;
+	arr [6] := 26;
+	arr [7] := 69;
+	arr [8] := -88;
+	arr [9] := 8;
+	arr [10] := 64;
+	arr [11] := 2;
+	printi (max (arr, size))
+end
