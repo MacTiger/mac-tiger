@@ -1,0 +1,274 @@
+let
+	type intRow = array of int
+	type intGrid = array of intRow
+	type Game = {turn : int, rows : int, columns : int, grid : intGrid}
+	var defaultRows := 6
+	var defaultColumns := 7
+	var defaultTurn := -1
+	function Game (turn : int, rows : int, columns : int) : Game = (
+		let
+			var turn := turn
+			var rows := (
+				if rows >= defaultRows then (
+					rows
+				) else (
+					defaultRows
+				)
+			)
+			var columns := (
+				if columns >= defaultColumns then (
+					columns
+				) else (
+					defaultColumns
+				)
+			)
+			var grid := intGrid [rows] of intRow [0] of 0
+		in
+			for row := 0 to rows - 1 do (
+				grid [row] := intRow [columns] of 0
+			);
+			Game {turn = turn, rows = rows, columns = columns, grid = grid}
+		end
+	)
+	function changeTurn (game : Game) = (
+		game.turn := -game.turn
+	)
+	function addToken (game : Game, column : int) : int = (
+		if column >= 0 & column < game.columns then (
+			let
+				var game := game
+				var turn := game.turn
+				var rows := game.rows
+				var grid := game.grid
+				var row := 0
+				var column := column
+			in
+				while row < rows & not (grid [row] [column]) do (
+					row := row + 1
+				);
+				if (
+					row := row - 1;
+					row + 1
+				) then (
+					grid [row] [column] := turn
+				);
+				row
+			end
+		) else (
+			-1
+		)
+	)
+	function getToken (game : Game, row : int, column : int) : int = (
+		if 0 <= row & row < game.rows & 0 <= column & column < game.columns then (
+			game.grid [row] [column]
+		) else (
+			0
+		)
+	)
+	function hasWinner (game : Game, row : int, column : int) : int = (
+		let
+			var game := game
+			var turn := game.turn
+			var row := row
+			var column := column
+			var counts := intRow [4] of 0
+			var hasWinner := 0
+		in
+			for i := -3 to 3 do (
+				let
+					var game := game
+					var turn := turn
+					var row := row
+					var column := column
+					var counts := counts
+				in
+					for j := 0 to 3 do (
+						let
+							var game := game
+							var turn := turn
+							var row := (
+								if j = 0 then (
+									row
+								) else (
+									row + i
+								)
+							)
+							var column := (
+								if j = 2 then (
+									column
+								) else if j = 3 then (
+									column - i
+								) else (
+									column + i
+								)
+							)
+							var counts := counts
+						in
+							counts [j] := (
+								if getToken (game, row, column) = turn then (
+									let
+										var counts := counts
+										var count := counts [j]
+									in
+										if count = 3 then (
+											hasWinner := 1;
+											break
+										);
+										count + 1
+									end
+								) else (
+									0
+								)
+							)
+						end
+					);
+					if hasWinner then (
+						break
+					)
+				end
+			);
+			hasWinner
+		end
+	)
+	function isFull (game : Game) : int = (
+		let
+			var game := game
+			var grid := game.grid
+			var row := grid [0]
+			var maxColumn := game.columns - 1
+			var isFull := 1
+		in
+			for column := 0 to maxColumn do (
+				if not (row [column]) then (
+					isFull := 0;
+					break
+				)
+			);
+			isFull
+		end
+	)
+	function printGame (game : Game) = (
+		let
+			var game := game
+			var grid := game.grid
+			var maxRow := game.rows - 1
+			var maxColumn := game.columns - 1
+		in
+			for row := 0 to maxRow do (
+				let
+					var row := grid [row]
+					var maxColumn := maxColumn
+				in
+					for column := 0 to maxColumn do (
+						let
+							var token := row [column]
+						in
+							if token > 0 then (
+								print ("|<>")
+							) else if token < 0 then (
+								print ("|[]")
+							) else (
+								print ("|  ")
+							)
+						end
+					);
+					print ("|\n")
+				end
+			);
+			for column := 0 to maxColumn do (
+				print ("+--")
+			);
+			print ("+\n");
+			for column := 1 to maxColumn + 1 do (
+				if column < 10 then (
+					print ("| ");
+					printi (column)
+				) else (
+					print ("|");
+					printi (column)
+				)
+			);
+			print ("|\n");
+			for column := 0 to maxColumn do (
+				print ("+--")
+			);
+			print ("+\n")
+		end
+	)
+	var scores := intRow [2] of 0
+	var nextTurn := defaultTurn
+in
+	while 1 do (
+		let
+			var game := Game (
+				nextTurn,
+				(
+					print ("Nombre de lignes (minimum ");
+					printi (defaultRows);
+					print (") ? ");
+					read ()
+				),
+				(
+					print ("Nombre de colonnes (minimum ");
+					printi (defaultColumns);
+					print (") ? ");
+					read ()
+				)
+			)
+		in
+			while 1 do (
+				printGame (game);
+				let
+					var turn := (game.turn + 1) / 2
+				in
+					print ("Au tour du joueur ");
+					printi (turn + 1);
+					print (" !\n");
+					let
+						var row := 0
+						var column := 0
+					in
+						while 1 do (
+							column := (
+								print ("Colonne (entre 1 et ");
+								printi (game.columns);
+								print (") ? ");
+								read () - 1
+							);
+							row := addToken (game, column);
+							if row <> -1 then (
+								break
+							);
+							print ("Colonne invalide !\n")
+						);
+						if hasWinner (game, row, column) then (
+							scores [turn] := scores [turn] + 1;
+							nextTurn := 1 - turn * 2;
+							printGame (game);
+							print ("Victoire du joueur ");
+							printi (turn + 1);
+							print (" !\n");
+							break
+						)
+					end
+				end;
+				if isFull (game) then (
+					nextTurn := -nextTurn;
+					printGame (game);
+					print ("Match nul...\n");
+					break
+				);
+				changeTurn (game)
+			);
+			print ("Les scores sont de ");
+			printi (scores [0]);
+			print (" pour le joueur 1 et ");
+			printi (scores [1]);
+			print (" pour le joueur 2\n");
+			print ("Voulez-vous arreter de jouer (1 pour oui et 0 pour non) ? ");
+			if read () then (
+				break
+			)
+		end
+	)
+end
