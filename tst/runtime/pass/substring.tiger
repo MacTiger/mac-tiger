@@ -79,7 +79,7 @@ in
 	str := substring ("ab", 2, 2);
 	print (str);
 	print ("\n");
-	printi (size (str))/*;
+	printi (size (str));
 	print ("\n");
 	str := substring ("abc", -1, -1);
 	print (str);
@@ -224,5 +224,5 @@ in
 	str := substring ("", 0, 0);
 	print (str);
 	print ("\n");
-	printi (size (str))*/
+	printi (size (str))
 end
