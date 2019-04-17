@@ -1,0 +1,5 @@
+(
+	printi (read ());
+	print ("\n");
+	printi (read ())
+)

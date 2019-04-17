@@ -8,23 +8,26 @@ let
 		`max`:
 			fonction qui retourne le maximum d'un tableau `arr` de taille `size`
 	*/
-	function max (arr : intArray, size : int) : int =
-		if size > 0 then
+	function max (arr : intArray, size : int) : int = (
+		if size > 0 then (
 			let
 				var max := arr [0]
 			in
-				for i := 1 to size - 1 do
+				for i := 1 to size - 1 do (
 					let
 						var item := arr [i]
 					in
 						if item > max then (
 							max := item
 						)
-					end;
+					end
+				);
 				max
 			end
-		else
+		) else (
 			0
+		)
+	)
 	var size := 12
 	var arr := intArray [size] of 0
 in

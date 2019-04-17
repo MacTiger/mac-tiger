@@ -12,13 +12,13 @@ let
 			après ajout dans l'arbre d'un nœud de valeur `value` ou un nouvel
 			arbre si celui-ci est vide
 	*/
-	function addToBST (tree : BST, value : int) : BST =
+	function addToBST (tree : BST, value : int) : BST = (
 		let
 			var leaf := BST {value = value, left = nil, right = nil}
 		in
-			if tree = nil then
+			if tree = nil then (
 				leaf
-			else
+			) else (
 				let
 					var side := 0
 					var current : BST := nil
@@ -27,10 +27,11 @@ let
 					while next <> nil do (
 						current := next;
 						side := value < current.value;
-						next := if side then
+						next := if side then (
 							current.left
-						else
+						) else (
 							current.right
+						)
 					);
 					if side then (
 						current.left := leaf
@@ -39,22 +40,24 @@ let
 					);
 					tree
 				end
+			)
 		end
+	)
 	/*
 		`printBST`:
 			procédure qui affiche une représentation d'un arbre binaire de
 			recherche `tree`, les nœuds de l'arbre étant indentés selon la
 			profondeur de leur position dans l'arbre
 	*/
-	function printBST (tree : BST) =
+	function printBST (tree : BST) = (
 		let
 			/*
 				`printBST`:
 					procédure qui affiche une représentation d'un nœud d'arbre
 					binaire de recherche `tree` préfixé de `currentPadding`
 			*/
-			function printBST (tree : BST, currentPadding : string) =
-				if tree <> nil then
+			function printBST (tree : BST, currentPadding : string) = (
+				if tree <> nil then (
 					let
 						var nextPadding := concat (currentPadding, "\t")
 					in
@@ -64,18 +67,21 @@ let
 						print ("\n");
 						printBST (tree.right, nextPadding)
 					end
+				)
+			)
 		in
 			printBST (tree, "")
 		end
+	)
 	/*
 		`itoa`:
 			fonction qui retourne la chaîne de caractères représentant l'entier
 			`integer` en base décimale
 	*/
-	function itoa (integer : int) : string =
-		if not (integer) then
+	function itoa (integer : int) : string = (
+		if not (integer) then (
 			"0"
-		else
+		) else (
 			let
 				var str := ""
 				var neg := 0
@@ -84,7 +90,7 @@ let
 					integer := -integer;
 					neg := 1
 				);
-				while integer do
+				while integer do (
 					let
 						var quot := 0
 						var rem := 0
@@ -93,12 +99,15 @@ let
 						rem := integer - quot * 10;
 						integer := quot;
 						str := concat (chr (rem + 48), str)
-					end;
+					end
+				);
 				if neg then (
 					str := concat ("-", str)
 				);
 				str
 			end
+		)
+	)
 	var tree : BST := nil
 in
 	tree := addToBST (tree, 16);

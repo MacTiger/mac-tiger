@@ -8,31 +8,34 @@ let
 		`index`:
 			fonction qui retourne l'indice du coefficient binomial "`k` parmi `n`" dans un tableau de coefficients binomiaux
 	*/
-	function index (n : int, k : int) : int =
+	function index (n : int, k : int) : int = (
 		n * (n + 1) / 2 + k
+	)
 	/*
 		`coefficient`:
 			fonction qui retourne le coefficient binomial "`k` parmi `n`" à partir d'un tableau de coefficients binomiaux `coefficients`
 	*/
-	function coefficient (coefficients : intArray, n : int, k : int) : int =
+	function coefficient (coefficients : intArray, n : int, k : int) : int = (
 		let
 			var index := index (n, k)
 		in
 			if not (coefficients [index]) then (
-				coefficients [index] :=
-					if k = 0 | k = n then
+				coefficients [index] := (
+					if k = 0 | k = n then (
 						1
-					else (
+					) else (
 						coefficient (coefficients, n - 1, k - 1) + coefficient (coefficients, n - 1, k)
 					)
+				)
 			);
 			coefficients [index]
 		end
+	)
 	/*
 		`printPascal`:
 			procédure qui affiche le triangle de pascal jusqu'au rang `rank` exclu
 	*/
-	function printPascal (rank : int) =
+	function printPascal (rank : int) = (
 		let
 			var rank := rank > 0 & rank
 			var coefficients := intArray [index (rank, 0)] of 0
@@ -46,6 +49,7 @@ let
 				print ("\n")
 			)
 		end
+	)
 in
 	printPascal (read ())
 end

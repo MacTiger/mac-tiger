@@ -481,11 +481,11 @@ public class TigerChecker {
 		Tree exp = tree.getChild(0);
 		Type expType = this.check(exp);
 		if ((expType != TigerChecker.intType) && (expType != TigerChecker.stringType)) {
-			this.reportError(exp, "the type of %s is not a primitive type (%s or %s)");
+			this.reportError(exp, "%s is not a primitive value (either an integer or a string)", exp.toString());
 			exp = tree.getChild(1);
 			expType = this.check(exp);
 			if ((expType != TigerChecker.intType) && (expType != TigerChecker.stringType)) {
-				this.reportError(exp, "%s is not a primitive value (either an integer or a string)");
+				this.reportError(exp, "%s is not a primitive value (either an integer or a string)", exp.toString());
 			}
 		} else {
 			exp = tree.getChild(1);

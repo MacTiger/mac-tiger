@@ -5,9 +5,9 @@ let
 			var i := 0
 			var resultat := 0
 		in
-			if b = 0 then
+			if b = 0 then (
 				1
-			else (
+			) else (
 				i := 1;
 				resultat := a;
 				while i < b do (
