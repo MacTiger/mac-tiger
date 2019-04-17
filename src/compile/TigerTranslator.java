@@ -336,7 +336,7 @@ public class TigerTranslator {
 				this.writer.writeHeader("RTS"); // FIN
 
 				this.writer.writeHeader("TST R4");
-				this.writer.writeHeader("BGE 12"); // Go fin prog n<0
+				this.writer.writeHeader("BGT 12"); // Go fin prog n<0
 				this.writer.writeHeader("LDW R5, #0");
 				this.writer.writeHeader("STW R5, (HP)+");
 				this.writer.writeHeader("LDW R0, HP");
