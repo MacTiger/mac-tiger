@@ -147,53 +147,42 @@ let
 			isFull
 		end
 	)
-	function printGame (game : Game) = (
-		let
-			var game := game
-			var grid := game.grid
-			var maxRow := game.rows - 1
-			var maxColumn := game.columns - 1
-		in
-			for row := 0 to maxRow do (
-				let
-					var row := grid [row]
-					var maxColumn := maxColumn
-				in
-					for column := 0 to maxColumn do (
-						let
-							var token := row [column]
-						in
-							if token > 0 then (
-								print ("|[]")
-							) else if token < 0 then (
-								print ("|<>")
-							) else (
-								print ("|  ")
-							)
-						end
-					);
-					print ("|\n")
-				end
+	function printGrid (rows: int, columns : int) = (
+		print ("\^[[0;34m");
+		for row := 1 to rows do (
+			for column := 1 to columns do (
+				print ("|  ")
 			);
-			for column := 0 to maxColumn do (
-				print ("+--")
+			print ("|\n")
+		);
+		for column := 1 to columns do (
+			print ("+--")
+		);
+		print ("+\n");
+		for column := 1 to columns do (
+			print ("|\^[[0m");
+			if column < 10 then (
+				print (" ")
 			);
-			print ("+\n");
-			for column := 1 to maxColumn + 1 do (
-				if column < 10 then (
-					print ("| ");
-					printi (column)
-				) else (
-					print ("|");
-					printi (column)
-				)
-			);
-			print ("|\n");
-			for column := 0 to maxColumn do (
-				print ("+--")
-			);
-			print ("+\n")
-		end
+			printi (column);
+			print ("\^[[0;34m")
+		);
+		print ("|\n");
+		for column := 1 to columns do (
+			print ("+--")
+		);
+		print ("+\n\^[[0m")
+	)
+	function printToken (turn : int) = (
+		print("\^[[0;3");
+		printi (turn + 2);
+		print ("m");
+		if turn > 0 then (
+			print ("[]")
+		) else (
+			print ("<>")
+		);
+		print ("\^[[0m")
 	)
 	var scores := intRow [2] of 0
 	var nextTurn := defaultTurn
@@ -216,59 +205,72 @@ in
 				)
 			)
 		in
+			print ("\^[[2A\^[[2M");
+			printGrid (game.rows, game.columns);
 			while 1 do (
-				printGame (game);
+				print ("Au tour du joueur ");
+				printToken (game.turn);
+				print (" !\n");
 				let
-					var turn := (game.turn + 1) / 2
+					var row := 0
+					var column := 0
 				in
-					print ("Au tour du joueur ");
-					printi (turn + 1);
-					print (" !\n");
-					let
-						var row := 0
-						var column := 0
-					in
-						while 1 do (
-							column := (
-								print ("Colonne (entre 1 et ");
-								printi (game.columns);
-								print (") ? ");
-								read () - 1
-							);
-							row := addToken (game, column);
-							if row <> -1 then (
-								break
-							);
-							print ("Colonne invalide !\n")
+					while 1 do (
+						column := (
+							print ("Colonne (entre 1 et ");
+							printi (game.columns);
+							print (") ? ");
+							read () - 1
 						);
-						if hasWinner (game, row, column) then (
-							scores [turn] := scores [turn] + 1;
-							nextTurn := 1 - turn * 2;
-							printGame (game);
-							print ("Victoire du joueur ");
-							printi (turn + 1);
-							print (" !\n");
+						row := addToken (game, column);
+						if row <> -1 then (
+							print ("\^[[");
+							printi (5 + game.rows - row);
+							print ("F\^[[");
+							printi (column * 3 + 1);
+							print ("C\^[[");
+							printToken (game.turn);
+							print ("\^[[");
+							printi (3 + game.rows - row);
+							print ("E");
 							break
-						)
-					end
+						);
+						print ("\^[[1A\^[[1M")
+					);
+					if hasWinner (game, row, column) then (
+						let
+							var player := (game.turn + 1) / 2
+						in
+							scores [player] := scores [player] + 1
+						end;
+						nextTurn := -game.turn;
+						print ("\^[[2MVictoire du joueur ");
+						printToken (game.turn);
+						print (" !\n");
+						break
+					)
 				end;
 				if isFull (game) then (
 					nextTurn := -nextTurn;
-					printGame (game);
-					print ("Match nul...\n");
+					print ("\^[[2MMatch nul...\n");
 					break
 				);
 				changeTurn (game)
 			);
-			print ("Les scores sont de ");
+			print ("Les scores sont de \^[[0;32m");
 			printi (scores [0]);
-			print (" pour le joueur 1 et ");
+			print ("\^[[0m pour le joueur ");
+			printToken (-1);
+			print (" et \^[[0;32m");
 			printi (scores [1]);
-			print (" pour le joueur 2.\n");
-			print ("Voulez-vous arreter de jouer (1 pour oui et 0 pour non) ? ");
+			print ("\^[[0m pour le joueur ");
+			printToken (1);
+			print (".\nVoulez-vous arreter de jouer (1 pour oui et 0 pour non) ? ");
 			if read () then (
+				print ("\^[[1A\^[[1M");
 				break
-			)
+			);
+			print ("\^[[1A\^[[1M")
 		end
 	)
 end

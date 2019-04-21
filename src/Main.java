@@ -53,7 +53,7 @@ public class Main {
 			public void reportError(RecognitionException exception) {
 				String message = this.getErrorMessage(exception, tokenNames);
 				int row = exception.line;
-				int column = exception.line;
+				int column = exception.charPositionInLine;
 				notifier.lexicalError(message, row, column);
 			}
 			public String getCharErrorDisplay(int character) {
@@ -70,7 +70,7 @@ public class Main {
 			public void reportError(RecognitionException exception) {
 				String message = this.getErrorMessage(exception, tokenNames);
 				int row = exception.line;
-				int column = exception.line;
+				int column = exception.charPositionInLine;
 				notifier.syntacticError(message, row, column);
 			}
 			public String getTokenErrorDisplay(Token token) {
