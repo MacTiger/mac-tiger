@@ -1,104 +1,117 @@
 @startuml
-
-Class TigerTranslator{
-  +String toString()
+class TigerChecker {
+    + TigerChecker(Tree tree)
+    + SymbolTable getSymbolTable()
+    + Map<Tree, Type> getTreeTypes()
 }
-
-Class Writer{
-  +Writer(LabelGenerator)
-  +void writeHeader(String label, String statement)
-  +void writeHeader(String statement)
-  +void writeHeader()
-  +void writeMainLine(String line)
-  +void writeMain(String label, String statement)
-  +void writeMain(String statement)
-  +void writeFunctionLine(String line)
-  +void writeFunction(String label, String statement)
-  +void writeFunction(String statement)
-  +void descend()
-  +void ascend()
-  +String toString()
+class SymbolTable {
+    - int depth
+    - SymbolTable parent
+    - List<SymbolTable> children
+    - Namespace<Type> types
+    - Namespace<FunctionOrVariable> functionsAndVariables
 }
-
-Class LabelGenerator{
-  +LabelGenerator(int maxLengthOfLabel)
-  +String padLabel(String string)
-  +String getIndent()
-  +String getLabel(SymbolTable table, String name)
-  +String getLabel(SymbolTable symbolTable)
-  +String getLabel(Tree tree, String key)
+class Namespace<Symbol extends Symbol> {
+    - Map<String, Symbol> symbols
 }
-
-Class RegisterManager{
-  +RegisterManager(Writer)
-  +void descend()
-  +void ascend()
-  +int saveAll()
-  +void restoreAll()
-  +int provideRegister()
-  +void freeRegister()
+abstract class Symbol
+abstract class FunctionOrVariable
+class Function {
+    - Type type
+    - SymbolTable table
 }
-
-TigerTranslator "0" -- "1\ncurrentTDS" SymbolTable
-TigerTranslator "0" -- "1" Writer
-TigerTranslator "0" -- "1" LabelGenerator
-TigerTranslator "0" -- "1" RegisterManager
-
-Writer "0" -- "1" LabelGenerator
-RegisterManager "0" -- "1" Writer
-
-
-
-Class Namespace{
--Map<String,Symbol> symbols
+class Variable {
+    - Type type
+    - int offset
+    - writable
+    - translated
 }
-Namespace -- "*" Symbol
-Abstract class Type{
-
+abstract class Type
+class Primitive {
+    - int size
 }
-
-Class Array{
--Type type
+class Array {
+    - Type type
 }
-Class Primitive{
--Int size
+class Record {
+    - Namespace<Variable> namespace
 }
-Class Record{
--Namespace<Variable> namespace
+Symbol <|-up- FunctionOrVariable
+FunctionOrVariable <|-left- Function
+FunctionOrVariable <|-right- Variable
+Symbol <|-down- Type
+Type <|-down- Primitive
+Type <|-down- Array
+Type <|-down- Record
+TigerChecker "0"-down-"2" SymbolTable
+SymbolTable "1"--"*" SymbolTable
+SymbolTable "0"--"2" Namespace
+SymbolTable "0"--"*" FunctionOrVariable
+SymbolTable "1"--"0" Function
+SymbolTable "0"--"*" Type
+Function "0"--"1" Type
+Variable "0"--"1" Type
+Array "0"--"1" Type
+Record "0"--"1" Namespace
+Record "0"--"*" Variable
+class TigerTranslator {
+    + TigerTranslator(Tree tree, Map<Tree, Type> treeTypes, SymbolTable table)
+    + String toString()
 }
-Type <|--Array
-Type <|--Primitive
-Type <|-- Record
-
-
-Abstract class Symbol{
-
+class LabelGenerator {
+    + LabelGenerator(int length)
+    + String padLabel(String string)
+    + String getIndent()
+    + String getLabel(SymbolTable table, String name)
+    + String getLabel(SymbolTable symbolTable)
+    + String getLabel(Tree tree, String key)
 }
-Abstract class FunctionOrVariable{
-
+class Writer {
+    + Writer(LabelGenerator labelGenerator)
+    + void writeHeader(String label, String statement)
+    + void writeHeader(String statement)
+    + void writeHeader()
+    + void writeMain(String label, String statement)
+    + void writeMain(String statement)
+    + void writeMain()
+    + void writeFunction(String label, String statement)
+    + void writeFunction(String statement)
+    + void writeFunction()
+    + void descend()
+    + void ascend()
+    + String toString()
 }
-Class Function{
--Type type
--SymbolTable table
+class StackCounter {
+    + StackCounter()
+    + void addCount(int count)
+    + void register(SymbolTable table)
+    + void register(Tree tree, SymbolTable table)
+    + void unregister(SymbolTable table)
+    + void unregister(Tree tree)
+    + SymbolTable getSymbolTable(Tree tree)
+    + int getOffset(SymbolTable table)
+    + int getOffset(Tree tree)
 }
-Class Variable{
--Type type
--int shift
+class RegisterManager {
+    + RegisterManager(Writer writer, StackCounter stackCounter, int available)
+    + void descend()
+    + void ascend()
+    + void saveAll(int current)
+    + void restoreAll(int current)
+    + int provideRegister()
+    + void freeRegister()
 }
-Symbol <|-- FunctionOrVariable
-FunctionOrVariable <|-- Function
-FunctionOrVariable <|--Variable
-Symbol <|-- Type
-
-
-
-Class SymbolTable{
-  +HashMap<Tree, Type> treeTypeHashMap
--SymbolTable symbolTableParent
--ArrayList<SymbolTable> children
--Namespace<Type> types
--Namespace<FunctionOrVariable> functsAndVard
+TigerTranslator "0"-left-"1" SymbolTable
+TigerTranslator "0"-down-"1" LabelGenerator
+TigerTranslator "0"-right-"1" Writer
+TigerTranslator "0"-up-"1" StackCounter
+TigerTranslator "0"-right-"1" RegisterManager
+Writer "0"-left-"1" LabelGenerator
+RegisterManager "0"-down-"1" Writer
+RegisterManager "0"-up-"1" StackCounter
+class TigerIllustrator {
+    + TigerIllustrator(SymbolTable table)
+    + String toString()
 }
-SymbolTable--"*" SymbolTable
-SymbolTable -- "2" Namespace
+TigerIllustrator "0"-right-"1" SymbolTable
 @enduml
