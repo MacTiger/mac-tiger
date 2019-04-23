@@ -22,6 +22,7 @@ Ce dépôt contient :
 - les [notes](notes/meeting) prises lors des réunions
 - les [notes](notes/tutoring) prises lors des séances de tutorat
 - le [rapport](reports/report-1.pdf) de la première partie du projet
+- le [rapport](reports/report-2.pdf) de la deuxième partie du projet
 
 ## Manuel d'utilisation
 
