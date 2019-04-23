@@ -1,0 +1,51 @@
+@startuml
+class SymbolTable {
+    - int depth
+    - SymbolTable parent
+    - List<SymbolTable> children
+    - Namespace<Type> types
+    - Namespace<FunctionOrVariable> functionsAndVariables
+}
+class Namespace<Symbol extends Symbol> {
+    - Map<String, Symbol> symbols
+}
+abstract class Symbol
+abstract class FunctionOrVariable
+class Function {
+    - Type type
+    - SymbolTable table
+}
+class Variable {
+    - Type type
+    - int offset
+    - writable
+    - translated
+}
+abstract class Type
+class Primitive {
+    - int size
+}
+class Array {
+    - Type type
+}
+class Record {
+    - Namespace<Variable> namespace
+}
+Symbol <|-up- FunctionOrVariable
+FunctionOrVariable <|-left- Function
+FunctionOrVariable <|-right- Variable
+Symbol <|-down- Type
+Type <|-down- Primitive
+Type <|-down- Array
+Type <|-down- Record
+SymbolTable "1"--"*" SymbolTable
+SymbolTable "0"--"2" Namespace
+SymbolTable "0"--"*" FunctionOrVariable
+SymbolTable "1"--"0" Function
+SymbolTable "0"--"*" Type
+Function "0"--"1" Type
+Variable "0"--"1" Type
+Array "0"--"1" Type
+Record "0"--"1" Namespace
+Record "0"--"*" Variable
+@enduml

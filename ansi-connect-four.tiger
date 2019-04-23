@@ -174,7 +174,7 @@ let
 		print ("+\n\^[[0m")
 	)
 	function printToken (turn : int) = (
-		print("\^[[0;3");
+		print ("\^[[0;3");
 		printi (turn + 2);
 		print ("m");
 		if turn > 0 then (
