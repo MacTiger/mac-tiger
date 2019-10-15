@@ -1,5 +1,5 @@
 #!/bin/bash
-java -cp res:lib/* -jar lib/antlr-3.5.2-complete.jar res/Tiger.g
+java -jar lib/antlr-3.5.2-complete.jar res/Tiger.g
 mv Tiger.tokens res/Tiger.tokens
 mkdir -p src/lexical
 mkdir -p src/syntactic

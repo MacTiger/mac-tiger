@@ -2,7 +2,6 @@ package semantic;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.lang.Iterable;
 import java.util.Map;
 
 public class Namespace<Symbol extends semantic.Symbol> implements Iterable<Map.Entry<String, Symbol>> {

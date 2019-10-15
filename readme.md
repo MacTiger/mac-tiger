@@ -6,23 +6,23 @@ Ce dépôt contient les sources du compilateur *Java* du langage *Tiger* réalis
 
 ## Membres du groupe
 
-- Alexis DIEU
-- David FORLEN
-- Philippe GRAFF (chef de projet)
-- Tristan LE GODAIS
+-   Alexis DIEU
+-   David FORLEN
+-   Philippe GRAFF (chef de projet)
+-   Tristan LE GODAIS
 
 ## Structure du dépôt
 
 Ce dépôt contient :
 
-- la [grammaire](res/Tiger.g) *ANTLR3* du langage *Tiger*
-- le [compilateur](src/Main.java) écrit en *Java*
-- la [suite de tests](tst) portant sur l'analyse lexicale, l'analyse syntaxique, les contrôles sémantiques et l'exécution des programmes
-- le [manuel d'utilisation](#manuel-dutilisation)
-- les [notes](notes/meeting) prises lors des réunions
-- les [notes](notes/tutoring) prises lors des séances de tutorat
-- le [rapport](reports/report-1.pdf) de la première partie du projet
-- le [rapport](reports/report-2.pdf) de la deuxième partie du projet
+-   la [grammaire](res/Tiger.g) *ANTLR3* du langage *Tiger*
+-   le [compilateur](src/Main.java) écrit en *Java*
+-   la [suite de tests](tst) portant sur l'analyse lexicale, l'analyse syntaxique, les contrôles sémantiques et l'exécution des programmes
+-   le [manuel d'utilisation](#manuel-dutilisation)
+-   les [notes](doc/notes/meeting) prises lors des réunions
+-   les [notes](doc/notes/tutoring) prises lors des séances de tutorat
+-   le [rapport](doc/reports/report-1.pdf) de la première partie du projet
+-   le [rapport](doc/reports/report-2.pdf) de la deuxième partie du projet
 
 ## Manuel d'utilisation
 
@@ -37,23 +37,7 @@ $ cd graff24u
 
 ### Configuration des dépendances
 
-Ajoutez *ANTLR3* à la variable d'environnement `CLASSPATH` en remplaçant `<path>` par le chemin absolu du projet :
-
-```shell
-$ echo 'export CLASSPATH=$CLASSPATH:<path>/graff24u/lib/antlr-3.5.2-complete.jar' >> ~/.bashrc
-```
-
-Fermez le terminal puis rouvrez-en un nouveau pour que les changements s'appliquent.
-
-Optionnellement, à partir de la racine du projet, installez *Graphviz* :
-
-```shell
-$ tar -xvf lib/graphviz.tar.gz -C lib
-$ cd lib/graphviz-2.40.1
-$ ./configure
-$ make
-$ make install
-```
+Optionnellement, installez *Graphviz*.
 
 Aucune configuration n'est requise par *MicroPIUP*.
 
@@ -95,14 +79,14 @@ Le compilateur *Java* dispose de plusieurs options permettant de contrôler sa s
 
 Pour moduler la sortie d'erreur :
 
-- `--no-color` : les messages d'erreurs lexicales, syntaxiques et sémantiques seront monochromes
-- `--color` (par défaut) : les messages d'erreurs lexicales, syntaxiques et sémantiques seront colorés
+-   `--no-color` : les messages d'erreurs lexicales, syntaxiques et sémantiques seront monochromes
+-   `--color` (par défaut) : les messages d'erreurs lexicales, syntaxiques et sémantiques seront colorés
 
 Pour moduler la sortie standard :
 
-- `--no-output` : seuls l'analyse lexicale, l'analyse syntaxique et les contrôles sémantiques seront réalisés et rien n'est émis sur la sortie standard
-- `--dot` : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *DOT* est émis sur la sortie standard pour permettre la génération du graphe des tables des symboles via *Graphviz*
-- `--src` (par défaut) : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *SRC* est émis sur la sortie standard pour permettre la génération de code via *MicroPIUP*
+-   `--no-output` : seuls l'analyse lexicale, l'analyse syntaxique et les contrôles sémantiques seront réalisés et rien n'est émis sur la sortie standard
+-   `--dot` : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *DOT* est émis sur la sortie standard pour permettre la génération du graphe des tables des symboles via *Graphviz*
+-   `--src` (par défaut) : en plus de l'analyse lexicale, de l'analyse syntaxique et des contrôles sémantiques, du code *SRC* est émis sur la sortie standard pour permettre la génération de code via *MicroPIUP*
 
 ### Lancement de la suite de tests avec *Bash*
 
@@ -114,7 +98,7 @@ $ make test
 
 Une étiquette associée à un code couleur est utilisée pour symboliser le niveau de réussite d'un test. La signification de ces étiquettes est définie ainsi :
 
-- `[PASS]` : test qui a réussi ou échoué comme prévu
-- `[FAIL]` : test qui a réussi ou échoué alors que le contraire était attendu
-- `[EXIT]` : test produisant un plantage du compilateur
-- `[WARN]` : test produisant une erreur à une étape de la compilation antérieure à celle testée
+-   `[PASS]` : test qui a réussi ou échoué comme prévu
+-   `[FAIL]` : test qui a réussi ou échoué alors que le contraire était attendu
+-   `[EXIT]` : test produisant un plantage du compilateur
+-   `[WARN]` : test produisant une erreur à une étape de la compilation antérieure à celle testée

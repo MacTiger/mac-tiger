@@ -79,7 +79,7 @@ public class Main {
 			}
 			public String getErrorMessage(RecognitionException exception, String[] tokenNames) {
 				String message = super.getErrorMessage(exception, tokenNames);
-				return message.replaceAll("(?<= )([A-Z][0-9A-Z_a-z]*|'[\\S\\s]+'$)", notifier.highlight("$1", 3));
+				return message.replaceAll("(?<= )([A-Z][0-9A-Z_a-z]*|'(?:[^'\\\\]|\\\\'|\\\\\\\\|\\\\)+')", notifier.highlight("$1", 3));
 			}
 		};
 		Tree tree = (Tree) parser.program().getTree();

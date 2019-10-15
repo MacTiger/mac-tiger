@@ -1,11 +1,9 @@
 .DS_Store
 *.iml
-*.iup
-*.swp
+*.log
 /.classpath
 /.idea
 /.project
-/commit_message
 /graph.dot
 /graph.svg
 /prompt.iup
@@ -13,13 +11,9 @@
 /torture.tiger
 /asm
 /bin
-/lib/graphviz-2.40.1
-/lib/output
 /log
-/misc/GraphTDS
 /out
 /res/output
 /res/Tiger.tokens
 /src/lexical/TigerLexer.java
 /src/syntactic/TigerParser.java
-/timer

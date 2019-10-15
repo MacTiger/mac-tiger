@@ -16,7 +16,7 @@ import semantic.Variable;
 
 public class TigerIllustrator {
 
-	String result;
+	private String result;
 
 	public TigerIllustrator(SymbolTable table) {
 		// Fonction créant le String qui permettra de générer l'illustration de la TDS
@@ -26,7 +26,7 @@ public class TigerIllustrator {
 
 		allTypes += "|{ VOID | <VOID> }";
 
-		ArrayList<String> resArray = this.draw(table.getParent(), "TDS", -1);
+		List<String> resArray = this.draw(table.getParent(), "TDS", -1);
 		this.result += resArray.get(0) + "\n" + resArray.get(1) + resArray.get(2);
 		allTypes += resArray.get(3);
 
@@ -70,7 +70,7 @@ public class TigerIllustrator {
 				var = (Variable) stringSymbolEntry.getValue();
 //				partOfGraph += "var|"+ stringSymbolEntry.getKey() + "|" + var.getOffset() + "| <" + "typeVar_" + i + ">";
 //				graphLinks += this.makeLink(name, "typeVar_" + i, "Types", this.makeAddress(var.getType().toString()), false); // Lien du type de la variable
-				ArrayList<String> res = this.makeCell(var, stringSymbolEntry.getKey(), name, String.valueOf(i));
+				List<String> res = this.makeCell(var, stringSymbolEntry.getKey(), name, String.valueOf(i));
 				partOfGraph += res.get(0);
 				graphLinks += res.get(1);
 			} else if (stringSymbolEntry.getValue() instanceof Function) { // Cellule d'une fonction
@@ -105,7 +105,7 @@ public class TigerIllustrator {
 		}
 
 		for (SymbolTable symbolTable: table.getChildren()) { // Parcours des TDS filles de cette TDS
-			ArrayList<String> symbolTableGraph = this.draw(symbolTable, name, i);
+			List<String> symbolTableGraph = this.draw(symbolTable, name, i);
 			// Récupère les graphes créés par la fille symbolTable :
 			graphLinks += "\n" + symbolTableGraph.get(2); // Ajout des liaisons créées par symbolTable
 			allTypes += symbolTableGraph.get(3);
@@ -166,8 +166,8 @@ public class TigerIllustrator {
 		}
 	}
 
-	private ArrayList<String> makeCell(Variable variable, String nameOfVar, String name, String numOfCell) {
-		ArrayList<String> typeGraphs = this.makeCell(variable.getType(), name, numOfCell);
+	private List<String> makeCell(Variable variable, String nameOfVar, String name, String numOfCell) {
+		List<String> typeGraphs = this.makeCell(variable.getType(), name, numOfCell);
 		String partOfGraph = "var|"+ nameOfVar + "|" + variable.getOffset() + "|";
 		partOfGraph += typeGraphs.get(0);
 		String graphLinks = typeGraphs.get(1);
