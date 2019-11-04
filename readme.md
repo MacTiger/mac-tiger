@@ -1,15 +1,25 @@
-# Projet de compilation du langage *Tiger*
+# Compilateur du langage *Tiger*
+
+## Tl;dr: démonstration rapide
+
+Jouez au *Puissance 4* !
+
+```shell
+$ git clone https://github.com/MacTiger/mac-tiger
+$ cd mac-tiger
+$ make init build prompt < ansi-connect-four.tiger
+```
 
 ## Présentation
 
-Ce dépôt contient les sources du compilateur *Java* du langage *Tiger* réalisé par le groupe 6 dans le cadre du projet de compilation des langages.
+Ce dépôt contient les sources du compilateur *Java* du langage *Tiger* réalisé par le groupe 6 dans le cadre du projet de compilation des langages 2018-2019 à *TELECOM Nancy*.
 
 ## Membres du groupe
 
--   Alexis DIEU
--   David FORLEN
--   Philippe GRAFF (chef de projet)
--   Tristan LE GODAIS
+-   Alexis DIEU (@Alexithub)
+-   David FORLEN (@DavidForlen)
+-   Philippe GRAFF (@PhilippsTelecom), chef de projet
+-   Tristan LE GODAIS (@TrisTOON)
 
 ## Structure du dépôt
 
@@ -31,8 +41,8 @@ Ce dépôt contient :
 Pour utiliser le compilateur, commencez par créer une copie locale du dépôt :
 
 ```shell
-$ git clone https://gitlab.telecomnancy.univ-lorraine.fr/Philippe.Graff/graff24u
-$ cd graff24u
+$ git clone https://github.com/MacTiger/mac-tiger
+$ cd mac-tiger
 ```
 
 ### Configuration des dépendances

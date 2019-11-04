@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="Projet de Compilation" company="" webLink="https://gitlab.telecomnancy.univ-lorraine.fr/Philippe.Graff/graff24u" view-date="2018-11-01" view-index="0" gantt-divider-location="661" resource-divider-location="300" version="2.8.10" locale="fr">
+<?xml version="1.0" encoding="UTF-8"?><project name="Projet de Compilation" company="" webLink="https://github.com/MacTiger/mac-tiger" view-date="2018-11-01" view-index="0" gantt-divider-location="661" resource-divider-location="300" version="2.8.10" locale="fr">
     <description><![CDATA[Projet visant à développer un compilateur pour le langage Tiger dans le cadre du module Traduction de la deuxième année de la formation d'ingénieur informatique à Télécom Nancy.]]></description>
     <view zooming-state="default:8" id="gantt-chart">
         <field id="tpd3" name="Nom" width="215" order="0"/>
