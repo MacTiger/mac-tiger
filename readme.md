@@ -29,8 +29,8 @@ Ce dépôt contient :
 -   le [compilateur](src/Main.java) écrit en *Java*
 -   la [suite de tests](tst) portant sur l'analyse lexicale, l'analyse syntaxique, les contrôles sémantiques et l'exécution des programmes
 -   le [manuel d'utilisation](#manuel-dutilisation)
--   les [notes](doc/notes/meeting) prises lors des réunions
--   les [notes](doc/notes/tutoring) prises lors des séances de tutorat
+-   les [notes](doc/notes/meetings) prises lors des réunions
+-   les [notes](doc/notes/tutorings) prises lors des séances de tutorat
 -   le [rapport](doc/reports/report-1.pdf) de la première partie du projet
 -   le [rapport](doc/reports/report-2.pdf) de la deuxième partie du projet
 
