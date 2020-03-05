@@ -1,0 +1,78 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="8">
+	<path d="
+		M32,176
+		A96,48,0,0,0,224,176
+		A96,64,0,0,0,32,176
+		Z
+	" fill="#f93"/>
+	<path d="
+		M32,144
+		A96,48,0,0,0,224,144
+		A96,64,0,0,0,32,144
+		Z
+	" fill="#630"/>
+	<path d="
+		M16,120
+		L128,56
+		L240,120
+		L128,184
+		Z
+	" fill="#fc0"/>
+	<path d="
+		M32,96
+		A96,48,0,0,0,224,96
+		A96,64,0,0,0,32,96
+		Z
+	" fill="#f93"/>
+	<path d="
+		M64,152
+		A32,32,0,0,0,128,152
+	" fill="#fff" transform="rotate(30,96,152)"/>
+	<path d="
+		M128,152
+		A32,32,0,0,0,192,152
+	" fill="#fff" transform="rotate(-30,160,152)"/>
+	<path d="
+		M80,152
+		L56,160
+		M96,168
+		L72,192
+		M176,152
+		L200,160
+		M160,168
+		L184,192
+	" fill="none"/>
+	<path d="
+		M104,152
+		L128,168
+		L152,152
+	" fill="#f69"/>
+	<ellipse cx="96" cy="112" rx="16" ry="24" fill="#fff" transform="rotate(-15,96,112)"/>
+	<ellipse cx="160" cy="112" rx="16" ry="24" fill="#fff" transform="rotate(15,160,112)"/>
+	<circle cx="100" cy="124" r="4" fill="none"/>
+	<circle cx="156" cy="124" r="4" fill="none"/>
+	<path d="
+		M112,80
+		A32,48,0,0,0,48,80
+	" fill="#f69" transform="rotate(-30,80,80)"/>
+	<path d="
+		M208,80
+		A32,48,0,0,0,144,80
+	" fill="#f69" transform="rotate(30,176,80)"/>
+	<path d="
+		M72,212
+		L88,204
+		L96,220
+		M184,212
+		L168,204
+		L160,220
+		M112,36
+		L128,60
+		L144,36
+		M104,80
+		L128,72
+		L152,80
+		L128,88
+		Z
+	" fill="#333"/>
+</svg>
