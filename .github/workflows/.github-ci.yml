@@ -1,0 +1,20 @@
+on:
+    - push
+    - pull_request
+
+jobs:
+    linux:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: docker://openjdk:8
+            -   uses: actions/checkout@v2
+            -   name: init
+                run: bash init.sh
+            -   name: build
+                run: bash build.sh
+            -   name: test
+                run: bash test.sh
+            -   uses: actions/upload-artifact@v1
+                with:
+                    name: log
+                    path: log

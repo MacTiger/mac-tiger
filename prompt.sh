@@ -1,14 +1,14 @@
 #!/bin/bash
 java -cp bin:lib/* Main --src > prompt.src
 status=$?
-if [[ (($status == 0)) ]]
+if (( $status == 0 ))
 then
 	err=$(java -jar lib/microPIUPK.jar -ass prompt.src 2>&1 1> /dev/null)
 	if [[ $err == "" ]]
 	then
 		java -jar lib/microPIUPK.jar -batch prompt.iup < /dev/tty
 		status=$?
-		if [[ (($status != 0)) ]]
+		if (( $status != 0 ))
 		then
 			status=$(($status + 4))
 		fi

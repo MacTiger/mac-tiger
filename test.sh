@@ -8,11 +8,11 @@ test() {
 	local dir=$1
 	local refstatus=$2
 	local sign=$(($refstatus < 0))
-	if [[ (($sign == 1)) ]]
+	if (( $sign == 1 ))
 	then
 		refstatus=$((-$refstatus))
 	fi
-	if [[ (($refstatus == 4)) ]]
+	if (( $refstatus == 4 ))
 	then
 		mkdir -p "asm/$dir"
 	fi
@@ -25,7 +25,7 @@ test() {
 			local stdout
 			local stderr="log/$dir/$file.log"
 			local status
-			if [[ (($refstatus == 4)) ]]
+			if (( $refstatus == 4 ))
 			then
 				stdout="asm/$dir/$file.src"
 				local refin="tst/$dir/$file.in"
@@ -34,7 +34,7 @@ test() {
 				touch $refout
 				java -cp bin:lib/* Main --no-color --src 2> $stderr 1> $stdout < $stdin
 				status=$((($? + 4) % 5))
-				if [[ (($status == 4)) ]]
+				if (( $status == 4 ))
 				then
 					local prgm="asm/$dir/$file.iup"
 					local err=$(java -jar lib/microPIUPK.jar -ass $stdout 2>&1 1>> $stderr)
@@ -58,22 +58,22 @@ test() {
 				java -cp bin:lib/* Main --no-color --no-output 2> $stderr 1> $stdout < $stdin
 				status=$((($? + 4) % 5))
 			fi
-			if [[ (($status == 0)) ]]
+			if (( $status == 0 ))
 			then
 				echo -e "[\033[0;34mEXIT\033[0m] $stdin"
 				d=$(($d + 1))
-			elif [[ (($status < $refstatus)) ]]
+			elif (( $status < $refstatus ))
 			then
 				echo -e "[\033[0;33mWARN\033[0m] $stdin"
 				c=$(($c + 1))
 			else
-				if [[ (($sign == 1)) ]]
+				if (( $sign == 1 ))
 				then
 					status=$(($status > $refstatus))
 				else
 					status=$(($status == $refstatus))
 				fi
-				if [[ (($status == 1)) ]]
+				if (( $status == 1 ))
 				then
 					echo -e "[\033[0;31mFAIL\033[0m] $stdin"
 					b=$(($b + 1))

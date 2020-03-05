@@ -1,0 +1,30 @@
+stages:
+    -   init
+    -   build
+    -   test
+
+default:
+    image: openjdk:8
+
+init:
+    stage: init
+    script: bash init.sh
+    artifacts:
+        paths:
+            -   src/lexical/TigerLexer.java
+            -   src/syntactic/TigerParser.java
+
+build:
+    stage: build
+    script: bash build.sh
+    artifacts:
+        paths:
+            -   bin
+
+test:
+    stage: test
+    script: bash test.sh
+    artifacts:
+        paths:
+            -   log
+    coverage: '/^\d+ tests: \d+ passed \((\d+\.\d+%)\), \d+ failed \(\d+\.\d+%\), \d+ warned \(\d+\.\d+%\), \d+ exited \(\d+\.\d+%\) in \d+ seconds$/'
