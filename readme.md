@@ -16,7 +16,7 @@ Ce dépôt contient les sources du compilateur *Java* du langage *Tiger* réalis
 
 ## Membres du groupe
 
--   Alexis DIEU (@Alexithub)
+-   Alexis DIEU (@AlexisDieu)
 -   David FORLEN (@DavidForlen)
 -   Philippe GRAFF (@PhilippsTelecom), chef de projet
 -   Tristan LE GODAIS (@TrisTOON)
