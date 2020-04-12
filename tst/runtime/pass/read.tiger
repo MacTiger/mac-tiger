@@ -1,5 +1,17 @@
 (
 	printi (read ());
 	print ("\n");
+	printi (read ());
+	print ("\n");
+	printi (read ());
+	print ("\n");
+	printi (read ());
+	print ("\n");
+	printi (read ());
+	print ("\n");
+	printi (read ());
+	print ("\n");
+	printi (read ());
+	print ("\n");
 	printi (read ())
 )

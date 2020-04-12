@@ -253,7 +253,7 @@ public class TigerTranslator {
 
 				// Récupère le premier caractère lu
 				this.writer.writeHeader("LDB R2, (R0)+ // Récupère un caractère");
-				this.writer.writeHeader("BEQ 38"); // Saute en fin de fonction si R1 vaut zéro // TODO : calculer le jump
+				this.writer.writeHeader("BEQ 36"); // Saute en fin de fonction si R1 vaut zéro // TODO : calculer le jump
 
 				// Gère le cas où le premier caractère est un signe moins :
 				this.writer.writeHeader("LDW R3, R2");
@@ -263,20 +263,20 @@ public class TigerTranslator {
 
 				// Parcours des autres caractères lus jusqu'à trouver un \0 (NULL, 0 en ASCII)
 				this.writer.writeHeader("LDB R2, (R0)+ // Parcours des autres caractères lus jusqu'à trouver un \\0 : Récupère un caractère");
-				this.writer.writeHeader("BEQ 20"); // Saute en fin de fonction // TODO : calculer le jump
+				this.writer.writeHeader("BEQ 18"); // Saute en fin de fonction // TODO : calculer le jump
 
 				// Teste si le caractère est un chiffre :
 				this.writer.writeHeader("ADQ -48, R2 // Passe du code ASCII à un entier"); // Début boucle parcours
-				this.writer.writeHeader("BLW 16 // Teste la borne inférieure"); // Saute en fin de fonction // TODO : jump à la fin du parcours
+				this.writer.writeHeader("BLW 14 // Teste la borne inférieure"); // Saute en fin de fonction // TODO : jump à la fin du parcours
 				this.writer.writeHeader("ADI R2, R3, #-10");
-				this.writer.writeHeader("BGE 10 // Teste la borne supérieure"); // Saute en fin de fonction // TODO : jump à la fin du parcours
+				this.writer.writeHeader("BGE 8 // Teste la borne supérieure"); // Saute en fin de fonction // TODO : jump à la fin du parcours
 
 				// Ajoute le chiffre au résultat :
 				this.writer.writeHeader("LDQ 10, R3 // Décalage des unités");
 				this.writer.writeHeader("MUL R1, R3, R1 // Décalage des unités");
 				this.writer.writeHeader("ADD R2, R1, R1 // Ajout du chiffre lu au résultat");
 
-				this.writer.writeHeader("JMP #-22 // Boucle sur les caractères lus"); // TODO : jump au début de boucle parcours
+				this.writer.writeHeader("BMP -22 // Boucle sur les caractères lus"); // TODO : jump au début de boucle parcours
 
 				// Gére le passage au négatif si l'entier doit être négatif :
 				this.writer.writeHeader("TST R4 // Vérifie si l'entier doit être négatif");

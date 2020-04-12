@@ -1,4 +1,8 @@
 (
+	printi (0001234);
+	print ("\n");
+	printi (-000123);
+	print ("\n");
 	printi (0);
 	print ("\n");
 	printi (42);
